@@ -11,3 +11,5 @@ configparser
 gTTS
 httplib2
 inference-sdk
+pandas     
+geopy         
