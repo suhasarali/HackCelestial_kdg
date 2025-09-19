@@ -4,50 +4,88 @@ import generateToken from "../utils/generateToken.js";
 import otpGenerator from 'otp-generator';
 import transporter from '../config/nodemailer.js';
 
+
 export async function signup(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { 
+      name, 
+      email, 
+      password, 
+      experienceYears,   // how long he has been a fisherman
+      boatLicenseId,     // boat license number/id
+      port,              // region/port he belongs to
+    } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    // --- Validation ---
+    if (!name || !email || !password || !experienceYears || !boatLicenseId || !port) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "All fields are required" 
+      });
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return res.status(400).json({ success: false, message: "Invalid email format" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid email format" 
+      });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Email already exists" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Email already exists" 
+      });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ success: false, message: "Password should be at least 6 characters" });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Password should be at least 6 characters" 
+      });
     }
 
+    // --- Hash password ---
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // --- Create User ---
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
+      experienceYears,
+      boatLicenseId,
+      port,
     });
 
     await newUser.save();
 
+    // --- Generate Token ---
     const token = generateToken(newUser._id);
 
     res.status(201).json({
       success: true,
       message: "Account created successfully",
-      token, // 🔑 send token to frontend
-      user: { id: newUser._id, name: newUser.name, email: newUser.email },
+      token,
+      user: { 
+        id: newUser._id, 
+        name: newUser.name, 
+        email: newUser.email,
+        experienceYears: newUser.experienceYears,
+        boatLicenseId: newUser.boatLicenseId,
+        port: newUser.port,
+      },
     });
+
   } catch (error) {
     console.log("Error in signup:", error.message);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Internal server error" 
+    });
   }
 }
 

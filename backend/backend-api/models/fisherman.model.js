@@ -13,19 +13,30 @@ const fishermanSchema = new mongoose.Schema(
       required: [true, "Email is required"],
       unique: true,
       lowercase: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
     },
     password: {
       type: String,
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
     },
+    experience: {
+      type: Number, // years of fishing
+      default: 0,
+    },
+    boatLicenseId: {
+      type: String,
+      default: null,
+    },
+    port: {
+      type: String, // region fisherman belongs to
+      default: null,
+    },
     otp: {
-      type: String, // store generated OTP
+      type: String,
       default: null,
     },
     otpExpires: {
-      type: Date, // expiry time for OTP
+      type: Date,
       default: null,
     },
   },

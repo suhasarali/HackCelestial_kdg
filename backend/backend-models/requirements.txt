@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-dotenv
+requests
+python-multipart
+motor
+pymongo>=4.0
+cloudinary
+configobj
+configparser
+gTTS
+httplib2
