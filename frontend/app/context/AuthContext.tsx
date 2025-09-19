@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string , profile: { boatLicenseId: string, experience: string, port: string }) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
   forgotPassword: (email: string) => Promise<boolean>;

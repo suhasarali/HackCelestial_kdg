@@ -30,7 +30,7 @@ export default function LoginScreen() {
     setLoading(false);
     
     if (success) {
-      router.replace('/(tabs)/home/page' as any);
+      router.replace('/(tabs)/home' as any);
     }
   };
 
