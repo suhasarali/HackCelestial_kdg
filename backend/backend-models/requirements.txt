@@ -9,6 +9,7 @@ cloudinary
 configobj
 configparser
 gTTS
+pydantic
 httplib2
 inference-sdk
 pandas     
