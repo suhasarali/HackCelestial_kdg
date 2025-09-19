@@ -102,7 +102,7 @@ const PostCard: React.FC<PostCardProps> = ({ firstName, lastName, userName, user
       </View>
       <Text style={cardStyles.content}>{content}</Text>
       <View style={cardStyles.tagContainer}>
-        {tags.map((tag: unknown, index: React.Key | null | undefined) => (
+        {tags.map((tag, index) => (
           <Tag key={index} text={tag} />
         ))}
       </View>
