@@ -26,7 +26,7 @@ const  AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const useAuth = () => useContext(AuthContext);
 //https://hackbuild.onrender.com/api
 // Your backend API base URLhttp://localhost:3000
-const API_BASE_URL = 'https://hackbuild-7cxb.onrender.com/api'; // Replace with your actual backend URL
+const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api'; // Replace with your actual backend URL
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +42,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const storedToken = await AsyncStorage.getItem('token');
       const storedUser = await AsyncStorage.getItem('user');
       
+      console.log('Stored Token:', storedToken);
+      console.log('Stored User:', storedUser);
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));

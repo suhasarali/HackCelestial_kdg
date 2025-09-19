@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { useTranslation } from 'react-i18next';
 
 export default function ProfileScreen() {
@@ -35,16 +36,28 @@ export default function ProfileScreen() {
     //i18n.changeLanguage(value ? 'en' : 'hi');
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      ('logout'),
-      ('logoutConfirm'),
-      [
-        { text: ('cancel'), style: 'cancel' },
-        { text: ('logout'), onPress: () => router.replace('/auth/login') }
-      ]
-    );
-  };
+  const handleLogout = async () => {
+  Alert.alert(
+    "Logout",
+    "Are you sure you want to logout?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("authToken");
+
+            console.log("User logged out, navigating to login screen");
+            router.replace("/auth/login");
+          } catch (error) {
+            console.error("Logout failed:", error);
+          }
+        }
+      }
+    ]
+  );
+};
 
   return (
     <ScrollView style={styles.container}>

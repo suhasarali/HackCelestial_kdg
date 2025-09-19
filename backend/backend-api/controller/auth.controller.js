@@ -11,13 +11,13 @@ export async function signup(req, res) {
       name, 
       email, 
       password, 
-      experienceYears,   // how long he has been a fisherman
+      experience,   // how long he has been a fisherman
       boatLicenseId,     // boat license number/id
       port,              // region/port he belongs to
     } = req.body;
 
     // --- Validation ---
-    if (!name || !email || !password || !experienceYears || !boatLicenseId || !port) {
+    if (!name || !email || !password || !experience || !boatLicenseId || !port) {
       return res.status(400).json({ 
         success: false, 
         message: "All fields are required" 
@@ -56,7 +56,7 @@ export async function signup(req, res) {
       name,
       email,
       password: hashedPassword,
-      experienceYears,
+      experience,
       boatLicenseId,
       port,
     });
