@@ -1,0 +1,93 @@
+{
+  "profile": {
+    "title": "Profile",
+    "profileInfo": "Profile Information",
+    "vessel": "Vessel",
+    "homePort": "Home Port",
+    "experience": "Experience",
+    "editProfile": "Edit Profile",
+    "saveProfile": "Save Profile",
+    "cancel": "Cancel",
+    "settings": "Settings",
+    "language": "Language",
+    "notifications": "Notifications",
+    "offlineMaps": "Offline Maps",
+    "voiceCommands": "Voice Commands",
+    "configure": "Configure",
+    "support": "Support",
+    "helpFAQ": "Help & FAQ",
+    "safetyGuidelines": "Safety Guidelines",
+    "regulations": "Regulations",
+    "contactSupport": "Contact Support",
+    "aboutApp": "About App",
+    "appDescription": "Your trusted companion for safe and successful fishing expeditions. Get real-time weather updates, fish probability predictions, and connect with the fishing community.",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?",
+    "logoutButton": "Logout",
+    "cancelButton": "Cancel",
+    "success": "Success",
+    "error": "Error",
+    "profileUpdated": "Profile updated successfully!",
+    "updateFailed": "Failed to update profile",
+    "fetchFailed": "Failed to fetch profile"
+  },
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information"
+  },
+  "navigation": {
+    "home": "Home",
+    "map": "Map",
+    "alerts": "Alerts",
+    "analytics": "Analytics",
+    "catchLog": "Catch Log",
+    "community": "Community",
+    "profile": "Profile"
+  },
+  "home": {
+    "weather": "Weather",
+    "loading": "Loading...",
+    "topFishingZones": "Top Fishing Zones",
+    "viewAll": "View All"
+  },
+  "map": {
+    "fetchingLocation": "Fetching location and generating heatmap...",
+    "refreshHeatmap": "Refresh Heatmap"
+  },
+  "alerts": {
+    "title": "Alerts",
+    "noAlerts": "No alerts at this time",
+    "markAllRead": "Mark All as Read",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "analytics": {
+    "title": "Analytics",
+    "catchStats": "Catch Statistics",
+    "weatherImpact": "Weather Impact",
+    "bestTimes": "Best Fishing Times"
+  },
+  "catchLog": {
+    "title": "Catch Log",
+    "addCatch": "Add Catch",
+    "noCatches": "No catches recorded yet"
+  },
+  "community": {
+    "title": "Community",
+    "fishermen": "Fishermen",
+    "shareExperience": "Share Your Experience"
+  }
+}

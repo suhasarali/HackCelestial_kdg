@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 
 // --- UserAvatar Component ---
 const generateColor = (name: string) => {

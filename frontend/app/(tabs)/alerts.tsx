@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-//import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 // Mock data
 const ALERTS = [
@@ -57,7 +57,7 @@ const ALERTS = [
 
 export default function AlertsScreen() {
   const router = useRouter();
-  //const { t } = useTranslation();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [alerts, setAlerts] = useState(ALERTS);
 
