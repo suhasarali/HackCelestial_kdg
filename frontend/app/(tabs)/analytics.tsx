@@ -44,7 +44,7 @@ const BEST_HOURS = [
 
 export default function AnalyticsScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  //const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState('week');
 
   const chartConfig = {
@@ -61,7 +61,7 @@ export default function AnalyticsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('analytics')}</Text>
+        <Text style={styles.title}>{('analytics')}</Text>
         <View style={styles.timeRangeSelector}>
           <TouchableOpacity 
             style={[styles.timeButton, timeRange === 'day' && styles.activeTimeButton]}
@@ -89,23 +89,23 @@ export default function AnalyticsScreen() {
         <View style={styles.summaryCard}>
           <Icon name="weight" size={24} color="#3498db" />
           <Text style={styles.summaryValue}>100 kg</Text>
-          <Text style={styles.summaryLabel}>{t('totalCatch')}</Text>
+          <Text style={styles.summaryLabel}>{('totalCatch')}</Text>
         </View>
         <View style={styles.summaryCard}>
           <Icon name="cash" size={24} color="#2ecc71" />
           <Text style={styles.summaryValue}>₹40,000</Text>
-          <Text style={styles.summaryLabel}>{t('totalValue')}</Text>
+          <Text style={styles.summaryLabel}>{('totalValue')}</Text>
         </View>
         <View style={styles.summaryCard}>
           <Icon name="chart-line" size={24} color="#f39c12" />
           <Text style={styles.summaryValue}>₹400/kg</Text>
-          <Text style={styles.summaryLabel}>{t('avgPrice')}</Text>
+          <Text style={styles.summaryLabel}>{('avgPrice')}</Text>
         </View>
       </View>
 
       {/* Catch History Chart */}
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{t('catchHistory')}</Text>
+        <Text style={styles.chartTitle}>{('catchHistory')}</Text>
         <LineChart
           data={{
             labels: CATCH_HISTORY.map(item => item.day),
@@ -125,7 +125,7 @@ export default function AnalyticsScreen() {
 
       {/* Species Distribution */}
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{t('speciesDistribution')}</Text>
+        <Text style={styles.chartTitle}>{('speciesDistribution')}</Text>
         <PieChart
           data={SPECIES_DATA}
           width={Dimensions.get('window').width - 32}
@@ -140,7 +140,7 @@ export default function AnalyticsScreen() {
 
       {/* Best Fishing Hours */}
       <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{t('bestFishingHours')}</Text>
+        <Text style={styles.chartTitle}>{('bestFishingHours')}</Text>
         <BarChart
           data={{
             labels: BEST_HOURS.map(item => item.hour),
@@ -165,23 +165,23 @@ export default function AnalyticsScreen() {
 
       {/* Insights */}
       <View style={styles.insightsContainer}>
-        <Text style={styles.insightsTitle}>{t('fishingInsights')}</Text>
+        <Text style={styles.insightsTitle}>{('fishingInsights')}</Text>
         <View style={styles.insightItem}>
           <Icon name="lightbulb-on" size={20} color="#f39c12" />
           <Text style={styles.insightText}>
-            {t('bestTimeInsight')} <Text style={styles.highlight}>6-7 AM</Text> ({t('successRate')}: 85%)
+            {('bestTimeInsight')} <Text style={styles.highlight}>6-7 AM</Text> ({('successRate')}: 85%)
           </Text>
         </View>
         <View style={styles.insightItem}>
           <Icon name="lightbulb-on" size={20} color="#f39c12" />
           <Text style={styles.insightText}>
-            {t('bestSpeciesInsight')} <Text style={styles.highlight}>Rohu</Text> (35% {t('ofCatches')})
+            {('bestSpeciesInsight')} <Text style={styles.highlight}>Rohu</Text> (35% {('ofCatches')})
           </Text>
         </View>
         <View style={styles.insightItem}>
           <Icon name="lightbulb-on" size={20} color="#f39c12" />
           <Text style={styles.insightText}>
-            {t('bestZoneInsight')} <Text style={styles.highlight}>North Bay</Text> ({t('avgCatch')}: 18kg/{t('trip')})
+            {('bestZoneInsight')} <Text style={styles.highlight}>North Bay</Text> ({('avgCatch')}: 18kg/{('trip')})
           </Text>
         </View>
       </View>
