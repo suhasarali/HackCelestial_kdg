@@ -10,3 +10,4 @@ configobj
 configparser
 gTTS
 httplib2
+inference-sdk

@@ -1,7 +1,54 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile, HTTPException
+import cloudinary
+import cloudinary.uploader
+import tempfile
+from inference_sdk import InferenceHTTPClient
+from app import config  # ✅ import config from app folder
+import os
 
 router = APIRouter()
 
-@router.get("/")
-async def detect_route():
-    return {"message": "detect route working"}
+# ✅ Configure Cloudinary
+cloudinary.config(
+    cloud_name=config.CLOUDINARY_CLOUD_NAME,
+    api_key=config.CLOUDINARY_API_KEY,
+    api_secret=config.CLOUDINARY_API_SECRET
+)
+
+# ✅ Initialize Roboflow client
+client = InferenceHTTPClient(
+    api_url="https://serverless.roboflow.com",
+    api_key=config.ROBOFLOW_API_KEY
+)
+
+@router.post("")
+async def detect_route(image: UploadFile = File(...)):
+    try:
+        # 1️⃣ Save uploaded file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
+            tmp.write(await image.read())
+            tmp_path = tmp.name
+
+        # 2️⃣ Send the local file to Roboflow (not URL)
+        result = client.run_workflow(
+            workspace_name=config.ROBOFLOW_WORKSPACE,
+            workflow_id=config.ROBOFLOW_WORKFLOW,
+            images={"image": tmp_path},  # 👈 pass local path instead of URL
+            use_cache=True
+        )
+
+        # 3️⃣ (Optional) Upload to Cloudinary AFTER successful Roboflow call
+        upload_result = cloudinary.uploader.upload(tmp_path)
+        image_url = upload_result.get("secure_url")
+
+        # 4️⃣ Clean up temp file
+        os.remove(tmp_path)
+
+        return {
+            "success": True,
+            "roboflow_result": result,
+            "cloudinary_url": image_url
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
