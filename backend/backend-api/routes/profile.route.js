@@ -1,7 +1,7 @@
 // routes/profile.route.js
 import express from "express";
 import { getProfile, updateProfile } from "../controller/profile.controller.js";
-import { protect } from "../middleware/protectRoute.js";
+import  protect  from "../middleware/protectRoute.js";
 
 const router = express.Router();
 
