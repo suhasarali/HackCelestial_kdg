@@ -96,7 +96,7 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={require('@/assets/images/splash-icon.png')}
+          source={require('../assets/images/matsya-logo.svg')}
           style={styles.logo}
           contentFit="contain"
         />
