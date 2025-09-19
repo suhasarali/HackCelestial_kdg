@@ -11,11 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import LocationDisplay from '../../components/LocationDisplay';
 
 // Mock data types
 interface WeatherData {
@@ -163,6 +164,20 @@ export default function HomeScreen() {
           <TouchableOpacity onPress={handleAlerts}>
            <Ionicons name="notifications" size={25} color={"#2c3e50"} /> 
           </TouchableOpacity>
+        </View>
+
+        {/* Location Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Current Location</Text>
+            <Icon name="map-marker" size={24} color="#3498db" />
+          </View>
+          <LocationDisplay 
+            showAddress={true}
+            showCoordinates={true}
+            showAccuracy={true}
+            compact={false}
+          />
         </View>
 
         {/* Weather Card */}
