@@ -12,6 +12,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 //import { useTranslation } from 'react-i18next';
 
 // Mock data types
@@ -140,6 +142,10 @@ export default function HomeScreen() {
     router.push('/profile');
   };
 
+  const handleAlerts=() => {
+    router.push('/(tabs)/alerts');
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView 
@@ -149,9 +155,12 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>{('welcome')}, Fisher!</Text>
           <TouchableOpacity onPress={handleViewProfile}>
             <Icon name="account" size={28} color="#2c3e50" />
+          </TouchableOpacity>
+          <Image source={require('../../assets/images/matsya-logo.svg')} style={{ width: 100, height: 50 }} />
+          <TouchableOpacity onPress={handleAlerts}>
+           <Ionicons name="notifications" size={25} color={"#2c3e50"} /> 
           </TouchableOpacity>
         </View>
 
@@ -289,13 +298,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    elevation: 2,
+    padding: 7,
+    backgroundColor: '#ecf0f1',
+    elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1},
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 6,
   },
   greeting: {
     fontSize: 20,
@@ -303,7 +312,7 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ecf0f1',
     borderRadius: 8,
     padding: 16,
     margin: 8,
