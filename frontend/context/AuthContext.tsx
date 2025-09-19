@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-wrapper-object-types */
 // contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,7 +27,7 @@ const  AuthContext = createContext<AuthContextType>({} as AuthContextType);
 export const useAuth = () => useContext(AuthContext);
 //https://hackbuild.onrender.com/api
 // Your backend API base URLhttp://localhost:3000
-const API_BASE_URL = 'https://hackbuild-7cxb.onrender.com/api'; // Replace with your actual backend URL
+const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api'; // Replace with your actual backend URL
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +43,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const storedToken = await AsyncStorage.getItem('token');
       const storedUser = await AsyncStorage.getItem('user');
       
+      console.log('Stored Token:', storedToken);
+      console.log('Stored User:', storedUser);
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
@@ -97,14 +100,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const register = async (name: string, email: string, password: string) => {
+  const register = async (name: string, email: string, password: string, profile: { boatLicenseId: string, experience: string, port: string }) => {
     try {
       const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, ...profile }),
       });
 
       const data = await response.json();

@@ -1,6 +1,6 @@
 // app/profile/index.tsx
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,11 +9,15 @@ import {
   TouchableOpacity,
   Image,
   Switch,
-  Alert
+  Alert,
+  TextInput
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 //import { useTranslation } from 'react-i18next';
+
+const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api'; // Update if needed
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,13 +25,95 @@ export default function ProfileScreen() {
   //const [isEnglish, setIsEnglish] = useState(i18n.language === 'en');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [offlineMapsEnabled, setOfflineMapsEnabled] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
-  const user = {
-    name: 'Rajesh Kumar',
-    phone: '+91 9876543210',
-    vessel: 'Fisherman II',
-    homePort: 'Mumbai',
-    experience: '15 years',
+  // Replace hardcoded user with state
+  const [user, setUser] = useState({
+    name: '',
+    phone: '',
+    vessel: '',
+    homePort: '',
+    experience: '',
+  });
+  const [editUser, setEditUser] = useState(user);
+
+  // Fetch profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/profile`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        if (data.success) {
+          setUser({
+            name: data.profile.name,
+            phone: data.profile.phone || '',
+            vessel: data.profile.boatLicenseId || '',
+            homePort: data.profile.port || '',
+            experience: data.profile.experience ? `${data.profile.experience} years` : '',
+          });
+          setEditUser({
+            name: data.profile.name,
+            phone: data.profile.phone || '',
+            vessel: data.profile.boatLicenseId || '',
+            homePort: data.profile.port || '',
+            experience: data.profile.experience ? `${data.profile.experience} years` : '',
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // Add update profile handler
+  const handleEditProfile = async () => {
+    if (!editMode) {
+      setEditMode(true);
+      return;
+    }
+    const token = await AsyncStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile/profile-update`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editUser.name,
+          experience: editUser.experience.replace(' years', ''),
+          boatLicenseId: editUser.vessel,
+          port: editUser.homePort,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        Alert.alert('Success', 'Profile updated!');
+        setUser({
+          name: data.profile.name,
+          phone: data.profile.phone || '',
+          vessel: data.profile.boatLicenseId || '',
+          homePort: data.profile.port || '',
+          experience: data.profile.experience ? `${data.profile.experience} years` : '',
+        });
+        setEditMode(false);
+      } else {
+        Alert.alert('Error', data.message);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile');
+    }
   };
 
   const handleLanguageChange = (value: boolean) => {
@@ -35,16 +121,28 @@ export default function ProfileScreen() {
     //i18n.changeLanguage(value ? 'en' : 'hi');
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      ('logout'),
-      ('logoutConfirm'),
-      [
-        { text: ('cancel'), style: 'cancel' },
-        { text: ('logout'), onPress: () => router.replace('/auth/login') }
-      ]
-    );
-  };
+  const handleLogout = async () => {
+  Alert.alert(
+    "Logout",
+    "Are you sure you want to logout?",
+    [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        onPress: async () => {
+          try {
+            await AsyncStorage.removeItem("authToken");
+
+            console.log("User logged out, navigating to login screen");
+            router.replace("/auth/login");
+          } catch (error) {
+            console.error("Logout failed:", error);
+          }
+        }
+      }
+    ]
+  );
+};
 
   return (
     <ScrollView style={styles.container}>
@@ -71,7 +169,15 @@ export default function ProfileScreen() {
           <Icon name="ship-wheel" size={20} color="#3498db" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>{('vessel')}</Text>
-            <Text style={styles.infoValue}>{user.vessel}</Text>
+            {editMode ? (
+              <TextInput
+                style={styles.infoValue}
+                value={editUser.vessel}
+                onChangeText={text => setEditUser({ ...editUser, vessel: text })}
+              />
+            ) : (
+              <Text style={styles.infoValue}>{user.vessel}</Text>
+            )}
           </View>
         </View>
 
@@ -79,7 +185,15 @@ export default function ProfileScreen() {
           <Icon name="map-marker" size={20} color="#3498db" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>{('homePort')}</Text>
-            <Text style={styles.infoValue}>{user.homePort}</Text>
+            {editMode ? (
+              <TextInput
+                style={styles.infoValue}
+                value={editUser.homePort}
+                onChangeText={text => setEditUser({ ...editUser, homePort: text })}
+              />
+            ) : (
+              <Text style={styles.infoValue}>{user.homePort}</Text>
+            )}
           </View>
         </View>
 
@@ -87,13 +201,32 @@ export default function ProfileScreen() {
           <Icon name="clock" size={20} color="#3498db" />
           <View style={styles.infoContent}>
             <Text style={styles.infoLabel}>{('experience')}</Text>
-            <Text style={styles.infoValue}>{user.experience}</Text>
+            {editMode ? (
+              <TextInput
+                style={styles.infoValue}
+                value={editUser.experience}
+                onChangeText={text => setEditUser({ ...editUser, experience: text })}
+                keyboardType="numeric"
+              />
+            ) : (
+              <Text style={styles.infoValue}>{user.experience}</Text>
+            )}
           </View>
         </View>
 
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>{('editProfile')}</Text>
+        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+          <Text style={styles.editButtonText}>
+            {editMode ? 'Save Profile' : ('editProfile')}
+          </Text>
         </TouchableOpacity>
+        {editMode && (
+          <TouchableOpacity
+            style={[styles.editButton, { backgroundColor: '#bdc3c7', marginTop: 8 }]}
+            onPress={() => { setEditMode(false); setEditUser(user); }}
+          >
+            <Text style={styles.editButtonText}>Cancel</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Settings */}
