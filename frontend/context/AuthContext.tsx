@@ -21,7 +21,7 @@ interface AuthContextType {
   resetPassword: (email: string, otp: string, newPassword: string) => Promise<boolean>;
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+const  AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 export const useAuth = () => useContext(AuthContext);
 //https://hackbuild.onrender.com/api
