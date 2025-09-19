@@ -91,10 +91,18 @@ async function getWeatherAPIAlerts(latitude, longitude) {
 
 // === API Endpoint for the Web Server ===
 // This route runs your threat detection logic when a user visits your app's URL.
-app.get('/', async (req, res) => {
-    // Example User Location (Mumbai, India)
-    const userLatitude = 22.5726;
-    const userLongitude = 88.3639;
+app.post('/notifications', async (req, res) => {
+    // Take lat and long from the request body
+    const { latitude, longitude } = req.body;
+
+    // Check if latitude and longitude are provided
+    if (!latitude || !longitude) {
+        return res.status(400).json({ error: "Latitude and longitude are required." });
+    }
+
+    // Convert them to numbers
+    const userLatitude = parseFloat(latitude);
+    const userLongitude = parseFloat(longitude);
 
     console.log("🌊 Starting threat detection web request...");
 
