@@ -4,6 +4,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
 import authRouter from "./routes/auth.route.js";
+import profileRoutes from "./routes/profile.route.js";
+
+import whetherRouter from "./routes/whether.route.js"; 
+
 
 // import weatherRoutes from "./routes/weatherRoutes.js";
 // import fishRoutes from "./routes/fishRoutes.js";
@@ -29,6 +33,8 @@ app.use(express.json());
 // app.use("/api/community", communityRoutes);
 
 app.use("/api/auth", authRouter);
+app.use("/api/data", whetherRouter); 
+app.use("/api/profile", profileRoutes);
 
 // Root Route
 app.get("/", (req, res) => {
