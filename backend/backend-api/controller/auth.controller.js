@@ -1,8 +1,9 @@
-import fisherman from "../models/fisherman.model.js";
+
 import bcrypt from "bcrypt";
 import generateToken from "../utils/generateToken.js";
 import otpGenerator from 'otp-generator';
 import transporter from '../config/nodemailer.js';
+import Fisherman from "../models/fisherman.model.js";
 
 
 export async function signup(req, res) {
@@ -32,7 +33,7 @@ export async function signup(req, res) {
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await Fisherman.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
         success: false, 
@@ -52,7 +53,7 @@ export async function signup(req, res) {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // --- Create User ---
-    const newUser = new User({
+    const newUser = new Fisherman({
       name,
       email,
       password: hashedPassword,
@@ -80,6 +81,8 @@ export async function signup(req, res) {
       },
     });
 
+    
+
   } catch (error) {
     console.log("Error in signup:", error.message);
     res.status(500).json({ 
@@ -89,6 +92,7 @@ export async function signup(req, res) {
   }
 }
 
+
 export async function login(req, res) {
   try {
     const { email, password } = req.body;
@@ -97,7 +101,7 @@ export async function login(req, res) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
-    const user = await User.findOne({ email });
+    const user = await Fisherman.findOne({ email });
     if (!user) {
       return res.status(404).json({ success: false, message: "Invalid credentials" });
     }
@@ -146,7 +150,7 @@ export const forgotPassword = async (req, res) => {
    const { email } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await Fisherman.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Generate a 4-digit OTP using otp-generator
@@ -187,7 +191,7 @@ export const verifyOtp = async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await Fisherman.findOne({ email });
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     // Check if OTP is correct and has not expired
@@ -220,7 +224,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // Find the user by email
-    const user = await User.findOne({ email });
+    const user = await Fisherman.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
