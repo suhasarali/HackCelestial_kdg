@@ -44,10 +44,18 @@ async def detect_route(image: UploadFile = File(...)):
         # 4️⃣ Clean up temp file
         os.remove(tmp_path)
 
+        detected_species = None
+        # Check for the correct nested path based on the new output structure
+        if result and isinstance(result, list) and result and "predictions" in result[0] and "predictions" in result[0]["predictions"]:
+            # Get the first prediction
+            predictions_list = result[0]["predictions"]["predictions"]
+            if predictions_list:
+                detected_species = predictions_list[0].get("class")
+
         return {
             "success": True,
-            "roboflow_result": result,
-            "cloudinary_url": image_url
+            "roboflow_result": detected_species,
+            
         }
 
     except Exception as e:

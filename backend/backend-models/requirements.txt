@@ -11,6 +11,7 @@ configparser
 gTTS
 pydantic
 httplib2
+gradio-client
 inference-sdk
 pandas     
 geopy         
