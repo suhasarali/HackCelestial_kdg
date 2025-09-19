@@ -4,11 +4,13 @@ import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { Image } from 'expo-image';
+import { useAuth } from '../context/AuthContext';
 
 export default function SplashScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { isLoading, user } = useAuth();
   
   // Animation values
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -49,14 +51,30 @@ export default function SplashScreen() {
         }),
       ])
     ).start();
+  }, [fadeAnim, scaleAnim, pulseAnim]);
 
-    // Navigate to main app after 3 seconds
-    const timer = setTimeout(() => {
-      router.replace('/auth/login');
-    }, 3000);
+  useEffect(() => {
+    // Wait for auth context to finish loading
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        try {
+          if (user) {
+            // User is logged in, go to main app
+            router.replace('/(tabs)/home');
+          } else {
+            // User is not logged in, go to login
+            router.replace('/auth/login');
+          }
+        } catch (error) {
+          console.error('Navigation error:', error);
+          // Fallback navigation
+          router.replace('/auth/login');
+        }
+      }, 3000);
 
-    return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, pulseAnim, router]);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, user, router]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -73,7 +91,7 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={require('@/assets/images/matsya-logo.svg')}
+          source={require('@/assets/images/splash-icon.png')}
           style={styles.logo}
           contentFit="contain"
         />

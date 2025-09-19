@@ -1,5 +1,4 @@
-// app/profile/page.tsx
-'use client';
+// app/profile/index.tsx
 
 import { useState } from 'react';
 import { 
@@ -13,7 +12,7 @@ import {
   Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 //import { useTranslation } from 'react-i18next';
 
 export default function ProfileScreen() {
