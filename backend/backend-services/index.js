@@ -5,7 +5,7 @@ const axios = require('axios');
 // === API KEYS ===
 // Use environment variables for sensitive data on Render.
 // Go to Render dashboard > Your Service > Environment > Add Environment Variable
-const WEATHERAPI_KEY = process.env.WEATHERAPI_KEY;
+const WEATHERAPI_KEY = "5c5b3ba3072e4c77a77133351251909";
 
 // === API Endpoints ===
 const USGS_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query";
