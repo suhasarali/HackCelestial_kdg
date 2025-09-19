@@ -17,6 +17,8 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationDisplay from '../../components/LocationDisplay';
+import { registerForPushNotificationsAsync } from '../../components/notification';
+import AlertListener from '../../components/alertlistener';
 
 // Mock data types
 interface WeatherData {
@@ -51,6 +53,9 @@ export default function HomeScreen() {
   const [zones, setZones] = useState<FishingZone[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
 
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+  }, []);  
   // Mock data - replace with actual API calls
   useEffect(() => {
     fetchWeatherData();
@@ -253,6 +258,7 @@ export default function HomeScreen() {
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{('alerts')}</Text>
               <TouchableOpacity onPress={handleViewAlerts}>
+                <AlertListener />
                 <Text style={styles.viewAll}>{('viewAll')}</Text>
               </TouchableOpacity>
             </View>
