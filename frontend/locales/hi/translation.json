@@ -1,0 +1,93 @@
+{
+  "profile": {
+    "title": "प्रोफ़ाइल",
+    "profileInfo": "प्रोफ़ाइल जानकारी",
+    "vessel": "जहाज़",
+    "homePort": "घरेलू बंदरगाह",
+    "experience": "अनुभव",
+    "editProfile": "प्रोफ़ाइल संपादित करें",
+    "saveProfile": "प्रोफ़ाइल सहेजें",
+    "cancel": "रद्द करें",
+    "settings": "सेटिंग्स",
+    "language": "भाषा",
+    "notifications": "सूचनाएं",
+    "offlineMaps": "ऑफ़लाइन मानचित्र",
+    "voiceCommands": "आवाज़ आदेश",
+    "configure": "कॉन्फ़िगर करें",
+    "support": "सहायता",
+    "helpFAQ": "सहायता और अक्सर पूछे जाने वाले प्रश्न",
+    "safetyGuidelines": "सुरक्षा दिशानिर्देश",
+    "regulations": "नियम",
+    "contactSupport": "सहायता से संपर्क करें",
+    "aboutApp": "ऐप के बारे में",
+    "appDescription": "सुरक्षित और सफल मछली पकड़ने के अभियानों के लिए आपका भरोसेमंद साथी। रियल-टाइम मौसम अपडेट, मछली संभावना भविष्यवाणी प्राप्त करें और मछली पकड़ने के समुदाय से जुड़ें।",
+    "logout": "लॉग आउट",
+    "logoutConfirm": "क्या आप वाकई लॉग आउट करना चाहते हैं?",
+    "logoutButton": "लॉग आउट",
+    "cancelButton": "रद्द करें",
+    "success": "सफलता",
+    "error": "त्रुटि",
+    "profileUpdated": "प्रोफ़ाइल सफलतापूर्वक अपडेट हो गई!",
+    "updateFailed": "प्रोफ़ाइल अपडेट करने में विफल",
+    "fetchFailed": "प्रोफ़ाइल प्राप्त करने में विफल"
+  },
+  "common": {
+    "back": "वापस",
+    "save": "सहेजें",
+    "cancel": "रद्द करें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "confirm": "पुष्टि करें",
+    "yes": "हां",
+    "no": "नहीं",
+    "ok": "ठीक है",
+    "loading": "लोड हो रहा है...",
+    "error": "त्रुटि",
+    "success": "सफलता",
+    "warning": "चेतावनी",
+    "info": "जानकारी"
+  },
+  "navigation": {
+    "home": "होम",
+    "map": "मानचित्र",
+    "alerts": "अलर्ट",
+    "analytics": "विश्लेषण",
+    "catchLog": "कैच लॉग",
+    "community": "समुदाय",
+    "profile": "प्रोफ़ाइल"
+  },
+  "home": {
+    "weather": "मौसम",
+    "loading": "लोड हो रहा है...",
+    "topFishingZones": "शीर्ष मछली पकड़ने के क्षेत्र",
+    "viewAll": "सभी देखें"
+  },
+  "map": {
+    "fetchingLocation": "स्थान प्राप्त कर रहे हैं और हीटमैप बना रहे हैं...",
+    "refreshHeatmap": "हीटमैप रिफ्रेश करें"
+  },
+  "alerts": {
+    "title": "अलर्ट",
+    "noAlerts": "इस समय कोई अलर्ट नहीं",
+    "markAllRead": "सभी को पढ़ा हुआ मार्क करें",
+    "high": "उच्च",
+    "medium": "मध्यम",
+    "low": "कम"
+  },
+  "analytics": {
+    "title": "विश्लेषण",
+    "catchStats": "कैच आंकड़े",
+    "weatherImpact": "मौसम प्रभाव",
+    "bestTimes": "सर्वोत्तम मछली पकड़ने का समय"
+  },
+  "catchLog": {
+    "title": "कैच लॉग",
+    "addCatch": "कैच जोड़ें",
+    "noCatches": "अभी तक कोई कैच दर्ज नहीं"
+  },
+  "community": {
+    "title": "समुदाय",
+    "fishermen": "मछुआरे",
+    "shareExperience": "अपना अनुभव साझा करें"
+  }
+}

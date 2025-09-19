@@ -10,7 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.frontend"
+      "bundleIdentifier": "com.anonymous.frontend",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to location to track your fishing location and provide location-based services.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to track your fishing location and provide location-based services.",
+        "NSLocationAlwaysUsageDescription": "This app needs access to location to track your fishing location and provide location-based services."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +26,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.frontend"
+      "package": "com.anonymous.frontend",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "web": {
       "output": "static",

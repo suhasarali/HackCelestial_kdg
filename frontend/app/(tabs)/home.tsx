@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-//import { useTranslation } from 'react-i18next';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import LocationDisplay from '../../components/LocationDisplay';
 
 // Mock data types
 interface WeatherData {
@@ -43,7 +45,7 @@ interface AlertItem {
 
 export default function HomeScreen() {
   const router = useRouter();
-  //const { t } = useTranslation();
+  const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [zones, setZones] = useState<FishingZone[]>([]);
@@ -164,10 +166,24 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Location Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Current Location</Text>
+            <Icon name="map-marker" size={24} color="#3498db" />
+          </View>
+          <LocationDisplay 
+            showAddress={true}
+            showCoordinates={true}
+            showAccuracy={true}
+            compact={false}
+          />
+        </View>
+
         {/* Weather Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{('weather')}</Text>
+            <Text style={styles.cardTitle}>{t('home.weather')}</Text>
             <Icon name="weather-partly-cloudy" size={24} color="#3498db" />
           </View>
           {weather ? (
@@ -189,16 +205,16 @@ export default function HomeScreen() {
               <Text style={styles.advisory}>{weather.advisory}</Text>
             </View>
           ) : (
-            <Text>{('loading')}</Text>
+            <Text>{t('home.loading')}</Text>
           )}
         </View>
 
         {/* Top Fishing Zones */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{('topFishingZones')}</Text>
+            <Text style={styles.cardTitle}>{t('home.topFishingZones')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/map')}>
-              <Text style={styles.viewAll}>{('viewAll')}</Text>
+              <Text style={styles.viewAll}>{t('home.viewAll')}</Text>
             </TouchableOpacity>
           </View>
           {zones.length > 0 ? (

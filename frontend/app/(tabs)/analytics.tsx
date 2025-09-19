@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
-//import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 // Mock data
 const CATCH_HISTORY = [
@@ -44,7 +44,7 @@ const BEST_HOURS = [
 
 export default function AnalyticsScreen() {
   const router = useRouter();
-  //const { t } = useTranslation();
+  const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState('week');
 
   const chartConfig = {

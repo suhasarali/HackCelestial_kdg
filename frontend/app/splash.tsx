@@ -5,12 +5,14 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { Image } from 'expo-image';
 import { useAuth } from '../context/AuthContext';
+import { useLocation } from '../context/LocationContext';
 
 export default function SplashScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
   const { isLoading, user } = useAuth();
+  const { startLocationTracking } = useLocation();
   
   // Animation values
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
@@ -51,7 +53,10 @@ export default function SplashScreen() {
         }),
       ])
     ).start();
-  }, [fadeAnim, scaleAnim, pulseAnim]);
+
+    // Start location tracking
+    startLocationTracking();
+  }, [fadeAnim, scaleAnim, pulseAnim, startLocationTracking]);
 
   useEffect(() => {
     // Wait for auth context to finish loading
@@ -91,7 +96,7 @@ export default function SplashScreen() {
         ]}
       >
         <Image
-          source={require('@/assets/images/splash-icon.png')}
+          source={require('../assets/images/matsya-logo.svg')}
           style={styles.logo}
           contentFit="contain"
         />

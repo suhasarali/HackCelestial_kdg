@@ -345,6 +345,7 @@
 
 /* eslint-disable react-hooks/rules-of-hooks */
 
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -358,6 +359,8 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
+
+
 
 // --- UserAvatar Component ---
 const generateColor = (name: string) => {

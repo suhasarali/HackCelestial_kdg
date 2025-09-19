@@ -15,15 +15,16 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
-//import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api'; // Update if needed
 
 export default function ProfileScreen() {
   const router = useRouter();
-  //const { t, i18n } = useTranslation();
-  //const [isEnglish, setIsEnglish] = useState(i18n.language === 'en');
+  const { t, i18n } = useTranslation();
+  const [isEnglish, setIsEnglish] = useState(i18n.language === 'en');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [offlineMapsEnabled, setOfflineMapsEnabled] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -100,7 +101,7 @@ export default function ProfileScreen() {
       });
       const data = await res.json();
       if (data.success) {
-        Alert.alert('Success', 'Profile updated!');
+        Alert.alert(t('profile.success'), t('profile.profileUpdated'));
         setUser({
           name: data.profile.name,
           phone: data.profile.phone || '',
@@ -110,52 +111,52 @@ export default function ProfileScreen() {
         });
         setEditMode(false);
       } else {
-        Alert.alert('Error', data.message);
+        Alert.alert(t('profile.error'), data.message);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
+      Alert.alert(t('profile.error'), t('profile.updateFailed'));
     }
   };
 
   const handleLanguageChange = (value: boolean) => {
-    //setIsEnglish(value);
-    //i18n.changeLanguage(value ? 'en' : 'hi');
+    setIsEnglish(value);
+    i18n.changeLanguage(value ? 'en' : 'hi');
   };
 
   const handleLogout = async () => {
-  Alert.alert(
-    "Logout",
-    "Are you sure you want to logout?",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("authToken");
-
-            console.log("User logged out, navigating to login screen");
-            router.replace("/auth/login");
-          } catch (error) {
-            console.error("Logout failed:", error);
+    Alert.alert(
+      t('profile.logout'),
+      t('profile.logoutConfirm'),
+      [
+        { text: t('profile.cancelButton'), style: "cancel" },
+        {
+          text: t('profile.logoutButton'),
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem("authToken");
+              console.log("User logged out, navigating to login screen");
+              router.replace("/auth/login");
+            } catch (error) {
+              console.error("Logout failed:", error);
+            }
           }
         }
-      }
-    ]
-  );
-};
+      ]
+    );
+  };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        {/* Back Button */}
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => router.push('/(tabs)/home')}
-        >
-          <Icon name="arrow-left" size={24} color="#2c3e50" />
-        </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          {/* Back Button */}
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={() => router.push('/(tabs)/home')}
+          >
+            <Icon name="arrow-left" size={24} color="#2c3e50" />
+          </TouchableOpacity>
         
         <View style={styles.avatarContainer}>
           <Image
@@ -170,14 +171,14 @@ export default function ProfileScreen() {
         <Text style={styles.userPhone}>{user.phone}</Text>
       </View>
 
-      {/* Profile Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('profileInfo')}</Text>
+        {/* Profile Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.profileInfo')}</Text>
         
-        <View style={styles.infoItem}>
-          <Icon name="ship-wheel" size={20} color="#3498db" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{('vessel')}</Text>
+          <View style={styles.infoItem}>
+            <Icon name="ship-wheel" size={20} color="#3498db" />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>{t('profile.vessel')}</Text>
             {editMode ? (
               <TextInput
                 style={styles.infoValue}
@@ -190,10 +191,10 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.infoItem}>
-          <Icon name="map-marker" size={20} color="#3498db" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{('homePort')}</Text>
+          <View style={styles.infoItem}>
+            <Icon name="map-marker" size={20} color="#3498db" />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>{t('profile.homePort')}</Text>
             {editMode ? (
               <TextInput
                 style={styles.infoValue}
@@ -206,10 +207,10 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.infoItem}>
-          <Icon name="clock" size={20} color="#3498db" />
-          <View style={styles.infoContent}>
-            <Text style={styles.infoLabel}>{('experience')}</Text>
+          <View style={styles.infoItem}>
+            <Icon name="clock" size={20} color="#3498db" />
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>{t('profile.experience')}</Text>
             {editMode ? (
               <TextInput
                 style={styles.infoValue}
@@ -223,120 +224,130 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-          <Text style={styles.editButtonText}>
-            {editMode ? 'Save Profile' : ('editProfile')}
+          <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
+            <Text style={styles.editButtonText}>
+              {editMode ? t('profile.saveProfile') : t('profile.editProfile')}
+            </Text>
+          </TouchableOpacity>
+          {editMode && (
+            <TouchableOpacity
+              style={[styles.editButton, { backgroundColor: '#bdc3c7', marginTop: 8 }]}
+              onPress={() => { setEditMode(false); setEditUser(user); }}
+            >
+              <Text style={styles.editButtonText}>{t('profile.cancel')}</Text>
+            </TouchableOpacity>
+          )}
+      </View>
+
+        {/* Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+          
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Icon name="translate" size={20} color="#3498db" />
+              <Text style={styles.settingLabel}>{t('profile.language')}</Text>
+            </View>
+            <View style={styles.languageToggle}>
+              <Text style={[styles.languageText, !isEnglish && styles.activeLanguageText]}>हिंदी</Text>
+              <Switch
+                value={isEnglish}
+                onValueChange={handleLanguageChange}
+                trackColor={{ false: '#bdc3c7', true: '#3498db' }}
+                style={styles.languageSwitch}
+              />
+              <Text style={[styles.languageText, isEnglish && styles.activeLanguageText]}>English</Text>
+            </View>
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Icon name="bell" size={20} color="#3498db" />
+              <Text style={styles.settingLabel}>{t('profile.notifications')}</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{ false: '#bdc3c7', true: '#3498db' }}
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Icon name="map" size={20} color="#3498db" />
+              <Text style={styles.settingLabel}>{t('profile.offlineMaps')}</Text>
+            </View>
+            <Switch
+              value={offlineMapsEnabled}
+              onValueChange={setOfflineMapsEnabled}
+              trackColor={{ false: '#bdc3c7', true: '#3498db' }}
+            />
+          </View>
+
+          <View style={styles.settingItem}>
+            <View style={styles.settingInfo}>
+              <Icon name="volume-high" size={20} color="#3498db" />
+              <Text style={styles.settingLabel}>{t('profile.voiceCommands')}</Text>
+            </View>
+            <TouchableOpacity style={styles.settingButton}>
+              <Text style={styles.settingButtonText}>{t('profile.configure')}</Text>
+            </TouchableOpacity>
+          </View>
+      </View>
+
+        {/* Support */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.support')}</Text>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Icon name="help-circle" size={20} color="#3498db" />
+            <Text style={styles.menuText}>{t('profile.helpFAQ')}</Text>
+            <Icon name="chevron-right" size={20} color="#bdc3c7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <Icon name="shield-check" size={20} color="#3498db" />
+            <Text style={styles.menuText}>{t('profile.safetyGuidelines')}</Text>
+            <Icon name="chevron-right" size={20} color="#bdc3c7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <Icon name="file-document" size={20} color="#3498db" />
+            <Text style={styles.menuText}>{t('profile.regulations')}</Text>
+            <Icon name="chevron-right" size={20} color="#bdc3c7" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.menuItem}>
+            <Icon name="email" size={20} color="#3498db" />
+            <Text style={styles.menuText}>{t('profile.contactSupport')}</Text>
+            <Icon name="chevron-right" size={20} color="#bdc3c7" />
+          </TouchableOpacity>
+        </View>
+
+        {/* App Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('profile.aboutApp')}</Text>
+          <Text style={styles.appVersion}>HackCelestial 2.0 v1.0.0</Text>
+          <Text style={styles.appDescription}>
+            {t('profile.appDescription')}
           </Text>
-        </TouchableOpacity>
-        {editMode && (
-          <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: '#bdc3c7', marginTop: 8 }]}
-            onPress={() => { setEditMode(false); setEditUser(user); }}
-          >
-            <Text style={styles.editButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Settings */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('settings')}</Text>
-        
-        <View style={styles.settingItem}>
-          <View style={styles.settingInfo}>
-            <Icon name="translate" size={20} color="#3498db" />
-            <Text style={styles.settingLabel}>{('language')}</Text>
-          </View>
-          <View style={styles.languageToggle}>
-            <Text style={styles.languageText}>हिंदी</Text>
-            
-            <Text style={styles.languageText}>English</Text>
-          </View>
         </View>
 
-        <View style={styles.settingItem}>
-          <View style={styles.settingInfo}>
-            <Icon name="bell" size={20} color="#3498db" />
-            <Text style={styles.settingLabel}>{('notifications')}</Text>
-          </View>
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={setNotificationsEnabled}
-            trackColor={{ false: '#bdc3c7', true: '#3498db' }}
-          />
-        </View>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingInfo}>
-            <Icon name="map" size={20} color="#3498db" />
-            <Text style={styles.settingLabel}>{('offlineMaps')}</Text>
-          </View>
-          <Switch
-            value={offlineMapsEnabled}
-            onValueChange={setOfflineMapsEnabled}
-            trackColor={{ false: '#bdc3c7', true: '#3498db' }}
-          />
-        </View>
-
-        <View style={styles.settingItem}>
-          <View style={styles.settingInfo}>
-            <Icon name="volume-high" size={20} color="#3498db" />
-            <Text style={styles.settingLabel}>{('voiceCommands')}</Text>
-          </View>
-          <TouchableOpacity style={styles.settingButton}>
-            <Text style={styles.settingButtonText}>{('configure')}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Support */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('support')}</Text>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="help-circle" size={20} color="#3498db" />
-          <Text style={styles.menuText}>{('helpFAQ')}</Text>
-          <Icon name="chevron-right" size={20} color="#bdc3c7" />
+        {/* Logout */}
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Icon name="logout" size={20} color="#e74c3c" />
+          <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="shield-check" size={20} color="#3498db" />
-          <Text style={styles.menuText}>{('safetyGuidelines')}</Text>
-          <Icon name="chevron-right" size={20} color="#bdc3c7" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="file-document" size={20} color="#3498db" />
-          <Text style={styles.menuText}>{('regulations')}</Text>
-          <Icon name="chevron-right" size={20} color="#bdc3c7" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <Icon name="email" size={20} color="#3498db" />
-          <Text style={styles.menuText}>{('contactSupport')}</Text>
-          <Icon name="chevron-right" size={20} color="#bdc3c7" />
-        </TouchableOpacity>
-      </View>
-
-      {/* App Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('aboutApp')}</Text>
-        <Text style={styles.appVersion}>HackCelestial 2.0 v1.0.0</Text>
-        <Text style={styles.appDescription}>
-          {('appDescription')}
-        </Text>
-      </View>
-
-      {/* Logout */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Icon name="logout" size={20} color="#e74c3c" />
-        <Text style={styles.logoutText}>{('logout')}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#ecf0f1',
+  },
   container: {
     flex: 1,
     backgroundColor: '#ecf0f1',
@@ -463,6 +474,13 @@ const styles = StyleSheet.create({
   languageText: {
     fontSize: 14,
     color: '#7f8c8d',
+  },
+  activeLanguageText: {
+    color: '#3498db',
+    fontWeight: 'bold',
+  },
+  languageSwitch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   settingButton: {
     backgroundColor: '#ecf0f1',

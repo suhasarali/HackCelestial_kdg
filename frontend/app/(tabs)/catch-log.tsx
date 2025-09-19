@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-//import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 // Mock data
 const FISH_SPECIES = [
@@ -29,7 +29,7 @@ const FISH_SPECIES = [
 
 export default function CatchLogScreen() {
   const router = useRouter();
-  //const { t } = useTranslation();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,39 +6,67 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Polygon } from 'react-native-maps';
+import MapView, { Marker, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 
 // --- HEATMAP CONSTANTS ---
 // Backend server URL - update this to match your actual server
 const BACKEND_API_URL = 'https://VolcanicBat64-fish3.hf.space/predict';
 
-const GRID_DELTA = 0.005; // Defines the size of each grid cell (in degrees)
+// Heatmap zone configuration
+const HEATMAP_ZONES = [
+  { id: 'zone-1', radius: 2000, offset: { lat: 0.01, lng: 0.01 } }, // 2km radius
+  { id: 'zone-2', radius: 1500, offset: { lat: -0.008, lng: 0.012 } }, // 1.5km radius
+  { id: 'zone-3', radius: 1800, offset: { lat: 0.015, lng: -0.01 } }, // 1.8km radius
+  { id: 'zone-4', radius: 1200, offset: { lat: -0.012, lng: -0.008 } }, // 1.2km radius
+];
 
-interface HeatmapCell {
+interface HeatmapZone {
   id: string;
-  coordinates: { latitude: number; longitude: number }[];
+  center: { latitude: number; longitude: number };
+  radius: number;
   probability: number; // 0 to 100
 }
 
-// Helper function to convert a 0-100 probability to an RGBA color
+// Helper function to convert a 0-100 probability to a heatmap color with transparency
 const getHeatmapColor = (probability: number): string => {
   const p = Math.max(0, Math.min(100, probability));
-  let r, g, b;
-  if (p < 50) {
-      r = 0;
-      g = Math.round(255 * (p / 50));
-      b = Math.round(255 * (1 - (p / 50)));
+  
+  // Create a heatmap color scheme with transparency
+  if (p < 20) {
+    return 'rgba(76, 175, 80, 0.3)'; // Green for low probability
+  } else if (p < 40) {
+    return 'rgba(255, 235, 59, 0.4)'; // Yellow for medium-low probability
+  } else if (p < 60) {
+    return 'rgba(255, 152, 0, 0.5)'; // Orange for medium probability
+  } else if (p < 80) {
+    return 'rgba(255, 87, 34, 0.6)'; // Deep orange for high probability
   } else {
-      r = Math.round(255 * ((p - 50) / 50));
-      g = Math.round(255 * (1 - ((p - 50) / 50)));
-      b = 0;
+    return 'rgba(244, 67, 54, 0.7)'; // Red for very high probability
   }
-  const alpha = 0.4;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+// Helper function to get stroke color for the heatmap zones
+const getStrokeColor = (probability: number): string => {
+  const p = Math.max(0, Math.min(100, probability));
+  
+  if (p < 20) {
+    return 'rgba(76, 175, 80, 0.8)'; // Green stroke
+  } else if (p < 40) {
+    return 'rgba(255, 235, 59, 0.8)'; // Yellow stroke
+  } else if (p < 60) {
+    return 'rgba(255, 152, 0, 0.8)'; // Orange stroke
+  } else if (p < 80) {
+    return 'rgba(255, 87, 34, 0.8)'; // Deep orange stroke
+  } else {
+    return 'rgba(244, 67, 54, 0.8)'; // Red stroke
+  }
 };
 
 // --- API CALL FUNCTION ---
@@ -74,39 +102,69 @@ const fetchFishProbability = async (latitude: number, longitude: number): Promis
 };
 
 export default function MapScreen() {
+  const { t } = useTranslation();
+  const mapRef = useRef<MapView>(null);
   const [userLocation, setUserLocation] = useState<any>(null);
-  const [heatmapData, setHeatmapData] = useState<HeatmapCell[]>([]);
+  const [heatmapZones, setHeatmapZones] = useState<HeatmapZone[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedZone, setSelectedZone] = useState<HeatmapZone | null>(null);
+  const [showProbabilityModal, setShowProbabilityModal] = useState(false);
 
-  // Function to generate the heatmap grid
+  // Function to generate the heatmap zones
   const generateHeatmap = async (centerLat: number, centerLon: number) => {
-    const gridRange = 3; // Number of cells around the center
-    const newHeatmapData: HeatmapCell[] = [];
-    let cellId = 0;
+    const newHeatmapZones: HeatmapZone[] = [];
 
-    for (let i = -gridRange; i <= gridRange; i++) {
-      for (let j = -gridRange; j <= gridRange; j++) {
-        const lat = centerLat + i * GRID_DELTA;
-        const lon = centerLon + j * GRID_DELTA;
-
-        const probability = await fetchFishProbability(lat, lon);
-        
-        if (probability !== null) {
-          newHeatmapData.push({
-            id: `cell-${cellId++}`,
-            coordinates: [
-              { latitude: lat, longitude: lon },
-              { latitude: lat + GRID_DELTA, longitude: lon },
-              { latitude: lat + GRID_DELTA, longitude: lon + GRID_DELTA },
-              { latitude: lat, longitude: lon + GRID_DELTA },
-            ],
-            probability: probability,
-          });
-        }
+    // Create 4 large heatmap zones around the user location
+    for (const zoneConfig of HEATMAP_ZONES) {
+      const zoneLat = centerLat + zoneConfig.offset.lat;
+      const zoneLng = centerLon + zoneConfig.offset.lng;
+      
+      // Get probability for the center of this zone
+      const probability = await fetchFishProbability(zoneLat, zoneLng);
+      
+      if (probability !== null) {
+        newHeatmapZones.push({
+          id: zoneConfig.id,
+          center: {
+            latitude: zoneLat,
+            longitude: zoneLng,
+          },
+          radius: zoneConfig.radius,
+          probability: probability,
+        });
       }
     }
-    setHeatmapData(newHeatmapData);
+    
+    setHeatmapZones(newHeatmapZones);
     setIsLoading(false);
+  };
+
+  // Function to handle zone press
+  const handleZonePress = (zone: HeatmapZone) => {
+    setSelectedZone(zone);
+    setShowProbabilityModal(true);
+  };
+
+  // Function to zoom in
+  const zoomIn = () => {
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        ...userLocation,
+        latitudeDelta: userLocation.latitudeDelta * 0.5,
+        longitudeDelta: userLocation.longitudeDelta * 0.5,
+      }, 1000);
+    }
+  };
+
+  // Function to zoom out
+  const zoomOut = () => {
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        ...userLocation,
+        latitudeDelta: userLocation.latitudeDelta * 2,
+        longitudeDelta: userLocation.longitudeDelta * 2,
+      }, 1000);
+    }
   };
 
   // Get user location and generate heatmap on app load
@@ -147,42 +205,143 @@ export default function MapScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007BFF" />
-          <Text style={styles.loadingText}>Fetching location and generating heatmap...</Text>
+          <Text style={styles.loadingText}>{t('map.fetchingLocation')}</Text>
         </View>
       ) : (
-        <MapView
-          style={styles.map}
-          initialRegion={userLocation}
-          showsUserLocation={true}
-        >
-          {/* --- HEATMAP LAYER --- */}
-          {heatmapData.map(cell => (
-            <Polygon
-              key={cell.id}
-              coordinates={cell.coordinates}
-              strokeWidth={0}
-              fillColor={getHeatmapColor(cell.probability)}
-            />
-          ))}
-        </MapView>
+        <>
+          <MapView
+            ref={mapRef}
+            style={styles.map}
+            initialRegion={userLocation}
+            showsUserLocation={true}
+            showsMyLocationButton={false}
+            showsCompass={false}
+            showsScale={false}
+          >
+            {/* --- HEATMAP ZONES --- */}
+            {heatmapZones.map(zone => (
+              <Circle
+                key={zone.id}
+                center={zone.center}
+                radius={zone.radius}
+                fillColor={getHeatmapColor(zone.probability)}
+                strokeColor={getStrokeColor(zone.probability)}
+                strokeWidth={3}
+                onPress={() => handleZonePress(zone)}
+              />
+            ))}
+            
+            {/* --- ZONE CENTER MARKERS --- */}
+            {heatmapZones.map(zone => (
+              <Marker
+                key={`marker-${zone.id}`}
+                coordinate={zone.center}
+                onPress={() => handleZonePress(zone)}
+              >
+                <View style={[
+                  styles.zoneMarker,
+                  {
+                    backgroundColor: getStrokeColor(zone.probability),
+                  }
+                ]}>
+                  <Text style={styles.zoneMarkerText}>
+                    {Math.round(zone.probability)}%
+                  </Text>
+                </View>
+              </Marker>
+            ))}
+          </MapView>
+
+          {/* Zoom Controls */}
+          <View style={styles.zoomControls}>
+            <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
+              <Ionicons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
+              <Ionicons name="remove" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Refresh Button */}
+          <View style={styles.refreshContainer}>
+            <TouchableOpacity
+              style={styles.refreshButton}
+              onPress={() => {
+                if (userLocation) {
+                  setIsLoading(true);
+                  generateHeatmap(userLocation.latitude, userLocation.longitude);
+                }
+              }}
+            >
+              <Ionicons name="refresh" size={20} color="#fff" />
+              <Text style={styles.refreshButtonText}>{t('map.refreshHeatmap')}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
 
-      {/* Control button for demonstration */}
-      {!isLoading && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.refreshButton}
-            onPress={() => {
-              if (userLocation) {
-                setIsLoading(true);
-                generateHeatmap(userLocation.latitude, userLocation.longitude);
-              }
-            }}
-          >
-            <Text style={styles.buttonText}>Refresh Heatmap</Text>
-          </TouchableOpacity>
+      {/* Probability Modal */}
+      <Modal
+        visible={showProbabilityModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowProbabilityModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Fish Probability</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowProbabilityModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            {selectedZone && (
+              <View style={styles.probabilityInfo}>
+                <View style={[
+                  styles.probabilityIndicator,
+                  { backgroundColor: getStrokeColor(selectedZone.probability) }
+                ]}>
+                  <Text style={styles.probabilityValue}>
+                    {Math.round(selectedZone.probability)}%
+                  </Text>
+                </View>
+                
+                <Text style={styles.probabilityLabel}>
+                  Fish Probability Zone
+                </Text>
+                
+                <View style={styles.coordinatesInfo}>
+                  <Text style={styles.coordinateText}>
+                    Center: {selectedZone.center.latitude.toFixed(6)}, {selectedZone.center.longitude.toFixed(6)}
+                  </Text>
+                  <Text style={styles.coordinateText}>
+                    Radius: {(selectedZone.radius / 1000).toFixed(1)} km
+                  </Text>
+                </View>
+
+                <View style={styles.probabilityDescription}>
+                  <Text style={styles.descriptionText}>
+                    {selectedZone.probability >= 80 ? 
+                      "Excellent fishing zone! Very high probability of catching fish in this area." :
+                      selectedZone.probability >= 60 ?
+                      "Good fishing zone. High probability of success in this area." :
+                      selectedZone.probability >= 40 ?
+                      "Moderate fishing zone. Fair probability of success in this area." :
+                      selectedZone.probability >= 20 ?
+                      "Low activity zone. Limited fishing success expected." :
+                      "Very low activity zone. Poor fishing conditions in this area."
+                    }
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
-      )}
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -206,7 +365,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#34495e',
   },
-  buttonContainer: {
+  
+  // Zone Marker Styles
+  zoneMarker: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  zoneMarkerText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+
+  // Zoom Controls
+  zoomControls: {
+    position: 'absolute',
+    right: 20,
+    bottom: 120,
+    flexDirection: 'column',
+  },
+  zoomButton: {
+    backgroundColor: '#007BFF',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+
+  // Refresh Button
+  refreshContainer: {
     position: 'absolute',
     bottom: 40,
     alignSelf: 'center',
@@ -215,11 +428,104 @@ const styles = StyleSheet.create({
     backgroundColor: '#007BFF',
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 8,
-    elevation: 3,
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
-  buttonText: {
+  refreshButtonText: {
     color: '#fff',
     fontWeight: 'bold',
+    marginLeft: 8,
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    margin: 20,
+    maxWidth: '90%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  closeButton: {
+    padding: 5,
+  },
+  probabilityInfo: {
+    alignItems: 'center',
+  },
+  probabilityIndicator: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  probabilityValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  probabilityLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 15,
+  },
+  coordinatesInfo: {
+    marginBottom: 15,
+  },
+  coordinateText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  probabilityDescription: {
+    backgroundColor: '#f8f9fa',
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 10,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#2c3e50',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
