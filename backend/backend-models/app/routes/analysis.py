@@ -12,6 +12,7 @@ async def save_analysis(analysis_data: AnalysisModel):
         
         # Convert Pydantic model to a dictionary
         analysis_dict = analysis_data.model_dump(by_alias=True, exclude_unset=True)
+        print(analysis_dict)
         
         result = await analysis_collection.insert_one(analysis_dict)
         print(result)
