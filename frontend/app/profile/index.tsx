@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React from 'react';
 //import { useTranslation } from 'react-i18next';
 
 const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api'; // Update if needed
@@ -148,6 +149,14 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        {/* Back Button */}
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => router.push('/(tabs)/home')}
+        >
+          <Icon name="arrow-left" size={24} color="#2c3e50" />
+        </TouchableOpacity>
+        
         <View style={styles.avatarContainer}>
           <Image
             source={{ uri: 'https://randomuser.me/api/portraits/men/1.jpg' }}
@@ -337,6 +346,26 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#fff',
     marginBottom: 16,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 24,
+    left: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   avatarContainer: {
     position: 'relative',
