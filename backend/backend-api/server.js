@@ -3,8 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
-
-
+import authRouter from "./routes/auth.route.js";
 
 // import weatherRoutes from "./routes/weatherRoutes.js";
 // import fishRoutes from "./routes/fishRoutes.js";
@@ -29,9 +28,11 @@ app.use(express.json());
 // app.use("/api/mentorship", mentorshipRoutes);
 // app.use("/api/community", communityRoutes);
 
+app.use("/api/auth", authRouter);
+
 // Root Route
 app.get("/", (req, res) => {
-  res.send("Hackathon Project API is running 🚀");
+  res.send("Hackathon Project API is running ");
 });
 
 // Start server
