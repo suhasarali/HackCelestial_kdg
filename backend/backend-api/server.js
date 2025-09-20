@@ -24,14 +24,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Routes
-// app.use("/api/weather", weatherRoutes);
-// app.use("/api/fish", fishRoutes);
-// app.use("/api/maps", mapRoutes);
-// app.use("/api/alerts", alertRoutes);
-// app.use("/api/mentorship", mentorshipRoutes);
-// app.use("/api/community", communityRoutes);
-
 app.use("/api/observations", observationRoutes);
 app.use("/api/auth", authRouter);
 app.use("/api/data", whetherRouter); 

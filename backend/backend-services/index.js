@@ -2,10 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 
-// === API KEYS ===
-// Use environment variables for sensitive data on Render.
-// Go to Render dashboard > Your Service > Environment > Add Environment Variable
+// === API KEYS & SERVER CONFIG ===
+// Variables are now directly in the code
 const WEATHERAPI_KEY = "5c5b3ba3072e4c77a77133351251909";
+const PORT = 10000;
+const HOST = '0.0.0.0';
 
 // === API Endpoints ===
 const USGS_API_URL = "https://earthquake.usgs.gov/fdsnws/event/1/query";
@@ -14,12 +15,10 @@ const WEATHERAPI_URL = "http://api.weatherapi.com/v1/forecast.json";
 // === Express Web Server Setup ===
 const app = express();
 app.use(cors());
+app.use(express.json()); // To parse JSON in request bodies
 
-// --- Your original threat detection functions (unchanged) ---
+// --- Threat detection functions ---
 async function getEarthquakeAlerts(latitude, longitude, radiusKm) {
-    /**
-     * Fetches earthquake alerts from the USGS API.
-     */
     const params = {
         "format": "geojson",
         "latitude": latitude,
@@ -28,12 +27,10 @@ async function getEarthquakeAlerts(latitude, longitude, radiusKm) {
         "orderby": "magnitude",
         "limit": 5
     };
-
     try {
         const response = await axios.get(USGS_API_URL, { params });
         const data = response.data;
         const alerts = [];
-
         if (data.features) {
             for (const feature of data.features) {
                 const properties = feature.properties;
@@ -55,20 +52,15 @@ async function getEarthquakeAlerts(latitude, longitude, radiusKm) {
 }
 
 async function getWeatherAPIAlerts(latitude, longitude) {
-    /**
-     * Fetches weather alerts from WeatherAPI.com.
-     */
     const params = {
         "key": WEATHERAPI_KEY,
         "q": `${latitude},${longitude}`,
         "alerts": "yes"
     };
-
     try {
         const response = await axios.get(WEATHERAPI_URL, { params });
         const data = response.data;
         const alerts = [];
-
         if (data.alerts && data.alerts.alert) {
             for (const alert of data.alerts.alert) {
                 const alertInfo = {
@@ -90,21 +82,23 @@ async function getWeatherAPIAlerts(latitude, longitude) {
 }
 
 // === API Endpoint for the Web Server ===
-// This route runs your threat detection logic when a user visits your app's URL.
-app.get('/', async (req, res) => {
-    // Example User Location (Mumbai, India)
-    const userLatitude = 22.5726;
-    const userLongitude = 88.3639;
+app.post('/notifications', async (req, res) => {
+    // Take lat and long from the request body
+    const { latitude, longitude } = req.body;
+
+    if (!latitude || !longitude) {
+        return res.status(400).json({ error: "Latitude and longitude are required." });
+    }
+
+    const userLatitude = parseFloat(latitude);
+    const userLongitude = parseFloat(longitude);
 
     console.log("🌊 Starting threat detection web request...");
 
     try {
-        // 1. Check for Earthquakes
         const earthquakeAlerts = await getEarthquakeAlerts(userLatitude, userLongitude, 500);
-        // 2. Check for Coastal/Weather Threats
         const coastalAlerts = await getWeatherAPIAlerts(userLatitude, userLongitude);
 
-        // Build a JSON response with the threat data
         const threatSummary = {
             status: (earthquakeAlerts.length > 0 || coastalAlerts.length > 0) ? "Active Threats Detected" : "No significant threats detected",
             threats: {
@@ -113,7 +107,6 @@ app.get('/', async (req, res) => {
             }
         };
 
-        // Send the JSON response to the client
         res.json(threatSummary);
         
     } catch (error) {
@@ -123,10 +116,6 @@ app.get('/', async (req, res) => {
 });
 
 // === Start the Web Server ===
-// The server must listen on the port provided by Render.
-const PORT = process.env.PORT || 10000;
-const HOST = '0.0.0.0';
-
 app.listen(PORT, HOST, () => {
     console.log(`✅ Web server is running and listening on http://${HOST}:${PORT}`);
 });
