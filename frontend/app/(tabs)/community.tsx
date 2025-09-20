@@ -1,9 +1,23 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
 
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Modal, TextInput, Pressable } from 'react-native';
-import { useTranslation } from 'react-i18next';
+
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
+import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+
 
 // --- UserAvatar Component ---
 const generateColor = (name: string) => {
@@ -107,10 +121,6 @@ const PostCard: React.FC<PostCardProps> = ({ firstName, lastName, userName, user
           <Tag key={index} text={tag} />
         ))}
       </View>
-      <View style={cardStyles.footer}>
-        <Text style={cardStyles.likeIcon}>❤️</Text>
-        <Text style={cardStyles.likeCount}>{likes}</Text>
-      </View>
     </View>
   );
 };
@@ -162,29 +172,91 @@ const cardStyles = StyleSheet.create({
   },
 });
 
-// --- Dummy Posts Data ---
-const posts = [
-  { id: '1', firstName: 'Silvia', lastName: null, userName: 'Silvia', userHandle: '@machadocomida', content: "ppl keep saying hot girl summer but i'm just trying to stay out of the humidity", likes: 12, tags: ['summer', 'humidity'] },
-  { id: '2', firstName: 'Jasi', lastName: 'Singh', userName: 'Jasi', userHandle: '@k9lover85', content: "Pop songs just hit different when you're driving", likes: 20, tags: ['music', 'driving', 'roadtrip'] },
-  { id: '3', firstName: 'Vera', lastName: 'Cordeiro', userName: 'Vera', userHandle: '@Veracordeiro20', content: "Help i can't stop canceling meetings", likes: 6, tags: ['work', 'life'] },
-  { id: '4', firstName: 'Harold', lastName: 'Wang', userName: 'Harold', userHandle: '@h_wang84', content: "There are too many people outside", likes: 25, tags: ['social', 'introvert'] },
-  { id: '5', firstName: 'Rohan', lastName: 'Bhangale', userName: 'Rohan Bhangale', userHandle: '@rohan_b', content: "I'm building this awesome app!", likes: 101, tags: ['react-native', 'coding', 'hackathon'] },
-];
-
 // --- Main Community Component ---
 const community = () => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [newContent, setNewContent] = useState('');
-  const [newTags, setNewTags] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [tags, setTags] = useState("");
 
-  const handleAddBlog = () => {
-    // Logic to add the new post to the list (e.g., send to a backend)
-    console.log('New Post Content:', newContent);
-    console.log('New Tags:', newTags);
-    setModalVisible(false);
-    setNewContent('');
-    setNewTags('');
-  };
+  const API_URL = "https://hackcelestial-kdg.onrender.com/api/observations"; // update for mobile (use IP)
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        const res = await axios.get(API_URL);
+        setPosts(res.data);
+      } catch (err) {
+        console.error("Error fetching posts:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
+
+
+const handleAddPost = async () => {
+  try {
+    // 1️⃣ Get token from AsyncStorage (or your auth state)
+    const token = await AsyncStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found. User may not be logged in.");
+      return;
+    }
+
+    // 2️⃣ Prepare post data
+    const postData = {
+      title,
+      description,
+      tags: tags.split(",").map((t) => t.trim()),
+    };
+
+    // 3️⃣ Send POST request with token in headers
+    const res = await axios.post(
+      API_URL,
+      postData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // explicitly send token
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 4️⃣ Update local state
+    setPosts([res.data, ...posts]); // prepend new post
+    setModalVisible(false);          // close modal
+    setTitle("");                     // reset form
+    setDescription("");
+    setTags("");
+
+    console.log("Post added successfully:", res.data);
+
+  } catch (err) {
+    // 5️⃣ Handle errors
+    if (axios.isAxiosError(err)) {
+      if (err.response) {
+        console.error("Error adding post:", err.response.status, err.response.data);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+      } else {
+        console.error("Axios error:", err.message);
+      }
+    } else {
+      console.error("Unexpected error:", err);
+    }
+  }
+};
+
+  if (loading) {
+    return (
+      <View style={communityStyles.centered}>
+        <ActivityIndicator size="large" color="#569acd" />
+      </View>
+    );
+  }
 
   return (
     <View style={communityStyles.container}>

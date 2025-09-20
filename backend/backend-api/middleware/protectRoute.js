@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 const protectRoute = async (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
-
+    console.log("🔐 Incoming auth header:", req.headers['authorization']);
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ success: false, message: "Unauthorized - No token" });
     }

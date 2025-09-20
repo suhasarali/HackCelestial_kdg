@@ -12,7 +12,7 @@ const router = express.Router();
 router.get("/", getObservations);
 
 // Protected create / update / delete / comment
-router.post("/",protectRoute, createObservation);
+router.post("/", createObservation);
 router.delete("/:id",protectRoute, deleteObservation);
 
 export default router;
