@@ -13,8 +13,12 @@ import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
+
 import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout } from '../../constants/design';
 import { fadeIn, scaleIn, bounce } from '../../utils/animations';
+
+
+
 
 // Mock data
 const CATCH_HISTORY = [
