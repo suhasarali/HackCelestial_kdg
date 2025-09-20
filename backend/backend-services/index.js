@@ -115,6 +115,9 @@ app.post('/notifications', async (req, res) => {
     }
 });
 
+app.get('/', (req, res) => {
+    res.send("🌊 HackCelestial Backend is running. Use the /notifications endpoint to get threat alerts.");
+});
 // === Start the Web Server ===
 app.listen(PORT, HOST, () => {
     console.log(`✅ Web server is running and listening on http://${HOST}:${PORT}`);

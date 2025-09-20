@@ -1,39 +1,69 @@
 // notifications.ts
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import * as Notifications from "expo-notifications";
+import { Platform } from "react-native";
 
-// Setup permissions once
-export async function registerForPushNotificationsAsync() {
-  let status;
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('alerts', {
-      name: 'Alerts',
-      importance: Notifications.AndroidImportance.HIGH,
-      sound: true,
-    });
+// Configure how notifications behave when received while app is foregrounded
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
+
+// ✅ Setup permissions & channel
+export async function registerForPushNotificationsAsync(): Promise<boolean> {
+  try {
+    // Android: create a channel with high importance + sound
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("alerts", {
+        name: "Alerts",
+        importance: Notifications.AndroidImportance.HIGH,
+        sound: "default", // play default notification sound
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FF231F7C",
+      });
+    }
+
+    // Get permission status
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    // Ask if not granted
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    return finalStatus === "granted";
+  } catch (err) {
+    console.error("❌ Error registering for notifications:", err);
+    return false;
   }
-
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  status = existingStatus;
-
-  if (existingStatus !== 'granted') {
-    const { status: askedStatus } = await Notifications.requestPermissionsAsync();
-    status = askedStatus;
-  }
-  return status === 'granted';
 }
 
-// Trigger local notifications
-export async function sendAlertNotification(alert: { type: string; message: string; priority: string }) {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: alert.type === 'weather' ? '🌦 Weather Alert' : '⚠️ Alert',
-      body: alert.message,
-      sound: true,
-      priority: alert.priority === 'high'
-        ? Notifications.AndroidNotificationPriority.HIGH
-        : Notifications.AndroidNotificationPriority.DEFAULT,
-    },
-    trigger: null, // send immediately
-  });
+// ✅ Send local notification
+export async function sendAlertNotification({
+  title,
+  body,
+  sound,
+}: {
+  title: string;
+  body: string;
+  sound?: boolean | string;
+}) {
+  try {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title,
+        body,
+        sound: sound ? (typeof sound === "string" ? sound : "default") : undefined,
+      },
+      trigger: null, // instant notification
+    });
+  } catch (err) {
+    console.error("❌ Error sending notification:", err);
+  }
 }

@@ -1,49 +1,66 @@
 // AlertListener.tsx
-import { useEffect } from 'react';
-import { sendAlertNotification } from './notification';
+import { useEffect, useRef } from "react";
+import { sendAlertNotification } from "./notification";
 
 export default function AlertListener() {
+  const prevDataRef = useRef<string | null>(null);
+
   useEffect(() => {
     const fetchAlerts = async () => {
       try {
-        const res = await fetch("https://hackcelestial-kdg.onrender.com/notifications", {
+        const res = await fetch("https://hackcelestial-kdg.onrender.com", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ latitude: 19.076, longitude: 72.8777 }) // replace with real location
+          body: JSON.stringify({ latitude: 19.076, longitude: 72.8777 }),
         });
 
-        const data = await res.json();
-
-        // Earthquake alerts
-        if (data.threats?.earthquakes?.length) {
-          for (const quake of data.threats.earthquakes) {
-            await sendAlertNotification({
-              type: "earthquake",
-              message: `M${quake.magnitude} - ${quake.place}`,
-              priority: "high"
-            });
-          }
+        // ✅ Handle non-200 responses
+        if (!res.ok) {
+          const rawText = await res.text();
+          console.error("❌ Server returned error:", res.status, rawText);
+          return;
         }
 
-        // Weather alerts
-        if (data.threats?.weatherAlerts?.length) {
-          for (const weather of data.threats.weatherAlerts) {
+        let data;
+        try {
+          data = await res.json();
+        } catch (parseError) {
+          const rawText = await res.text();
+          console.error("❌ Could not parse JSON. Got:", rawText);
+          return;
+        }
+
+        console.log("Fetched alerts:", data);
+
+        // Convert threats into a string signature to detect changes
+        const currentSignature = JSON.stringify(data?.threats || {});
+        if (currentSignature === prevDataRef.current) {
+          // No new data, skip
+          return;
+        }
+        prevDataRef.current = currentSignature;
+
+        // ✅ Only notify if status says "Active Threats Detected"
+        if (data?.status === "Active Threats Detected" && data?.threats?.weatherAlerts?.length) {
+          for (const alert of data.threats.weatherAlerts) {
             await sendAlertNotification({
-              type: "weather",
-              message: `${weather.headline} - ${weather.description}`,
-              priority: "high"
+              title: `⚠️ ${alert.headline || "Weather Alert"} (${alert.severity})`,
+              body: alert.description || "No description provided",
+              sound: "default",
             });
           }
+        } else {
+          console.log("✅ No active threats detected");
         }
       } catch (err) {
         console.error("❌ Error fetching alerts:", err);
       }
     };
 
-    // fetch immediately
+    // Fetch immediately on mount
     fetchAlerts();
 
-    // poll every 5 minutes
+    // Poll every 5 minutes
     const interval = setInterval(fetchAlerts, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
