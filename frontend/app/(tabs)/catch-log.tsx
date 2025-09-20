@@ -19,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
@@ -37,7 +36,6 @@ const FISH_SPECIES = [
 
 export default function CatchLogScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
   const { user } = useAuth();
   const { location, getCurrentLocation } = useLocation();
   const [permission, requestPermission] = useCameraPermissions();

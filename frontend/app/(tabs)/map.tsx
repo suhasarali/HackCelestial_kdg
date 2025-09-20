@@ -13,7 +13,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Circle } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 
 // --- HEATMAP CONSTANTS ---
@@ -173,7 +172,6 @@ const fetchFishName = async (latitude: number, longitude: number): Promise<strin
 };
 
 export default function MapScreen() {
-  const { t } = useTranslation();
   const mapRef = useRef<MapView>(null);
   const [userLocation, setUserLocation] = useState<any>(null);
   const [heatmapZones, setHeatmapZones] = useState<HeatmapZone[]>([]);
@@ -319,7 +317,7 @@ export default function MapScreen() {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007BFF" />
-          <Text style={styles.loadingText}>{t('map.fetchingLocation')}</Text>
+          <Text style={styles.loadingText}>{('map.fetchingLocation')}</Text>
         </View>
       ) : (
         <>
@@ -411,7 +409,7 @@ export default function MapScreen() {
               }}
             >
               <Ionicons name="refresh" size={20} color="#fff" />
-              <Text style={styles.refreshButtonText}>{t('map.refreshHeatmap')}</Text>
+              <Text style={styles.refreshButtonText}>{('map.refreshHeatmap')}</Text>
             </TouchableOpacity>
           </View>
         </>
