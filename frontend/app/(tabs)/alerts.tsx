@@ -1,3 +1,4 @@
+
 // app/(tabs)/alerts/page.tsx
 'use client';
 
@@ -218,3 +219,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
