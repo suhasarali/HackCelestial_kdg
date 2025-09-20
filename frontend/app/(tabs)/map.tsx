@@ -69,7 +69,7 @@ const getStrokeColor = (probability: number): string => {
   }
 };
 
-// --- API CALL FUNCTION ---
+// --- API CALL FUNCTIONS ---
 const fetchFishProbability = async (latitude: number, longitude: number): Promise<number | null> => {
   try {
       const response = await fetch(BACKEND_API_URL, {
@@ -82,21 +82,61 @@ const fetchFishProbability = async (latitude: number, longitude: number): Promis
               longitude: longitude,
           }),
       });
+      
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`Error fetching fish probability: HTTP status ${response.status}`, errorBody);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const responseData = await response.json();
+      
+      if (responseData.status !== "success") {
+        console.error('Error fetching fish probability: Backend returned an unsuccessful status', responseData);
+        throw new Error('Backend returned an unsuccessful status');
+      }
+
+      console.log('Successfully fetched fish probability:', responseData);
+      return responseData.fish_probability;
+
+  } catch (error) {
+      console.error('API call for fish probability failed:', error);
+      return null;
+  }
+};
+
+const fetchFishName = async (latitude: number, longitude: number): Promise<string | null> => {
+  try {
+      const response = await fetch('https://VolcanicBat64-fish-name-predict.hf.space/predict_name', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              latitude: latitude,
+              longitude: longitude,
+          }),
+      });
 
       if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        console.error(`Error fetching fish name: HTTP status ${response.status}`, errorBody);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const responseData = await response.json();
       
       if (responseData.status !== "success") {
-          throw new Error('Backend returned an unsuccessful status');
+        console.error('Error fetching fish name: Backend returned an unsuccessful status', responseData);
+        throw new Error('Backend returned an unsuccessful status');
       }
 
-      return responseData.fish_probability;
+      console.log('Successfully fetched fish name:', responseData);
+      // FIX: Correctly access the "predicted_fish_name" key from the API response
+      return responseData.predicted_fish_name || null;
 
   } catch (error) {
-      console.error('Error fetching fish probability:', error);
+      console.error('API call for fish name failed:', error);
       return null;
   }
 };
@@ -109,6 +149,7 @@ export default function MapScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedZone, setSelectedZone] = useState<HeatmapZone | null>(null);
   const [showProbabilityModal, setShowProbabilityModal] = useState(false);
+  const [mostProbableFish, setMostProbableFish] = useState<string | null>(null);
 
   // Function to generate the heatmap zones
   const generateHeatmap = async (centerLat: number, centerLon: number) => {
@@ -116,6 +157,7 @@ export default function MapScreen() {
 
     // Create 4 large heatmap zones around the user location
     for (const zoneConfig of HEATMAP_ZONES) {
+      // FIX: Correctly calculate the zone coordinates
       const zoneLat = centerLat + zoneConfig.offset.lat;
       const zoneLng = centerLon + zoneConfig.offset.lng;
       
@@ -136,7 +178,6 @@ export default function MapScreen() {
     }
     
     setHeatmapZones(newHeatmapZones);
-    setIsLoading(false);
   };
 
   // Function to handle zone press
@@ -167,9 +208,23 @@ export default function MapScreen() {
     }
   };
 
-  // Get user location and generate heatmap on app load
+  // Function to reset to default zoom
+  const resetZoom = () => {
+    if (mapRef.current && userLocation) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }, 1000);
+    }
+  };
+  
+  // FIX: This single useEffect hook now handles all initial data fetching
   useEffect(() => {
-    const getUserLocation = async () => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required to show your location.');
@@ -182,23 +237,34 @@ export default function MapScreen() {
         const newLat = location.coords.latitude;
         const newLon = location.coords.longitude;
         
-        setUserLocation({
+        const newLocation = {
           latitude: newLat,
           longitude: newLon,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        });
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        };
+        setUserLocation(newLocation);
 
+        // Fetch fish name
+        const fishName = await fetchFishName(newLat, newLon);
+        setMostProbableFish(fishName);
+
+        // Generate heatmap
         generateHeatmap(newLat, newLon);
-
+        
       } catch (error) {
         Alert.alert('Location Error', 'Could not fetch current location.');
+        console.error('Failed to get location or fetch data:', error);
+      } finally {
         setIsLoading(false);
       }
     };
 
-    getUserLocation();
-  }, []);
+    fetchData();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // FIX: The fetchUserLocationFish call has been removed from a separate useEffect
+  // and is now integrated into the single fetchData hook. This prevents redundant calls.
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,6 +275,21 @@ export default function MapScreen() {
         </View>
       ) : (
         <>
+          {/* Fish Name Display */}
+          <View style={styles.fishNameContainer}>
+            <View style={styles.fishNameCard}>
+              <View style={styles.fishNameHeader}>
+                <Ionicons name="fish" size={20} color="#007BFF" />
+                <Text style={styles.fishNameTitle}>Most Probable Fish</Text>
+              </View>
+              {mostProbableFish ? (
+                <Text style={styles.fishNameText}>{mostProbableFish}</Text>
+              ) : (
+                <Text style={styles.fishNameError}>Unable to predict fish</Text>
+              )}
+            </View>
+          </View>
+
           <MapView
             ref={mapRef}
             style={styles.map}
@@ -260,6 +341,9 @@ export default function MapScreen() {
             <TouchableOpacity style={styles.zoomButton} onPress={zoomOut}>
               <Ionicons name="remove" size={24} color="#fff" />
             </TouchableOpacity>
+            <TouchableOpacity style={styles.zoomButton} onPress={resetZoom}>
+              <Ionicons name="locate" size={20} color="#fff" />
+            </TouchableOpacity>
           </View>
 
           {/* Refresh Button */}
@@ -268,6 +352,7 @@ export default function MapScreen() {
               style={styles.refreshButton}
               onPress={() => {
                 if (userLocation) {
+                  // Only re-generate heatmap, fish name is static for user location
                   setIsLoading(true);
                   generateHeatmap(userLocation.latitude, userLocation.longitude);
                 }
@@ -364,6 +449,62 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#34495e',
+  },
+
+  // Fish Name Display Styles
+  fishNameContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    zIndex: 1000,
+  },
+  fishNameCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderLeftWidth: 4,
+    borderLeftColor: '#007BFF',
+  },
+  fishNameHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  fishNameTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginLeft: 8,
+  },
+  fishNameLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fishNameLoadingText: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginLeft: 8,
+  },
+  fishNameText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    textAlign: 'center',
+  },
+  fishNameError: {
+    fontSize: 14,
+    color: '#e74c3c',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   
   // Zone Marker Styles
