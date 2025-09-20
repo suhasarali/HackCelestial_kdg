@@ -7,7 +7,8 @@ import {
   Dimensions,
   Alert,
   ActivityIndicator,
-  Modal
+  Modal,
+  ScrollView 
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Circle } from 'react-native-maps';
@@ -21,10 +22,10 @@ const BACKEND_API_URL = 'https://VolcanicBat64-fish3.hf.space/predict';
 
 // Heatmap zone configuration
 const HEATMAP_ZONES = [
-  { id: 'zone-1', radius: 2000, offset: { lat: 0.01, lng: 0.01 } }, // 2km radius
-  { id: 'zone-2', radius: 1500, offset: { lat: -0.008, lng: 0.012 } }, // 1.5km radius
-  { id: 'zone-3', radius: 1800, offset: { lat: 0.015, lng: -0.01 } }, // 1.8km radius
-  { id: 'zone-4', radius: 1200, offset: { lat: -0.012, lng: -0.008 } }, // 1.2km radius
+  { id: 'zone-1', radius: 2000, offset: { lat: 0.01, lng: 0.01 } },
+  { id: 'zone-2', radius: 1500, offset: { lat: -0.008, lng: 0.012 } },
+  { id: 'zone-3', radius: 1800, offset: { lat: 0.015, lng: -0.01 } },
+  { id: 'zone-4', radius: 1200, offset: { lat: -0.012, lng: -0.008 } },
 ];
 
 interface HeatmapZone {
@@ -34,11 +35,40 @@ interface HeatmapZone {
   probability: number; // 0 to 100
 }
 
+// --- GEMINI API SETUP ---
+// TODO: Move this to environment variables for security
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "AIzaSyDXfPvzApUIJZHi3WP5Af68R2p2DYRrZxc"; 
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+
+// --- Gemini AI call ---
+const fetchBestFishingPractices = async (fish: string, lat: number, lon: number) => {
+  try {
+    const prompt = `You are an expert fisheries advisor in India.
+Suggest the best fishing practices, gear, seasons, and sustainability guidelines
+for catching ${fish} found near coordinates latitude ${lat}, longitude ${lon}.
+Keep answer short, practical, and easy for fishermen to understand.`;
+
+    const res = await fetch(`${GEMINI_API_BASE_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    });
+
+    if (!res.ok) throw new Error(`Gemini API error ${res.status}`);
+    const data = await res.json();
+    return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No advice found.';
+  } catch (e) {
+    console.error('Gemini error:', e);
+    return 'Could not fetch best practices at this time.';
+  }
+};
+
 // Helper function to convert a 0-100 probability to a heatmap color with transparency
 const getHeatmapColor = (probability: number): string => {
   const p = Math.max(0, Math.min(100, probability));
   
-  // Create a heatmap color scheme with transparency
   if (p < 20) {
     return 'rgba(76, 175, 80, 0.3)'; // Green for low probability
   } else if (p < 40) {
@@ -151,6 +181,25 @@ export default function MapScreen() {
   const [showProbabilityModal, setShowProbabilityModal] = useState(false);
   const [mostProbableFish, setMostProbableFish] = useState<string | null>(null);
 
+  // --- Gemini Modal States ---
+  const [showGeminiModal, setShowGeminiModal] = useState(false);
+  const [geminiAdvice, setGeminiAdvice] = useState<string | null>(null);
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
+
+  // Gemini Handler
+  const handleGeminiPress = async () => {
+    if (!mostProbableFish || !userLocation) {
+      Alert.alert('No Fish Data', 'Cannot fetch best practices without a predicted fish.');
+      return;
+    }
+    setShowGeminiModal(true);
+    setIsGeminiLoading(true);
+    const advice = await fetchBestFishingPractices(mostProbableFish, userLocation.latitude, userLocation.longitude);
+    setGeminiAdvice(advice);
+    setIsGeminiLoading(false);
+  };
+
+
   // Function to generate the heatmap zones
   const generateHeatmap = async (centerLat: number, centerLon: number) => {
     const newHeatmapZones: HeatmapZone[] = [];
@@ -178,6 +227,7 @@ export default function MapScreen() {
     }
     
     setHeatmapZones(newHeatmapZones);
+    setIsLoading(false);
   };
 
   // Function to handle zone press
@@ -220,7 +270,7 @@ export default function MapScreen() {
     }
   };
   
-  // FIX: This single useEffect hook now handles all initial data fetching
+  // Single useEffect hook for initial data fetching
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -261,10 +311,7 @@ export default function MapScreen() {
     };
 
     fetchData();
-  }, []); // Empty dependency array ensures this runs only once on mount
-
-  // FIX: The fetchUserLocationFish call has been removed from a separate useEffect
-  // and is now integrated into the single fetchData hook. This prevents redundant calls.
+  }, []); 
 
   return (
     <SafeAreaView style={styles.container}>
@@ -308,7 +355,6 @@ export default function MapScreen() {
                 fillColor={getHeatmapColor(zone.probability)}
                 strokeColor={getStrokeColor(zone.probability)}
                 strokeWidth={3}
-                onPress={() => handleZonePress(zone)}
               />
             ))}
             
@@ -335,6 +381,11 @@ export default function MapScreen() {
 
           {/* Zoom Controls */}
           <View style={styles.zoomControls}>
+            {/* Floating Gemini Button */}
+            <TouchableOpacity style={styles.geminiButton} onPress={handleGeminiPress}>
+              <Ionicons name="help-circle" size={28} color="#fff" />
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.zoomButton} onPress={zoomIn}>
               <Ionicons name="add" size={24} color="#fff" />
             </TouchableOpacity>
@@ -409,6 +460,7 @@ export default function MapScreen() {
                 </View>
 
                 <View style={styles.probabilityDescription}>
+                  {/* Ensure all description text is wrapped in <Text> */}
                   <Text style={styles.descriptionText}>
                     {selectedZone.probability >= 80 ? 
                       "Excellent fishing zone! Very high probability of catching fish in this area." :
@@ -424,6 +476,33 @@ export default function MapScreen() {
                 </View>
               </View>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Gemini Modal */}
+      <Modal visible={showGeminiModal} animationType="slide" transparent onRequestClose={() => setShowGeminiModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.geminiModalContent]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Best Fishing Practices</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowGeminiModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            {isGeminiLoading ? (
+              <ActivityIndicator size="large" color="#007BFF" />
+            ) : (
+              <ScrollView style={styles.geminiScrollView}>
+                <Text style={styles.geminiText}>{geminiAdvice}</Text>
+              </ScrollView>
+            )}
+            <TouchableOpacity style={styles.closeButtonLarge} onPress={() => setShowGeminiModal(false)}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity> 
           </View>
         </View>
       </Modal>
@@ -541,6 +620,24 @@ const styles = StyleSheet.create({
     bottom: 120,
     flexDirection: 'column',
   },
+  // Gemini Button Style
+  geminiButton: {
+    backgroundColor: '#1E90FF', 
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   zoomButton: {
     backgroundColor: '#007BFF',
     width: 50,
@@ -564,6 +661,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
     alignSelf: 'center',
+    zIndex: 100,
   },
   refreshButton: {
     backgroundColor: '#007BFF',
@@ -623,6 +721,35 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 5,
   },
+  // Gemini Modal Specific Styles 
+  geminiModalContent: {
+    maxHeight: '80%', 
+    width: '90%',
+  },
+  geminiScrollView: {
+    maxHeight: '80%',
+    paddingRight: 10, 
+  },
+  geminiText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: '#333',
+    marginBottom: 10,
+  },
+  closeButtonLarge: {
+    marginTop: 20,
+    backgroundColor: '#f1f1f1',
+    padding: 10,
+    borderRadius: 10,
+    alignSelf: 'stretch',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#007BFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  // Existing Probability Modal styles...
   probabilityInfo: {
     alignItems: 'center',
   },
