@@ -17,6 +17,7 @@ import { Image } from 'expo-image';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationDisplay from '../../components/LocationDisplay';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock data types
 interface WeatherData {
@@ -57,15 +58,64 @@ export default function HomeScreen() {
     fetchTopZones();
     fetchAlerts();
   }, []);
+setTimeout(() => {
+  fetchWeatherData
+}, 5000);
+  const fetchWeatherData = async () => {
+    try {
+      // Get location object from AsyncStorage
+      const locationStr = await AsyncStorage.getItem('app_location');
+      if (!locationStr) {
+        Alert.alert('Location not set', 'Please set your location first.');
+        setWeather(null);
+        return;
+      }
+      const location = JSON.parse(locationStr);
+      const lat = location.latitude;
+      const lon = location.longitude;
 
-  const fetchWeatherData = () => {
-    setWeather({
-      temperature: 28,
-      windSpeed: 12,
-      waveHeight: 1.2,
-      condition: 'Partly Cloudy',
-      advisory: 'Good fishing conditions'
-    });
+      if (!lat || !lon) {
+        Alert.alert('Location not set', 'Please set your location first.');
+        setWeather(null);
+        return;
+      }
+
+      // Fetch weather from Open-Meteo
+      const weatherUrl =  `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height&timezone=auto`;
+
+      const [weatherRes, marineRes] = await Promise.all([
+        fetch(weatherUrl),
+        fetch(marineUrl),
+      ]);
+
+      if (!weatherRes.ok || !marineRes.ok) {
+        throw new Error('Failed to fetch weather data');
+      }
+
+      const weatherData = await weatherRes.json();
+      const marineData = await marineRes.json();
+
+      const current = weatherData.current_weather;
+      let waveHeight = null;
+      if (marineData.hourly && marineData.hourly.wave_height) {
+        // Get wave height for the current hour
+        const now = new Date().toISOString().slice(0, 13) + ":00";
+        const idx = marineData.hourly.time.indexOf(now);
+        waveHeight = idx !== -1 ? marineData.hourly.wave_height[idx] : marineData.hourly.wave_height[0];
+      }
+
+      setWeather({
+        temperature: current?.temperature ?? 0,
+        windSpeed: current?.windspeed ?? 0,
+        waveHeight: waveHeight ?? 0,
+        condition: 'N/A',
+        advisory: 'Check local conditions',
+      });
+    } catch (error) {
+      console.error('Weather fetch error:', error);
+      setWeather(null);
+    }
   };
 
   const fetchTopZones = () => {

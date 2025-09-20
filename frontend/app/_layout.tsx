@@ -6,6 +6,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { LocationProvider } from '../context/LocationContext';
 import i18n from '../i18n';
 import React from 'react';
+import { AlertProvider } from '@/context/AlertContext';
 
 export default function RootLayout() {
   return (
@@ -13,6 +14,7 @@ export default function RootLayout() {
       <I18nextProvider i18n={i18n}>
         <AuthProvider>
           <LocationProvider>
+            <AlertProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="index" options={{ headerShown: false }} />
               <Stack.Screen name="splash" options={{ headerShown: false }} />
@@ -21,6 +23,7 @@ export default function RootLayout() {
               <Stack.Screen name="profile" options={{ presentation: 'modal' }} />
               <Stack.Screen name="settings" options={{ presentation: 'modal' }} />
             </Stack>
+            </AlertProvider>
           </LocationProvider>
         </AuthProvider>
       </I18nextProvider>

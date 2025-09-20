@@ -1,7 +1,8 @@
+
 // app/(tabs)/alerts/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -14,65 +15,27 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTranslation } from 'react-i18next';
-
-// Mock data
-const ALERTS = [
-  {
-    id: 1,
-    type: 'weather',
-    title: 'High Wind Warning',
-    message: 'Wind speeds expected to exceed 40 km/h after 3 PM. Return to shore by 2 PM.',
-    priority: 'high',
-    timestamp: '2023-10-15T10:30:00Z',
-    read: false
-  },
-  {
-    id: 2,
-    type: 'regulation',
-    title: 'Fishing Restrictions',
-    message: 'Fishing restricted in Zone B until next week due to breeding season.',
-    priority: 'medium',
-    timestamp: '2023-10-14T16:45:00Z',
-    read: true
-  },
-  {
-    id: 3,
-    type: 'safety',
-    title: 'Boundary Alert',
-    message: 'You are approaching maritime boundary. Turn back to avoid legal issues.',
-    priority: 'high',
-    timestamp: '2023-10-13T09:15:00Z',
-    read: true
-  },
-  {
-    id: 4,
-    type: 'opportunity',
-    title: 'Good Fishing Conditions',
-    message: 'Ideal conditions reported in North Bay. High probability of tuna catch.',
-    priority: 'low',
-    timestamp: '2023-10-12T07:00:00Z',
-    read: true
-  }
-];
+import React from 'react';
+import { useAlerts } from '../../context/AlertContext';
 
 export default function AlertsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { alerts, setAlerts } = useAlerts(); // ✅ use context
   const [refreshing, setRefreshing] = useState(false);
-  const [alerts, setAlerts] = useState(ALERTS);
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     setRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1500);
+    // You could trigger manual refresh here if needed
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const markAsRead = (id: number) => {
-    setAlerts(alerts.map(alert => 
-      alert.id === id ? { ...alert, read: true } : alert
-    ));
+  const markAsRead = (id: string) => {
+    setAlerts(prev =>
+      prev.map(alert =>
+        alert.id === id ? { ...alert, read: true } : alert
+      )
+    );
   };
 
   const getPriorityColor = (priority: string) => {
@@ -97,7 +60,7 @@ export default function AlertsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>{('alerts')}</Text>
+        <Text style={styles.title}>{t('alerts') || 'Alerts'}</Text>
         <TouchableOpacity>
           <Icon name="filter" size={24} color="#3498db" />
         </TouchableOpacity>
@@ -146,7 +109,7 @@ export default function AlertsScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Icon name="bell-off" size={48} color="#bdc3c7" />
-            <Text style={styles.emptyStateText}>{('noAlerts')}</Text>
+            <Text style={styles.emptyStateText}>{t('noAlerts') || 'No alerts right now'}</Text>
           </View>
         )}
       </ScrollView>
@@ -256,3 +219,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
