@@ -11,42 +11,42 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="home" 
         options={{ 
-          title: t('navigation.home'), 
+          title: ('home'), 
           tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen 
         name="catch-log" 
         options={{ 
-          title: t('navigation.catchLog'), 
+          title: ('catchLog'), 
           tabBarIcon: ({ color, size }) => <Ionicons name="fish" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen 
         name="analytics" 
         options={{ 
-          title: t('navigation.analytics'), 
+          title: ('analytics'), 
           tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen 
         name="map" 
         options={{ 
-          title: t('navigation.map'), 
+          title: ('map'), 
           tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen 
         name="alerts" 
         options={{ 
-          title: t('navigation.alerts'), 
+          title: ('alerts'), 
           tabBarIcon: ({ color, size }) => <Ionicons name="notifications" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen
         name="community"
         options={{
-          title: t('navigation.community'),
+          title: ('community'),
           tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />
         }}
         />
