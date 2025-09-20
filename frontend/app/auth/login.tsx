@@ -7,10 +7,17 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  ImageBackground,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
+
+// A placeholder ocean image. Replace with your own!
+const oceanImage = { uri: 'https://unsplash.com/photos/a-group-of-fish-swimming-in-an-aquarium-sInnJmPJfCw' };
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -25,101 +32,124 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-    
+
     const success = await login(email, password);
     setLoading(false);
-    
+
     if (success) {
       router.replace('/(tabs)/home' as any);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subtitle}>Sign in to continue</Text>
+    <ImageBackground source={oceanImage} style={styles.backgroundImage} resizeMode="cover">
+      <View style={styles.overlay}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <KeyboardAvoidingView
+            style={styles.keyboardContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          >
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to continue</Text>
 
-      <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+              <View style={styles.form}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  editable={!loading}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="#999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!loading}
+                />
 
-        <TouchableOpacity 
-          style={[styles.button, loading && styles.buttonDisabled]} 
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign In</Text>
-          )}
-        </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, loading && styles.buttonDisabled]}
+                  onPress={handleLogin}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Sign In</Text>
+                  )}
+                </TouchableOpacity>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
-          <Link href="/auth/register" asChild>
-            <TouchableOpacity>
-              <Text style={styles.link}>Sign Up</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
+                <View style={styles.footer}>
+                  <Text style={styles.footerText}>Don't have an account? </Text>
+                  <Link href="/auth/register" asChild>
+                    <TouchableOpacity disabled={loading}>
+                      <Text style={styles.link}>Sign Up</Text>
+                    </TouchableOpacity>
+                  </Link>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       </View>
-    </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 20, 40, 0.75)',
+  },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 10,
+    color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
     marginBottom: 30,
-    color: '#666',
+    color: '#ddd',
   },
   form: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 25,
+    borderRadius: 15,
   },
   input: {
     height: 50,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    backgroundColor: '#f0f0f0',
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
   button: {
     backgroundColor: '#007AFF',
@@ -128,22 +158,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
   },
   buttonDisabled: {
     opacity: 0.7,
+    backgroundColor: '#0056b3',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginTop: 10,
-  },
-  forgotPasswordText: {
-    color: '#007AFF',
-    fontSize: 14,
   },
   footer: {
     flexDirection: 'row',
@@ -151,10 +179,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   footerText: {
-    color: '#666',
+    color: '#333',
+    fontSize: 15,
   },
   link: {
     color: '#007AFF',
     fontWeight: 'bold',
+    fontSize: 15,
   },
 });
