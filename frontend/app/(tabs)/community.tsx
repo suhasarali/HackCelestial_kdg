@@ -650,6 +650,14 @@ const community = () => {
 
   // Replace your existing handleAddPost function with this one
   const handleAddPost = async () => {
+    console.log("POST DATA:", {
+      title,
+      description,
+      tags: tags.split(",").map((t) => t.trim()),
+    });
+    const token = await AsyncStorage.getItem("token");
+    console.log("TOKEN:", token);
+
     try {
       const token = await AsyncStorage.getItem("token");
 
@@ -675,43 +683,26 @@ const community = () => {
         },
       });
 
-      // ✅ FIX 1: Check if the response data is valid before using it
       if (res.data && res.data._id) {
-        // Add the new post to the beginning of the posts array
         setPosts([res.data, ...posts]);
-        setModalVisible(false);
-        setTitle("");
-        setDescription("");
-        setTags("");
-
         console.log("Post added successfully:", res.data);
       } else {
         Alert.alert("Post Failed", "Server returned an invalid response.");
         console.error("Invalid response data:", res.data);
       }
     } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (err.response) {
-          console.error(
-            "Error adding post:",
-            err.response.status,
-            err.response.data
-          );
-          Alert.alert(
-            "Post Failed",
-            err.response.data.message || "Something went wrong."
-          );
-        } else if (err.request) {
-          console.error("No response received:", err.request);
-          Alert.alert("Network Error", "Could not connect to the server.");
-        } else {
-          console.error("Axios error:", err.message);
-          Alert.alert("Error", "An unexpected error occurred.");
-        }
-      } else {
-        console.error("Unexpected error:", err);
-        Alert.alert("Error", "An unexpected error occurred.");
-      }
+      // This is where the error from the stack trace is being thrown
+      console.error("Error in handleAddPost:", err);
+      Alert.alert(
+        "Post Failed",
+        "An unexpected error occurred. Please try again."
+      );
+    } finally {
+      // Ensure modal is closed and form is reset regardless of success or failure
+      setModalVisible(false);
+      setTitle("");
+      setDescription("");
+      setTags("");
     }
   };
 

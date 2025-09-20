@@ -180,27 +180,44 @@
 import Observation from "../models/community.model.js";
 
 // CREATE observation
+// controller/community.controller.js
+import Observation from "../models/community.model.js";
+
 export const createObservation = async (req, res) => {
   try {
+    // Quick debug log to see if middleware attached user
+    console.log("createObservation - req.user:", !!req.user, req.user ? req.user._id : null);
+
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authenticated. Missing user (protectRoute not applied or token invalid)." });
+    }
+
     const { title, description, tags } = req.body;
 
     if (!title && !description) {
-      return res.status(400).json({ message: "Please provide a title or description." });
+      return res
+        .status(400)
+        .json({ message: "Please provide a title or description." });
     }
 
-    const observation = await Observation.create({
-      user: req.user._id, // from auth middleware
-      title,
-      description,
-      tags: Array.isArray(tags) ? tags : [], // safe default
+    const observation = new Observation({
+      user: req.user._id,
+      title: title ? String(title).trim() : undefined,
+      description: description ? String(description).trim() : undefined,
+      tags: Array.isArray(tags) ? tags : [],
     });
 
-    res.status(201).json(observation);
+    await observation.save();
+    // populate creator name before returning
+    await observation.populate("user", "name");
+
+    return res.status(201).json(observation);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    console.error("createObservation error:", error);
+    return res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
 
 // GET all observations
 export const getObservations = async (req, res) => {

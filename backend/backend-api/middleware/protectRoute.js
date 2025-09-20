@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import User from "../models/fisherman.model.js";
 import dotenv from "dotenv";
-// dotenv.config();
+//dotenv.config();
 
 const protectRoute = async (req, res, next) => {
   try {

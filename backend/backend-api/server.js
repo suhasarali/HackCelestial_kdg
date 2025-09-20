@@ -8,7 +8,7 @@ import profileRoutes from "./routes/profile.route.js";
 import whetherRouter from "./routes/whether.route.js"; 
 import observationRoutes from "./routes/community.route.js";
 
-
+dotenv.config();
 // import weatherRoutes from "./routes/weatherRoutes.js";
 // import fishRoutes from "./routes/fishRoutes.js";
 // import mapRoutes from "./routes/mapRoutes.js";
