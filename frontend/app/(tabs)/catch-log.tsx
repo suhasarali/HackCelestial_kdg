@@ -11,16 +11,19 @@ import {
   ScrollView,
   Image,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
+
+const { width } = Dimensions.get('window');
 
 // Mock data
 const FISH_SPECIES = [
@@ -154,27 +157,35 @@ export default function CatchLogScreen() {
   if (!permission.granted) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Text style={styles.message}>{('cameraPermission')}</Text>
-        <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>{('grantPermission')}</Text>
-        </TouchableOpacity>
+        <View style={styles.permissionContainer}>
+          <MaterialCommunityIcons name="camera-off" size={64} color="#bdc3c7" />
+          <Text style={styles.permissionTitle}>Camera Access Required</Text>
+          <Text style={styles.permissionMessage}>
+            We need camera access to help you identify fish species and log your catch.
+          </Text>
+          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+            <Text style={styles.permissionButtonText}>Grant Camera Access</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (isCameraActive) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <SafeAreaView style={styles.cameraContainer} edges={['top']}>
         <CameraView style={styles.camera} ref={cameraRef}>
-          <View style={styles.cameraControls}>
-            <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
-              <Ionicons name="camera" size={32} color="#fff" />
-            </TouchableOpacity>
+          <View style={styles.cameraHeader}>
             <TouchableOpacity 
               style={styles.closeButton} 
               onPress={() => setIsCameraActive(false)}
             >
-              <Ionicons name="close" size={32} color="#fff" />
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.cameraControls}>
+            <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
+              <View style={styles.captureButtonInner} />
             </TouchableOpacity>
           </View>
         </CameraView>
@@ -184,174 +195,236 @@ export default function CatchLogScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView>
-      <Text style={styles.title}>{('logCatch')}</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.title}>Log Your Catch</Text>
+          <Text style={styles.subtitle}>Document your fishing success</Text>
+        </View>
 
-      {/* Image Capture */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('capturePhoto')}</Text>
-        {capturedImage ? (
-          <View style={styles.imagePreview}>
-            <Image source={{ uri: capturedImage }} style={styles.image} />
+        {/* Image Capture */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="camera" size={20} color="#3498db" />
+            <Text style={styles.sectionTitle}>Capture Photo</Text>
+          </View>
+          <Text style={styles.sectionDescription}>
+            Take a photo of your catch to automatically detect the species
+          </Text>
+          
+          {capturedImage ? (
+            <View style={styles.imagePreview}>
+              <Image source={{ uri: capturedImage }} style={styles.image} />
+              <View style={styles.imageActions}>
+                <TouchableOpacity 
+                  style={styles.imageActionButton}
+                  onPress={() => setIsCameraActive(true)}
+                >
+                  <Ionicons name="camera-reverse" size={20} color="#fff" />
+                  <Text style={styles.imageActionText}>Retake</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
             <TouchableOpacity 
-              style={styles.retakeButton}
+              style={styles.captureButtonLarge}
               onPress={() => setIsCameraActive(true)}
             >
-              <Text style={styles.retakeText}>{('retakePhoto')}</Text>
+              <MaterialCommunityIcons name="camera-plus" size={40} color="#3498db" />
+              <Text style={styles.captureText}>Take Photo</Text>
             </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Detection Result */}
+        {isDetecting && (
+          <View style={styles.section}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#3498db" />
+              <Text style={styles.loadingText}>Detecting fish species...</Text>
+            </View>
           </View>
-        ) : (
-          <TouchableOpacity 
-            style={styles.captureButtonLarge}
-            onPress={() => setIsCameraActive(true)}
-          >
-            <Ionicons name="camera" size={48} color="#3498db" />
-            <Text style={styles.captureText}>{('takePhoto')}</Text>
-          </TouchableOpacity>
         )}
-      </View>
 
-      {/* Detection Result */}
-      {isDetecting && (
-        <View style={styles.section}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#3498db" />
-            <Text style={styles.loadingText}>Detecting fish species...</Text>
-          </View>
-        </View>
-      )}
-
-      {detectedSpecies && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Detected Species</Text>
-          <Text style={styles.detectedText}>{detectedSpecies}</Text>
-        </View>
-      )}
-
-      {/* Form */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{('Catch Details')}</Text>
-        
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Species (Auto-detected or manual)</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.species}
-            onChangeText={(text) => setFormData({...formData, species: text})}
-            placeholder="Fish species"
-            editable={true}
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{('weight')} (kg)</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.weight}
-            onChangeText={(text) => setFormData({...formData, weight: text})}
-            keyboardType="numeric"
-            placeholder="Enter weight"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>{('Qty.')} (numeric)</Text>
-          <TextInput
-            style={styles.input}
-            value={formData.qty}
-            onChangeText={(text) => setFormData({...formData, qty: text})}
-            keyboardType="numeric"
-            placeholder="Enter qty. of fishes caught"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Price Type</Text>
-          <View style={styles.priceTypeContainer}>
-            {['Retail', 'FL', 'FH'].map((type) => (
-              <TouchableOpacity
-                key={type}
-                style={[
-                  styles.priceTypeButton,
-                  formData.priceType === type && styles.priceTypeButtonSelected
-                ]}
-                onPress={() => setFormData({...formData, priceType: type})}
-              >
-                <Text style={[
-                  styles.priceTypeText,
-                  formData.priceType === type && styles.priceTypeTextSelected
-                ]}>
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </View>
-
-      {/* Prediction Loading */}
-      {isPredicting && (
-        <View style={styles.section}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#2ecc71" />
-            <Text style={styles.loadingText}>Calculating price prediction...</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Prediction Result */}
-      {predictionResult && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Price Prediction Result</Text>
-          <View style={styles.resultContainer}>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Species:</Text>
-              <Text style={styles.resultValue}>{predictionResult.species || formData.species}</Text>
+        {detectedSpecies && (
+          <View style={[styles.section, styles.detectedSection]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="fish" size={20} color="#2ecc71" />
+              <Text style={styles.sectionTitle}>Detected Species</Text>
             </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Quantity:</Text>
-              <Text style={styles.resultValue}>{formData.qty} fish</Text>
+            <View style={styles.detectedContainer}>
+              <Text style={styles.detectedText}>{detectedSpecies}</Text>
+              <MaterialCommunityIcons name="check-circle" size={24} color="#2ecc71" />
             </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Weight:</Text>
-              <Text style={styles.resultValue}>{formData.weight} kg</Text>
-            </View>
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Price Type:</Text>
-              <Text style={styles.resultValue}>{formData.priceType}</Text>
-            </View>
-            {predictionResult.predicted_price && (
-              <View style={styles.resultRow}>
-                <Text style={styles.resultLabel}>Predicted Price:</Text>
-                <Text style={[styles.resultValue, styles.priceValue]}>
-                  ₹{predictionResult.predicted_price}
-                </Text>
-              </View>
-            )}
-            {predictionResult.price_per_kg && (
-              <View style={styles.resultRow}>
-                <Text style={styles.resultLabel}>Price per kg:</Text>
-                <Text style={[styles.resultValue, styles.priceValue]}>
-                  ₹{predictionResult.price_per_kg}/kg
-                </Text>
-              </View>
-            )}
           </View>
-        </View>
-      )}
-
-      {/* Save Button */}
-      <TouchableOpacity 
-        style={[styles.saveButton, (isPredicting || isDetecting) && styles.saveButtonDisabled]} 
-        onPress={handleSaveCatch}
-        disabled={isPredicting || isDetecting}
-      >
-        {isPredicting ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.saveButtonText}>Calculate Price</Text>
         )}
-      </TouchableOpacity>
+
+        {/* Form */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="clipboard-list" size={20} color="#3498db" />
+            <Text style={styles.sectionTitle}>Catch Details</Text>
+          </View>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Species</Text>
+            <Text style={styles.labelHint}>Auto-detected or enter manually</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.species}
+              onChangeText={(text) => setFormData({...formData, species: text})}
+              placeholder="Enter fish species"
+              editable={true}
+            />
+          </View>
+
+          <View style={styles.inputRow}>
+            <View style={[styles.inputGroup, styles.inputGroupHalf]}>
+              <Text style={styles.label}>Weight (kg)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.weight}
+                onChangeText={(text) => setFormData({...formData, weight: text})}
+                keyboardType="numeric"
+                placeholder="0.0"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, styles.inputGroupHalf]}>
+              <Text style={styles.label}>Quantity</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.qty}
+                onChangeText={(text) => setFormData({...formData, qty: text})}
+                keyboardType="numeric"
+                placeholder="0"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Price Type</Text>
+            <View style={styles.priceTypeContainer}>
+              {['Retail', 'FL', 'FH'].map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.priceTypeButton,
+                    formData.priceType === type && styles.priceTypeButtonSelected
+                  ]}
+                  onPress={() => setFormData({...formData, priceType: type})}
+                >
+                  <Text style={[
+                    styles.priceTypeText,
+                    formData.priceType === type && styles.priceTypeTextSelected
+                  ]}>
+                    {type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Prediction Loading */}
+        {isPredicting && (
+          <View style={styles.section}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2ecc71" />
+              <Text style={styles.loadingText}>Calculating price prediction...</Text>
+              <Text style={styles.loadingSubtext}>This may take a few moments</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Prediction Result */}
+        {predictionResult && (
+          <View style={[styles.section, styles.resultSection]}>
+            <View style={styles.sectionHeader}>
+              <MaterialCommunityIcons name="currency-inr" size={20} color="#2ecc71" />
+              <Text style={styles.sectionTitle}>Price Prediction</Text>
+            </View>
+            <View style={styles.resultContainer}>
+              <View style={styles.resultRow}>
+                <View style={styles.resultLabelContainer}>
+                  <Text style={styles.resultLabel}>Species</Text>
+                </View>
+                <Text style={styles.resultValue}>{predictionResult.species || formData.species}</Text>
+              </View>
+              
+              <View style={styles.resultDivider} />
+              
+              <View style={styles.resultRow}>
+                <View style={styles.resultLabelContainer}>
+                  <Text style={styles.resultLabel}>Quantity</Text>
+                </View>
+                <Text style={styles.resultValue}>{formData.qty} fish</Text>
+              </View>
+              
+              <View style={styles.resultDivider} />
+              
+              <View style={styles.resultRow}>
+                <View style={styles.resultLabelContainer}>
+                  <Text style={styles.resultLabel}>Weight</Text>
+                </View>
+                <Text style={styles.resultValue}>{formData.weight} kg</Text>
+              </View>
+              
+              <View style={styles.resultDivider} />
+              
+              <View style={styles.resultRow}>
+                <View style={styles.resultLabelContainer}>
+                  <Text style={styles.resultLabel}>Price Type</Text>
+                </View>
+                <Text style={styles.resultValue}>{formData.priceType}</Text>
+              </View>
+              
+              <View style={styles.resultDivider} />
+              
+              {predictionResult.predicted_price && (
+                <>
+                  <View style={styles.resultRow}>
+                    <View style={styles.resultLabelContainer}>
+                      <Text style={styles.resultLabel}>Predicted Price</Text>
+                    </View>
+                    <Text style={[styles.resultValue, styles.priceValue]}>
+                      ₹{predictionResult.predicted_price}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.resultDivider} />
+                </>
+              )}
+              
+              {predictionResult.price_per_kg && (
+                <View style={styles.resultRow}>
+                  <View style={styles.resultLabelContainer}>
+                    <Text style={styles.resultLabel}>Price per kg</Text>
+                  </View>
+                  <Text style={[styles.resultValue, styles.priceValue]}>
+                    ₹{predictionResult.price_per_kg}/kg
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Save Button */}
+        <TouchableOpacity 
+          style={[styles.saveButton, (isPredicting || isDetecting) && styles.saveButtonDisabled]} 
+          onPress={handleSaveCatch}
+          disabled={isPredicting || isDetecting}
+        >
+          {isPredicting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <>
+              <MaterialCommunityIcons name="calculator" size={20} color="#fff" />
+              <Text style={styles.saveButtonText}>Calculate Price</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -360,52 +433,34 @@ export default function CatchLogScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ecf0f1',
-    padding: 16,
+    backgroundColor: '#f8f9fa',
   },
-  message: {
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#3498db',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  section: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 12,
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: '#000',
   },
   camera: {
     flex: 1,
   },
+  cameraHeader: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+  },
+  closeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cameraControls: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 40,
     alignSelf: 'center',
-    flexDirection: 'row',
-    gap: 20,
+    alignItems: 'center',
   },
   captureButton: {
     width: 70,
@@ -414,134 +469,192 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 5,
+    borderWidth: 4,
     borderColor: '#3498db',
   },
-  closeButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#3498db',
+  },
+  permissionContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
+  },
+  permissionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  permissionMessage: {
+    fontSize: 16,
+    color: '#7f8c8d',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  permissionButton: {
+    backgroundColor: '#3498db',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  permissionButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  header: {
+    padding: 20,
+    paddingBottom: 10,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7f8c8d',
+  },
+  section: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginLeft: 8,
+  },
+  sectionDescription: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 16,
+    lineHeight: 20,
   },
   captureButtonLarge: {
-    height: 200,
+    height: 160,
     borderWidth: 2,
     borderColor: '#3498db',
     borderStyle: 'dashed',
-    borderRadius: 8,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#f8f9fa',
   },
   captureText: {
     marginTop: 12,
     color: '#3498db',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    fontSize: 16,
   },
   imagePreview: {
-    alignItems: 'center',
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: 200,
-    borderRadius: 8,
-    marginBottom: 12,
+    borderRadius: 12,
   },
-  retakeButton: {
-    backgroundColor: '#3498db',
-    padding: 10,
-    borderRadius: 6,
+  imageActions: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
   },
-  retakeText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  ocrText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2ecc71',
-    textAlign: 'center',
-    padding: 16,
-    backgroundColor: '#ecf0f1',
-    borderRadius: 8,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#bdc3c7',
-    borderRadius: 6,
-    padding: 12,
-    fontSize: 16,
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  speciesGrid: {
+  imageActionButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  speciesButton: {
-    padding: 12,
-    borderRadius: 6,
-    backgroundColor: '#ecf0f1',
     alignItems: 'center',
-    minWidth: 80,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 4,
   },
-  speciesButtonSelected: {
-    backgroundColor: '#3498db',
-  },
-  speciesText: {
-    fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  speciesLocalText: {
-    fontSize: 12,
-    color: '#7f8c8d',
-  },
-  saveButton: {
-    backgroundColor: '#2ecc71',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  saveButtonText: {
+  imageActionText: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#bdc3c7',
+    fontWeight: '500',
+    fontSize: 14,
   },
   loadingContainer: {
     alignItems: 'center',
     padding: 20,
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 16,
+    color: '#2c3e50',
+    fontWeight: '500',
+  },
+  loadingSubtext: {
+    marginTop: 4,
+    fontSize: 14,
     color: '#7f8c8d',
+  },
+  detectedSection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#2ecc71',
+  },
+  detectedContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f0fdf4',
+    padding: 16,
+    borderRadius: 12,
   },
   detectedText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2ecc71',
-    textAlign: 'center',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  inputGroupHalf: {
+    flex: 1,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 4,
+  },
+  labelHint: {
+    fontSize: 14,
+    color: '#7f8c8d',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
     padding: 16,
-    backgroundColor: '#ecf0f1',
-    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#f8f9fa',
   },
   priceTypeContainer: {
     flexDirection: 'row',
@@ -549,36 +662,41 @@ const styles = StyleSheet.create({
   },
   priceTypeButton: {
     flex: 1,
-    padding: 12,
-    borderRadius: 6,
-    backgroundColor: '#ecf0f1',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#f8f9fa',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#bdc3c7',
+    borderColor: '#e2e8f0',
   },
   priceTypeButtonSelected: {
     backgroundColor: '#3498db',
     borderColor: '#3498db',
   },
   priceTypeText: {
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#2c3e50',
   },
   priceTypeTextSelected: {
     color: '#fff',
   },
+  resultSection: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#2ecc71',
+  },
   resultContainer: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
     padding: 16,
   },
   resultRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ecf0f1',
+    paddingVertical: 12,
+  },
+  resultLabelContainer: {
+    flex: 1,
   },
   resultLabel: {
     fontSize: 16,
@@ -587,11 +705,41 @@ const styles = StyleSheet.create({
   },
   resultValue: {
     fontSize: 16,
-    color: '#7f8c8d',
+    color: '#64748b',
+    fontWeight: '500',
+  },
+  resultDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
   },
   priceValue: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#2ecc71',
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#2ecc71',
+    padding: 20,
+    borderRadius: 16,
+    marginHorizontal: 16,
+    marginBottom: 30,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 18,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#bdc3c7',
   },
 });

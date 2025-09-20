@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   View, 
@@ -7,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity, 
   RefreshControl,
-  Alert
+  Alert,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,6 +18,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import LocationDisplay from '../../components/LocationDisplay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width } = Dimensions.get('window');
 
 // Mock data types
 interface WeatherData {
@@ -58,9 +60,7 @@ export default function HomeScreen() {
     fetchTopZones();
     fetchAlerts();
   }, []);
-setTimeout(() => {
-  fetchWeatherData
-}, 5000);
+
   const fetchWeatherData = async () => {
     try {
       // Get location object from AsyncStorage
@@ -204,16 +204,36 @@ setTimeout(() => {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        showsVerticalScrollIndicator={false}
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleViewProfile}>
+          <TouchableOpacity onPress={handleViewProfile} style={styles.headerButton}>
             <Icon name="account" size={28} color="#2c3e50" />
           </TouchableOpacity>
-          <Image source={require('../../assets/images/matsya-logo.svg')} style={{ width: 100, height: 50 }} />
-          <TouchableOpacity onPress={handleAlerts}>
-           <Ionicons name="notifications" size={25} color={"#2c3e50"} /> 
+          
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/images/matsya-logo.svg')} 
+              style={styles.logo} 
+              contentFit="contain"
+            />
+          </View>
+          
+          <TouchableOpacity onPress={handleAlerts} style={styles.headerButton}>
+            <Ionicons name="notifications" size={25} color={"#2c3e50"} />
+            {alerts.length > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationText}>{alerts.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
+        </View>
+
+        {/* Welcome Message */}
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeTitle}>Welcome back!</Text>
+          <Text style={styles.welcomeSubtitle}>Ready for your next fishing trip?</Text>
         </View>
 
         {/* Location Card */}
@@ -240,23 +260,62 @@ setTimeout(() => {
             <View>
               <View style={styles.weatherRow}>
                 <View style={styles.weatherItem}>
-                  <Icon name="temperature-celsius" size={20} color="#e74c3c" />
-                  <Text style={styles.weatherText}>{weather.temperature}°C</Text>
+                  <View style={[styles.weatherIconContainer, { backgroundColor: '#ffeded' }]}>
+                    <Icon name="temperature-celsius" size={20} color="#e74c3c" />
+                  </View>
+                  <Text style={styles.weatherValue}>{weather.temperature}°C</Text>
+                  <Text style={styles.weatherLabel}>Temperature</Text>
                 </View>
                 <View style={styles.weatherItem}>
-                  <Icon name="weather-windy" size={20} color="#3498db" />
-                  <Text style={styles.weatherText}>{weather.windSpeed} km/h</Text>
+                  <View style={[styles.weatherIconContainer, { backgroundColor: '#e8f4fd' }]}>
+                    <Icon name="weather-windy" size={20} color="#3498db" />
+                  </View>
+                  <Text style={styles.weatherValue}>{weather.windSpeed} km/h</Text>
+                  <Text style={styles.weatherLabel}>Wind Speed</Text>
                 </View>
                 <View style={styles.weatherItem}>
-                  <Icon name="waves" size={20} color="#3498db" />
-                  <Text style={styles.weatherText}>{weather.waveHeight} m</Text>
+                  <View style={[styles.weatherIconContainer, { backgroundColor: '#e8f4fd' }]}>
+                    <Icon name="waves" size={20} color="#3498db" />
+                  </View>
+                  <Text style={styles.weatherValue}>{weather.waveHeight} m</Text>
+                  <Text style={styles.weatherLabel}>Wave Height</Text>
                 </View>
               </View>
-              <Text style={styles.advisory}>{weather.advisory}</Text>
+              <View style={styles.advisoryContainer}>
+                <Icon name="information" size={16} color="#7f8c8d" />
+                <Text style={styles.advisory}>{weather.advisory}</Text>
+              </View>
             </View>
           ) : (
             <Text>{t('home.loading')}</Text>
           )}
+        </View>
+
+        {/* Quick Actions */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{('Quick Actions')}</Text>
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleStartTrip}>
+              <View style={[styles.actionIcon, { backgroundColor: '#3498db' }]}>
+                <Icon name="navigation" size={24} color="#fff" />
+              </View>
+              <Text style={styles.actionText}>{('startTrip')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton} onPress={handleLogCatch}>
+              <View style={[styles.actionIcon, { backgroundColor: '#2ecc71' }]}>
+                <Icon name="fish" size={24} color="#fff" />
+              </View>
+              <Text style={styles.actionText}>{('logCatch')}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionButton} onPress={handleViewAnalytics}>
+              <View style={[styles.actionIcon, { backgroundColor: '#9b59b6' }]}>
+                <Icon name="chart-bar" size={24} color="#fff" />
+              </View>
+              <Text style={styles.actionText}>{('analytics')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Top Fishing Zones */}
@@ -264,7 +323,7 @@ setTimeout(() => {
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>{t('home.topFishingZones')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/map')}>
-              <Text style={styles.viewAll}>{t('home.viewAll')}</Text>
+              <Text style={styles.viewAll}>{t('View All')}</Text>
             </TouchableOpacity>
           </View>
           {zones.length > 0 ? (
@@ -279,14 +338,20 @@ setTimeout(() => {
               >
                 <View style={styles.zoneInfo}>
                   <Text style={styles.zoneName}>{zone.name}</Text>
-                  <Text style={styles.zoneDistance}>{zone.distance} away</Text>
+                  <View style={styles.zoneDetails}>
+                    <Icon name="map-marker-distance" size={14} color="#7f8c8d" />
+                    <Text style={styles.zoneDistance}>{zone.distance} away</Text>
+                  </View>
                   <Text style={styles.zoneReason}>{zone.reason}</Text>
                 </View>
                 <View style={styles.zoneRating}>
-                  <Icon name="star" size={16} color="#f39c12" />
-                  <Text style={styles.ratingText}>{zone.rating}</Text>
+                  <View style={styles.ratingContainer}>
+                    <Icon name="star" size={16} color="#f39c12" />
+                    <Text style={styles.ratingText}>{zone.rating}</Text>
+                  </View>
                   <View style={[styles.safetyBadge, 
-                    { backgroundColor: zone.safety === 'Safe' ? '#2ecc71' : '#f39c12' }]}>
+                    { backgroundColor: zone.safety === 'Safe' ? '#2ecc71' : 
+                      zone.safety === 'Moderate' ? '#f39c12' : '#e74c3c' }]}>
                     <Text style={styles.safetyText}>{zone.safety}</Text>
                   </View>
                 </View>
@@ -301,55 +366,38 @@ setTimeout(() => {
         {alerts.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Text style={styles.cardTitle}>{('alerts')}</Text>
+              <Text style={styles.cardTitle}>{('Alerts')}</Text>
               <TouchableOpacity onPress={handleViewAlerts}>
-                <Text style={styles.viewAll}>{('viewAll')}</Text>
+                <Text style={styles.viewAll}>{('View All')}</Text>
               </TouchableOpacity>
             </View>
             {alerts.slice(0, 2).map(alert => (
               <TouchableOpacity 
                 key={alert.id} 
                 style={[styles.alertItem, 
-                  { borderLeftColor: alert.priority === 'high' ? '#e74c3c' : '#f39c12' }]}
+                  { 
+                    borderLeftWidth: 4,
+                    borderLeftColor: alert.priority === 'high' ? '#e74c3c' : 
+                                    alert.priority === 'medium' ? '#f39c12' : '#3498db',
+                    backgroundColor: alert.priority === 'high' ? '#fdedec' : 
+                                    alert.priority === 'medium' ? '#fef9e7' : '#e8f4fd'
+                  }]}
                 onPress={handleViewAlerts}
               >
-                <Icon 
-                  name={alert.type === 'weather' ? 'weather-windy' : 'alert-circle'} 
-                  size={20} 
-                  color={alert.priority === 'high' ? '#e74c3c' : '#f39c12'} 
-                />
+                <View style={styles.alertIconContainer}>
+                  <Icon 
+                    name={alert.type === 'weather' ? 'weather-windy' : 'alert-circle'} 
+                    size={20} 
+                    color={alert.priority === 'high' ? '#e74c3c' : 
+                          alert.priority === 'medium' ? '#f39c12' : '#3498db'} 
+                  />
+                </View>
                 <Text style={styles.alertText}>{alert.message}</Text>
+                <Icon name="chevron-right" size={20} color="#bdc3c7" />
               </TouchableOpacity>
             ))}
           </View>
         )}
-
-        {/* Quick Actions */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{('quickActions')}</Text>
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleStartTrip}>
-              <View style={styles.actionIcon}>
-                <Icon name="navigation" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>{('startTrip')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton} onPress={handleLogCatch}>
-              <View style={styles.actionIcon}>
-                <Icon name="fish" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>{('logCatch')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.actionButton} onPress={handleViewAnalytics}>
-              <View style={styles.actionIcon}>
-                <Icon name="chart-bar" size={24} color="#fff" />
-              </View>
-              <Text style={styles.actionText}>{('analytics')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -358,41 +406,84 @@ setTimeout(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ecf0f1',
+    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 7,
-    backgroundColor: '#ecf0f1',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1},
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  greeting: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-  },
-  card: {
-    backgroundColor: '#ecf0f1',
-    borderRadius: 8,
-    padding: 16,
-    margin: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
+  headerButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f8f9fa',
+    position: 'relative',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 140,
+    height: 50,
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    borderRadius: 10,
+    width: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  welcomeContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: '#7f8c8d',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ecf0f1',
   },
   cardTitle: {
     fontSize: 18,
@@ -405,26 +496,49 @@ const styles = StyleSheet.create({
   },
   weatherRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   weatherItem: {
     alignItems: 'center',
+    flex: 1,
   },
-  weatherText: {
+  weatherIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  weatherValue: {
     fontSize: 16,
-    marginTop: 4,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 4,
+  },
+  weatherLabel: {
+    fontSize: 12,
+    color: '#7f8c8d',
+    textAlign: 'center',
+  },
+  advisoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
   },
   advisory: {
-    textAlign: 'center',
+    marginLeft: 8,
+    flex: 1,
     fontStyle: 'italic',
     color: '#7f8c8d',
-    marginTop: 8,
   },
   zoneItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#ecf0f1',
   },
@@ -435,31 +549,40 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#2c3e50',
+    marginBottom: 4,
+  },
+  zoneDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   zoneDistance: {
     fontSize: 14,
     color: '#7f8c8d',
-    marginTop: 2,
+    marginLeft: 4,
   },
   zoneReason: {
     fontSize: 14,
     color: '#34495e',
-    marginTop: 4,
   },
   zoneRating: {
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   ratingText: {
     fontSize: 14,
     color: '#f39c12',
-    marginTop: 2,
+    marginLeft: 4,
+    fontWeight: 'bold',
   },
   safetyBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    marginTop: 4,
   },
   safetyText: {
     color: '#fff',
@@ -469,16 +592,17 @@ const styles = StyleSheet.create({
   alertItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#fef9e7',
-    borderRadius: 6,
-    marginBottom: 8,
-    borderLeftWidth: 4,
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  alertIconContainer: {
+    marginRight: 12,
   },
   alertText: {
-    marginLeft: 8,
     flex: 1,
     color: '#34495e',
+    fontWeight: '500',
   },
   actionsContainer: {
     flexDirection: 'row',
@@ -487,19 +611,25 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     alignItems: 'center',
+    width: (width - 72) / 3, // Responsive width calculation
   },
   actionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#3498db',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
   },
   actionText: {
     fontSize: 12,
     color: '#2c3e50',
     textAlign: 'center',
+    fontWeight: '500',
   },
 });

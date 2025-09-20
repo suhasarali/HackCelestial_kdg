@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
+import React from 'react';
 
 // Mock data
 const CATCH_HISTORY = [
