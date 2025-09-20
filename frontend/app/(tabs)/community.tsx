@@ -206,7 +206,7 @@ const community = () => {
   const [posts, setPosts] = useState<Observation[]>([]); // Using the new Observation interface
   const [loading, setLoading] = useState(true);
 
-  const API_URL = "http://localhost:5000/api/observations/";
+  const API_URL = "https://hackcelestial-kdg.onrender.com/api/observations/";
 
   useEffect(() => {
     const fetchPosts = async () => {
