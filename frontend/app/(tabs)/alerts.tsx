@@ -1,8 +1,4 @@
-
-// app/(tabs)/alerts/page.tsx
-'use client';
-
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -14,14 +10,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useTranslation } from 'react-i18next';
-import React from 'react';
+// useTranslation hook and react-i18next import removed
 import { useAlerts } from '../../context/AlertContext';
 
 export default function AlertsScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
-  const { alerts, setAlerts } = useAlerts(); // ✅ use context
+  // useTranslation hook removed
+  const { alerts, setAlerts } = useAlerts(); 
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
@@ -60,7 +55,7 @@ export default function AlertsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t('alerts') || 'Alerts'}</Text>
+        <Text style={styles.title}>Alerts</Text>
         <TouchableOpacity>
           <Icon name="filter" size={24} color="#3498db" />
         </TouchableOpacity>
@@ -109,7 +104,7 @@ export default function AlertsScreen() {
         ) : (
           <View style={styles.emptyState}>
             <Icon name="bell-off" size={48} color="#bdc3c7" />
-            <Text style={styles.emptyStateText}>{t('noAlerts') || 'No alerts right now'}</Text>
+            <Text style={styles.emptyStateText}>No alerts right now</Text>
           </View>
         )}
       </ScrollView>
@@ -219,4 +214,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
