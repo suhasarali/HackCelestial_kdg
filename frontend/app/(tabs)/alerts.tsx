@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -10,22 +10,71 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useAlerts } from '../../context/AlertContext';
+// import { useAlerts } from '../../context/AlertContext'; // Context import kept but usage is modified
+
+// --- DUMMY ALERT DATA ---
+const DUMMY_ALERTS = [
+  {
+    id: 'd-1',
+    title: 'Strong Winds Ahead',
+    message: 'High wind advisory near the coast (Lat: 19.0, Lon: 72.8). Secure all gear.',
+    type: 'weather',
+    priority: 'high',
+    read: false,
+    timestamp: Date.now() - 3600000, // 1 hour ago
+  },
+  {
+    id: 'd-2',
+    title: 'New Regulation Update',
+    message: 'New zone restrictions effective immediately for Catla fishing. Check map boundaries.',
+    type: 'regulation',
+    priority: 'medium',
+    read: false,
+    timestamp: Date.now() - 7200000, // 2 hours ago
+  },
+  {
+    id: 'd-3',
+    title: 'Peak Fishing Opportunity',
+    message: 'Increased fish probability detected 5km East of your current location. Move fast!',
+    type: 'opportunity',
+    priority: 'low',
+    read: true,
+    timestamp: Date.now() - 10800000, // 3 hours ago
+  },
+];
+// --- END DUMMY ALERT DATA ---
+
+// Define a type for the alert for clarity and to satisfy TypeScript
+interface AlertItem {
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+    priority: 'low' | 'medium' | 'high' | string;
+    read: boolean;
+    timestamp: number;
+}
+
 
 export default function AlertsScreen() {
   const router = useRouter();
-  // useTranslation hook removed
-  const { alerts, setAlerts } = useAlerts(); 
+  
+  // 1. Initialize state with the DUMMY_ALERTS
+  const [localAlerts, setLocalAlerts] = useState<AlertItem[]>(DUMMY_ALERTS); 
   const [refreshing, setRefreshing] = useState(false);
+
+  // Note: The useAlerts context hook is temporarily ignored for rendering dummy data, 
+  // but the logic relies on localAlerts state now.
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // You could trigger manual refresh here if needed
+    // In a real app, you would fetch new alerts here.
+    // For this dummy example, we just wait and reset:
     setTimeout(() => setRefreshing(false), 1000);
   };
 
   const markAsRead = (id: string) => {
-    setAlerts(prev =>
+    setLocalAlerts(prev =>
       prev.map(alert =>
         alert.id === id ? { ...alert, read: true } : alert
       )
@@ -65,8 +114,9 @@ export default function AlertsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {alerts.length > 0 ? (
-          alerts.map(alert => (
+        {/* 2. Render localAlerts */}
+        {localAlerts.length > 0 ? (
+          localAlerts.map(alert => (
             <TouchableOpacity 
               key={alert.id}
               style={[styles.alertCard, !alert.read && styles.unreadAlert]}
