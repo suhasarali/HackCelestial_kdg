@@ -37,18 +37,38 @@ const BEST_HOURS = [
   { hour: '5-6 PM', success: 65 },
 ];
 
-export default function AnalyticsScreen() {
-  const router = useRouter();
+// Define interfaces for API data to fix TypeScript errors
+interface SummaryData {
+  totalWeight: number;
+  totalValue: number;
+  averagePricePerKg: number;
+}
 
-  const [summary, setSummary] = useState({
+interface DailyData {
+  day: string;
+  quantity: number;
+}
+
+interface SpeciesData {
+  name: string;
+  population: number;
+  color: string;
+  legendFontColor: string;
+  legendFontSize: number;
+}
+
+export default function AnalyticsScreen() {
+  const router = useRouter(); // 'router' is unused. We will leave it for future use.
+
+  const [summary, setSummary] = useState<SummaryData>({
     totalWeight: 0,
     totalValue: 0,
     averagePricePerKg: 0,
   });
   const [timeRange, setTimeRange] = useState('week');
-  const [dailyData, setDailyData] = useState([]);
-  const [speciesData, setSpeciesData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [dailyData, setDailyData] = useState<DailyData[]>([]);
+  const [speciesData, setSpeciesData] = useState<SpeciesData[]>([]);
+  const [loading, setLoading] = useState(true); // 'loading' is now used in the return statement
 
   // Animation refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -62,7 +82,7 @@ export default function AnalyticsScreen() {
     }, 300);
   }, [fadeAnim, scaleAnim, chartAnim]);
 
-  const getColorForIndex = (index) => {
+  const getColorForIndex = (index: number): string => {
     const palette = [
       Colors.primary ?? '#3498db',
       Colors.secondary ?? '#2ecc71',
@@ -101,7 +121,7 @@ export default function AnalyticsScreen() {
           );
           //console.log(resp);
           if (resp.ok) {
-            const data = await resp.json();
+            const data: SummaryData = await resp.json();
             console.log('Summary data:', data);
             if (mounted) setSummary(data);
           } else {
@@ -121,9 +141,9 @@ export default function AnalyticsScreen() {
             }
           );
           if (resp.ok) {
-            const data = await resp.json();
+            const data: any[] = await resp.json();
             console.log('Species data:', data);
-            const formatted = Array.isArray(data)
+            const formatted: SpeciesData[] = Array.isArray(data)
               ? data.map((item, index) => ({
                   name: item.species ?? `Species ${index + 1}`,
                   population: Number(item.quantity) || 0,
@@ -165,6 +185,9 @@ export default function AnalyticsScreen() {
     barPercentage: 0.6,
     useShadowColorFromDataset: false,
     decimalPlaces: 0,
+    // Add these properties to fix the chart alignment
+    paddingRight: 16,
+    paddingLeft: 16,
     propsForDots: {
       r: '6',
       strokeWidth: '2',
@@ -297,6 +320,7 @@ export default function AnalyticsScreen() {
                 ...chartConfig,
                 color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
               }}
+              yAxisLabel="" // Moved from chartConfig to here
               yAxisSuffix="%"
               showValuesOnTopOfBars
               style={styles.chart}

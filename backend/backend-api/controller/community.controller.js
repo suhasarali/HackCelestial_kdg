@@ -176,7 +176,6 @@
 //   }
 // };
 
-
 import Observation from "../models/community.model.js";
 
 // CREATE observation
@@ -184,7 +183,7 @@ import Observation from "../models/community.model.js";
 
 export const createObservation = async (req, res) => {
   try {
-        console.log("📥 Incoming body:", req.body);
+    console.log("📥 Incoming body:", req.body);
     console.log("👤 Authenticated user:", req.user);
     // Quick debug log to see if middleware attached user
     console.log("createObservation - req.user:", !!req.user, req.user ? req.user._id : null);
@@ -200,6 +199,41 @@ export const createObservation = async (req, res) => {
         .status(400)
         .json({ message: "Please provide a title or description." });
     }
+
+    // --- NEW: Spam detection integration ---
+    const text_to_check = `${title || ""} ${description || ""}`;
+    const spamCheckUrl = 'http://127.0.0.1:8000/predict'; // Make sure this URL matches your FastAPI server's address
+    
+    try {
+      const response = await fetch(spamCheckUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: text_to_check }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Spam check API responded with status: ${response.status}`);
+      }
+
+      const spamResult = await response.json();
+      console.log("Spam check result:", spamResult);
+
+      // Block the post if the prediction is 'high_probability_spam'
+      if (spamResult.prediction === "high_probability_spam") {
+        return res.status(400).json({ 
+          message: "Your message was flagged as spam with a high probability and cannot be posted.",
+          spam_probability: spamResult.spam_probability
+        });
+      }
+    } catch (spamError) {
+      console.error("Error during spam check:", spamError.message);
+      // Decide how to handle an API error (e.g., fail open or fail closed)
+      // For now, we will log the error but allow the post to go through to prevent service disruption.
+    }
+    // --- END NEW: Spam detection integration ---
+
 
     const observation = new Observation({
       user: req.user._id,
