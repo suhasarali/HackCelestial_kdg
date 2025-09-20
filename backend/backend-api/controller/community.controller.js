@@ -181,7 +181,6 @@ import Observation from "../models/community.model.js";
 
 // CREATE observation
 // controller/community.controller.js
-import Observation from "../models/community.model.js";
 
 export const createObservation = async (req, res) => {
   try {
