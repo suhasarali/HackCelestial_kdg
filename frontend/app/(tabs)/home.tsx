@@ -254,7 +254,7 @@ export default function HomeScreen() {
         {/* Weather Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{t('home.weather')}</Text>
+            <Text style={styles.cardTitle}>Weather</Text>
             <Icon name="weather-partly-cloudy" size={24} color="#3498db" />
           </View>
           {weather ? (
@@ -288,7 +288,7 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : (
-            <Text>{t('home.loading')}</Text>
+            <Text>loading</Text>
           )}
         </View>
 
@@ -322,9 +322,9 @@ export default function HomeScreen() {
         {/* Top Fishing Zones */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>{t('home.topFishingZones')}</Text>
+            <Text style={styles.cardTitle}>Top FishingZones</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/map')}>
-              <Text style={styles.viewAll}>{t('View All')}</Text>
+              <Text style={styles.viewAll}>View All</Text>
             </TouchableOpacity>
           </View>
           {zones.length > 0 ? (
@@ -414,10 +414,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
+    paddingVertical: 9,
+    backgroundColor: '#f8f9fa',
     elevation: 2,
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
