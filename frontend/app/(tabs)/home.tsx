@@ -210,7 +210,7 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleViewProfile} style={styles.headerButton}>
-            <Icon name="account" size={28} color="#2c3e50" />
+            <Icon name="account" size={30} color="#2c3e50" />
           </TouchableOpacity>
           
           <View style={styles.logoContainer}>
@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 140,
-    height: 50,
+    width: 160,
+    height: 60,
   },
   notificationBadge: {
     position: 'absolute',
