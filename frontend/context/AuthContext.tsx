@@ -87,6 +87,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.success) {
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        await AsyncStorage.setItem('userId', JSON.stringify(data.user.id));
+        console.log("User ID stored:", data.user.id);
         await AsyncStorage.setItem('usertokenTimestamp', Date.now().toString());
         setToken(data.token);
         setUser(data.user);
