@@ -359,6 +359,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -470,10 +471,6 @@ const PostCard: React.FC<PostCardProps> = ({
           <Tag key={index} text={tag} />
         ))}
       </View>
-      <View style={cardStyles.footer}>
-        <Text style={cardStyles.likeIcon}>❤️</Text>
-        <Text style={cardStyles.likeCount}>{likes}</Text>
-      </View>
     </View>
   );
 };
@@ -550,26 +547,60 @@ const Community = () => {
     fetchPosts();
   }, []);
 
-  const handleAddPost = async () => {
-    try {
-      const res = await axios.post(
-        API_URL,
-        {
-          title,
-          description,
-          tags: tags.split(",").map((t) => t.trim()),
-        },
-        { withCredentials: true } // if cookies/token needed
-      );
-      setPosts([res.data, ...posts]); // prepend new post
-      setModalVisible(false);
-      setTitle("");
-      setDescription("");
-      setTags("");
-    } catch (err) {
-      console.error("Error adding post:", err);
+
+const handleAddPost = async () => {
+  try {
+    // 1️⃣ Get token from AsyncStorage (or your auth state)
+    const token = await AsyncStorage.getItem("token");
+
+    if (!token) {
+      console.error("No token found. User may not be logged in.");
+      return;
     }
-  };
+
+    // 2️⃣ Prepare post data
+    const postData = {
+      title,
+      description,
+      tags: tags.split(",").map((t) => t.trim()),
+    };
+
+    // 3️⃣ Send POST request with token in headers
+    const res = await axios.post(
+      API_URL,
+      postData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // explicitly send token
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 4️⃣ Update local state
+    setPosts([res.data, ...posts]); // prepend new post
+    setModalVisible(false);          // close modal
+    setTitle("");                     // reset form
+    setDescription("");
+    setTags("");
+
+    console.log("Post added successfully:", res.data);
+
+  } catch (err) {
+    // 5️⃣ Handle errors
+    if (axios.isAxiosError(err)) {
+      if (err.response) {
+        console.error("Error adding post:", err.response.status, err.response.data);
+      } else if (err.request) {
+        console.error("No response received:", err.request);
+      } else {
+        console.error("Axios error:", err.message);
+      }
+    } else {
+      console.error("Unexpected error:", err);
+    }
+  }
+};
 
   if (loading) {
     return (
