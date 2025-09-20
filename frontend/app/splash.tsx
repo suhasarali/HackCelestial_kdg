@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Colors } from '@/constants/theme';
 import { Image } from 'expo-image';
 import { useAuth } from '../context/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocation } from '../context/LocationContext';
 
 export default function SplashScreen() {
@@ -13,11 +14,11 @@ export default function SplashScreen() {
   const colors = Colors[colorScheme ?? 'light'];
   const { isLoading, user } = useAuth();
   const { startLocationTracking } = useLocation();
-  
+
   // Animation values
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
-  const scaleAnim = React.useRef(new Animated.Value(0.8)).current;
-  const pulseAnim = React.useRef(new Animated.Value(1)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Start animations
@@ -59,27 +60,48 @@ export default function SplashScreen() {
   }, [fadeAnim, scaleAnim, pulseAnim, startLocationTracking]);
 
   useEffect(() => {
-    // Wait for auth context to finish loading
-    if (!isLoading) {
-      const timer = setTimeout(() => {
-        try {
-          if (user) {
-            // User is logged in, go to main app
+    const checkAuthAndNavigate = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem('token');
+        const timestamp = await AsyncStorage.getItem('usertokenTimestamp');
+        const TOKEN_EXPIRY_TIME = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+
+        console.log('Stored Token:', storedToken);
+        console.log('Token Timestamp:', timestamp);
+        console.log('Current Time:', Date.now());
+
+        let isValid = false;
+
+        if (storedToken && timestamp) {
+          const storedTime = parseInt(timestamp, 10);
+          const currentTime = Date.now();
+
+          if (storedTime && currentTime - storedTime <= TOKEN_EXPIRY_TIME) {
+            isValid = true;
+          } else {
+            // Expired → remove token
+            await AsyncStorage.multiRemove(['token', 'usertokenTimestamp']);
+          }
+        }
+
+        // Delay navigation slightly for splash effect
+        setTimeout(() => {
+          if (isValid) {
             router.replace('/(tabs)/home');
           } else {
-            // User is not logged in, go to login
             router.replace('/auth/login');
           }
-        } catch (error) {
-          console.error('Navigation error:', error);
-          // Fallback navigation
-          router.replace('/auth/login');
-        }
-      }, 3000);
+        }, 2500);
+      } catch (err) {
+        console.error('Error checking auth:', err);
+        router.replace('/auth/login');
+      }
+    };
 
-      return () => clearTimeout(timer);
+    if (!isLoading) {
+      checkAuthAndNavigate();
     }
-  }, [isLoading, user, router]);
+  }, [isLoading, router]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -88,10 +110,7 @@ export default function SplashScreen() {
           styles.logoContainer,
           {
             opacity: fadeAnim,
-            transform: [
-              { scale: scaleAnim },
-              { scale: pulseAnim },
-            ],
+            transform: [{ scale: scaleAnim }, { scale: pulseAnim }],
           },
         ]}
       >
@@ -101,33 +120,41 @@ export default function SplashScreen() {
           contentFit="contain"
         />
       </Animated.View>
-      
+
       <Animated.Text
         style={[
           styles.appName,
           {
             color: colors.text,
             opacity: fadeAnim,
-            transform: [{ translateY: fadeAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [20, 0],
-            }) }],
+            transform: [
+              {
+                translateY: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }),
+              },
+            ],
           },
         ]}
       >
         Matsya
       </Animated.Text>
-      
+
       <Animated.Text
         style={[
           styles.tagline,
           {
             color: colors.icon,
             opacity: fadeAnim,
-            transform: [{ translateY: fadeAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [30, 0],
-            }) }],
+            transform: [
+              {
+                translateY: fadeAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [30, 0],
+                }),
+              },
+            ],
           },
         ]}
       >

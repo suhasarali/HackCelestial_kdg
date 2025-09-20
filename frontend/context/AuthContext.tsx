@@ -82,10 +82,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
 
       const data = await response.json();
+      console.log('Login Response:', data);
 
       if (data.success) {
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('user', JSON.stringify(data.user));
+        await AsyncStorage.setItem('usertokenTimestamp', Date.now().toString());
         setToken(data.token);
         setUser(data.user);
         return true;
