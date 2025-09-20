@@ -12,12 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
-import { useTranslation } from 'react-i18next';
 
+// NOTE: These design imports are assumed to be correctly defined in your project
 import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout } from '../../constants/design';
 import { fadeIn, scaleIn, bounce } from '../../utils/animations';
-
-
 
 
 // Mock data
@@ -48,7 +46,7 @@ const BEST_HOURS = [
 
 export default function AnalyticsScreen() {
   const router = useRouter();
-  const { t } = useTranslation();
+  // useTranslation hook removed
   const [timeRange, setTimeRange] = useState('week');
   
   // Animation values
@@ -115,7 +113,8 @@ export default function AnalyticsScreen() {
               },
             ]}
           >
-            <Text style={styles.title}>{t('analytics')}</Text>
+            {/* Hardcoded string 'Analytics' */}
+            <Text style={styles.title}>Analytics</Text>
             <View style={styles.timeRangeSelector}>
               <TouchableOpacity 
                 style={[styles.timeButton, timeRange === 'day' && styles.activeTimeButton]}
@@ -138,7 +137,7 @@ export default function AnalyticsScreen() {
             </View>
           </Animated.View>
 
-          {/* Summary Cards - CORRECTED */}
+          {/* Summary Cards */}
           <Animated.View 
             style={[
               styles.summaryRow,
@@ -153,6 +152,7 @@ export default function AnalyticsScreen() {
               },
             ]}
           >
+            {/* Card 1: Total Catch */}
             <Animated.View 
               style={[
                 styles.summaryCard,
@@ -168,9 +168,10 @@ export default function AnalyticsScreen() {
             >
               <Icon name="weight" size={24} color={Colors.primary} />
               <Text style={styles.summaryValue}>100 kg</Text>
-              <Text style={styles.summaryLabel}>{t('totalCatch')}</Text>
+              <Text style={styles.summaryLabel}>Total Catch</Text>
             </Animated.View>
 
+            {/* Card 2: Total Value */}
             <Animated.View 
               style={[
                 styles.summaryCard,
@@ -186,9 +187,10 @@ export default function AnalyticsScreen() {
             >
               <Icon name="cash" size={24} color={Colors.secondary} />
               <Text style={styles.summaryValue}>₹40,000</Text>
-              <Text style={styles.summaryLabel}>{t('totalValue')}</Text>
+              <Text style={styles.summaryLabel}>Total Value</Text>
             </Animated.View>
 
+            {/* Card 3: Avg Price */}
             <Animated.View 
               style={[
                 styles.summaryCard,
@@ -204,7 +206,7 @@ export default function AnalyticsScreen() {
             >
               <Icon name="chart-line" size={24} color={Colors.accent} />
               <Text style={styles.summaryValue}>₹400/kg</Text>
-              <Text style={styles.summaryLabel}>{t('avgPrice')}</Text>
+              <Text style={styles.summaryLabel}>Avg Price</Text>
             </Animated.View>
           </Animated.View>
 
@@ -223,7 +225,7 @@ export default function AnalyticsScreen() {
               },
             ]}
           >
-            <Text style={styles.chartTitle}>{t('catchHistory')}</Text>
+            <Text style={styles.chartTitle}>Catch History</Text>
             <LineChart
               data={{
                 labels: CATCH_HISTORY.map(item => item.day),
@@ -256,7 +258,7 @@ export default function AnalyticsScreen() {
               },
             ]}
           >
-            <Text style={styles.chartTitle}>{t('speciesDistribution')}</Text>
+            <Text style={styles.chartTitle}>Species Distribution</Text>
             <PieChart
               data={SPECIES_DATA}
               width={Dimensions.get('window').width - 32}
@@ -284,7 +286,7 @@ export default function AnalyticsScreen() {
               },
             ]}
           >
-            <Text style={styles.chartTitle}>{t('bestFishingHours')}</Text>
+            <Text style={styles.chartTitle}>Best Fishing Hours</Text>
             <BarChart
               data={{
                 labels: BEST_HOURS.map(item => item.hour),
@@ -309,23 +311,23 @@ export default function AnalyticsScreen() {
 
           {/* Insights */}
           <View style={styles.insightsContainer}>
-            <Text style={styles.insightsTitle}>{t('fishingInsights')}</Text>
+            <Text style={styles.insightsTitle}>Fishing Insights</Text>
             <View style={styles.insightItem}>
               <Icon name="lightbulb-on" size={20} color="#f39c12" />
               <Text style={styles.insightText}>
-                {t('bestTimeInsight')} <Text style={styles.highlight}>6-7 AM</Text> ({t('successRate')}: 85%)
+                Best time to fish: <Text style={styles.highlight}>6-7 AM</Text> (Success Rate: 85%)
               </Text>
             </View>
             <View style={styles.insightItem}>
               <Icon name="lightbulb-on" size={20} color="#f39c12" />
               <Text style={styles.insightText}>
-                {t('bestSpeciesInsight')} <Text style={styles.highlight}>Rohu</Text> (35% {t('ofCatches')})
+                Most caught species: <Text style={styles.highlight}>Rohu</Text> (35% of catches)
               </Text>
             </View>
             <View style={styles.insightItem}>
               <Icon name="lightbulb-on" size={20} color="#f39c12" />
               <Text style={styles.insightText}>
-                {t('bestZoneInsight')} <Text style={styles.highlight}>North Bay</Text> ({t('avgCatch')}: 18kg/{t('trip')})
+                Highest value zone: <Text style={styles.highlight}>North Bay</Text> (Avg Catch: 18kg/trip)
               </Text>
             </View>
           </View>
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
   container: {
     ...Layout.container,
     backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.md,
   },
   animatedContainer: {
     flex: 1,
@@ -348,7 +351,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
   },
   title: {
