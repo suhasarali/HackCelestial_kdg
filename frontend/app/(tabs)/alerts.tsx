@@ -10,7 +10,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-// useTranslation hook and react-i18next import removed
 import { useAlerts } from '../../context/AlertContext';
 
 export default function AlertsScreen() {
