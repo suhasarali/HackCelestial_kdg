@@ -38,31 +38,32 @@ interface HeatmapZone {
 // --- GEMINI API SETUP ---
 // TODO: Move this to environment variables for security
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY || "AIzaSyDXfPvzApUIJZHi3WP5Af68R2p2DYRrZxc"; 
-const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 // --- Gemini AI call ---
 const fetchBestFishingPractices = async (fish: string, lat: number, lon: number) => {
-  try {
-    const prompt = `You are an expert fisheries advisor in India.
+try {
+const prompt = `You are an expert fisheries advisor in India.
 Suggest the best fishing practices, gear, seasons, and sustainability guidelines
 for catching ${fish} found near coordinates latitude ${lat}, longitude ${lon}.
 Keep answer short, practical, and easy for fishermen to understand.`;
 
-    const res = await fetch(`${GEMINI_API_BASE_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-      }),
-    });
+const res = await fetch(`${GEMINI_API_BASE_URL}?key=${GEMINI_API_KEY}`, {
+ method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+ contents: [{ parts: [{ text: prompt }] }],
+ }),
+});
 
-    if (!res.ok) throw new Error(`Gemini API error ${res.status}`);
-    const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No advice found.';
-  } catch (e) {
-    console.error('Gemini error:', e);
-    return 'Could not fetch best practices at this time.';
-  }
+if (!res.ok) throw new Error(`Gemini API error ${res.status}`);
+const data = await res.json();
+console.log('Gemini response data:', data);
+return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No advice found.';
+ } catch (e) {
+console.error('Gemini error:', e);
+return 'Could not fetch best practices at this time.';
+ }
 };
 
 // Helper function to convert a 0-100 probability to a heatmap color with transparency
@@ -481,7 +482,7 @@ export default function MapScreen() {
       </Modal>
 
       {/* Gemini Modal */}
-      <Modal visible={showGeminiModal} animationType="slide" transparent onRequestClose={() => setShowGeminiModal(false)}>
+ <Modal visible={showGeminiModal} animationType="slide" transparent onRequestClose={() => setShowGeminiModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.geminiModalContent]}>
             <View style={styles.modalHeader}>
@@ -493,16 +494,16 @@ export default function MapScreen() {
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
-            {isGeminiLoading ? (
-              <ActivityIndicator size="large" color="#007BFF" />
-            ) : (
-              <ScrollView style={styles.geminiScrollView}>
-                <Text style={styles.geminiText}>{geminiAdvice}</Text>
-              </ScrollView>
-            )}
-            <TouchableOpacity style={styles.closeButtonLarge} onPress={() => setShowGeminiModal(false)}>
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity> 
+ {isGeminiLoading ? (
+ <ActivityIndicator size="large" color="#007BFF" />
+ ) : (
+<ScrollView style={styles.geminiScrollView}>
+<Text style={styles.geminiText}>{geminiAdvice}</Text>
+</ScrollView>
+)}
+ <TouchableOpacity style={styles.closeButtonLarge} onPress={() => setShowGeminiModal(false)}>
+<Text style={styles.closeButtonText}>Close</Text>
+ </TouchableOpacity> 
           </View>
         </View>
       </Modal>
