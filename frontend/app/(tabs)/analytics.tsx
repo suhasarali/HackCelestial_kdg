@@ -1,20 +1,20 @@
-// app/(tabs)/analytics/page.tsx
-'use client';
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity,
-  Dimensions
+  Dimensions,
+  Animated
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { useTranslation } from 'react-i18next';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout } from '../../constants/design';
+import { fadeIn, scaleIn, bounce } from '../../utils/animations';
 
 // Mock data
 const CATCH_HISTORY = [
@@ -46,188 +46,335 @@ export default function AnalyticsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
   const [timeRange, setTimeRange] = useState('week');
+  
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const chartAnim = useRef(new Animated.Value(0)).current;
+
+  // Start animations on mount
+  useEffect(() => {
+    Animated.parallel([
+      fadeIn(fadeAnim, 800),
+      scaleIn(scaleAnim, 600),
+    ]).start();
+    
+    // Stagger chart animation
+    setTimeout(() => {
+      fadeIn(chartAnim, 400).start();
+    }, 300);
+  }, []);
 
   const chartConfig = {
-    backgroundGradientFrom: '#fff',
-    backgroundGradientTo: '#fff',
-    color: (opacity = 1) => `rgba(52, 152, 219, ${opacity})`,
-    strokeWidth: 2,
-    barPercentage: 0.5,
+    backgroundGradientFrom: Colors.surface,
+    backgroundGradientTo: Colors.surface,
+    color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
+    strokeWidth: 3,
+    barPercentage: 0.6,
     useShadowColorFromDataset: false,
     decimalPlaces: 0,
+    propsForDots: {
+      r: '6',
+      strokeWidth: '2',
+      stroke: Colors.primary,
+    },
+    propsForBackgroundLines: {
+      strokeDasharray: '5,5',
+      stroke: Colors.textTertiary,
+      strokeWidth: 1,
+    },
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView>
-      <View style={styles.header}>
-        <Text style={styles.title}>{('analytics')}</Text>
-        <View style={styles.timeRangeSelector}>
-          <TouchableOpacity 
-            style={[styles.timeButton, timeRange === 'day' && styles.activeTimeButton]}
-            onPress={() => setTimeRange('day')}
-          >
-            <Text style={[styles.timeButtonText, timeRange === 'day' && styles.activeTimeButtonText]}>Day</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.timeButton, timeRange === 'week' && styles.activeTimeButton]}
-            onPress={() => setTimeRange('week')}
-          >
-            <Text style={[styles.timeButtonText, timeRange === 'week' && styles.activeTimeButtonText]}>Week</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.timeButton, timeRange === 'month' && styles.activeTimeButton]}
-            onPress={() => setTimeRange('month')}
-          >
-            <Text style={[styles.timeButtonText, timeRange === 'month' && styles.activeTimeButtonText]}>Month</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Summary Cards */}
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Icon name="weight" size={24} color="#3498db" />
-          <Text style={styles.summaryValue}>100 kg</Text>
-          <Text style={styles.summaryLabel}>{('totalCatch')}</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <Icon name="cash" size={24} color="#2ecc71" />
-          <Text style={styles.summaryValue}>₹40,000</Text>
-          <Text style={styles.summaryLabel}>{('totalValue')}</Text>
-        </View>
-        <View style={styles.summaryCard}>
-          <Icon name="chart-line" size={24} color="#f39c12" />
-          <Text style={styles.summaryValue}>₹400/kg</Text>
-          <Text style={styles.summaryLabel}>{('avgPrice')}</Text>
-        </View>
-      </View>
-
-      {/* Catch History Chart */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{('catchHistory')}</Text>
-        <LineChart
-          data={{
-            labels: CATCH_HISTORY.map(item => item.day),
-            datasets: [
+      <Animated.View 
+        style={[
+          styles.animatedContainer,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Animated.View 
+            style={[
+              styles.header,
               {
-                data: CATCH_HISTORY.map(item => item.weight),
+                opacity: fadeAnim,
+                transform: [{ 
+                  translateY: fadeAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-20, 0],
+                  })
+                }],
               },
-            ],
-          }}
-          width={Dimensions.get('window').width - 32}
-          height={220}
-          chartConfig={chartConfig}
-          bezier
-          style={styles.chart}
-        />
-      </View>
+            ]}
+          >
+            <Text style={styles.title}>{t('analytics')}</Text>
+            <View style={styles.timeRangeSelector}>
+              <TouchableOpacity 
+                style={[styles.timeButton, timeRange === 'day' && styles.activeTimeButton]}
+                onPress={() => setTimeRange('day')}
+              >
+                <Text style={[styles.timeButtonText, timeRange === 'day' && styles.activeTimeButtonText]}>Day</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.timeButton, timeRange === 'week' && styles.activeTimeButton]}
+                onPress={() => setTimeRange('week')}
+              >
+                <Text style={[styles.timeButtonText, timeRange === 'week' && styles.activeTimeButtonText]}>Week</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.timeButton, timeRange === 'month' && styles.activeTimeButton]}
+                onPress={() => setTimeRange('month')}
+              >
+                <Text style={[styles.timeButtonText, timeRange === 'month' && styles.activeTimeButtonText]}>Month</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
 
-      {/* Species Distribution */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{('speciesDistribution')}</Text>
-        <PieChart
-          data={SPECIES_DATA}
-          width={Dimensions.get('window').width - 32}
-          height={200}
-          chartConfig={chartConfig}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          style={styles.chart}
-        />
-      </View>
-
-      {/* Best Fishing Hours */}
-      <View style={styles.chartContainer}>
-        <Text style={styles.chartTitle}>{('bestFishingHours')}</Text>
-        <BarChart
-          data={{
-            labels: BEST_HOURS.map(item => item.hour),
-            datasets: [
+          {/* Summary Cards - CORRECTED */}
+          <Animated.View 
+            style={[
+              styles.summaryRow,
               {
-                data: BEST_HOURS.map(item => item.success),
+                opacity: chartAnim,
+                transform: [{ 
+                  translateY: chartAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                }],
               },
-            ],
-          }}
-          width={Dimensions.get('window').width - 32}
-          height={220}
-          chartConfig={{
-            ...chartConfig,
-            color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-          }}
-          style={styles.chart}
-          yAxisLabel=""
-          yAxisSuffix="%"
-          showValuesOnTopOfBars
-        />
-      </View>
+            ]}
+          >
+            <Animated.View 
+              style={[
+                styles.summaryCard,
+                {
+                  transform: [{ 
+                    scale: chartAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    })
+                  }]
+                }
+              ]}
+            >
+              <Icon name="weight" size={24} color={Colors.primary} />
+              <Text style={styles.summaryValue}>100 kg</Text>
+              <Text style={styles.summaryLabel}>{t('totalCatch')}</Text>
+            </Animated.View>
 
-      {/* Insights */}
-      <View style={styles.insightsContainer}>
-        <Text style={styles.insightsTitle}>{('fishingInsights')}</Text>
-        <View style={styles.insightItem}>
-          <Icon name="lightbulb-on" size={20} color="#f39c12" />
-          <Text style={styles.insightText}>
-            {('bestTimeInsight')} <Text style={styles.highlight}>6-7 AM</Text> ({('successRate')}: 85%)
-          </Text>
-        </View>
-        <View style={styles.insightItem}>
-          <Icon name="lightbulb-on" size={20} color="#f39c12" />
-          <Text style={styles.insightText}>
-            {('bestSpeciesInsight')} <Text style={styles.highlight}>Rohu</Text> (35% {('ofCatches')})
-          </Text>
-        </View>
-        <View style={styles.insightItem}>
-          <Icon name="lightbulb-on" size={20} color="#f39c12" />
-          <Text style={styles.insightText}>
-            {('bestZoneInsight')} <Text style={styles.highlight}>North Bay</Text> ({('avgCatch')}: 18kg/{('trip')})
-          </Text>
-        </View>
-      </View>
-      </ScrollView>
+            <Animated.View 
+              style={[
+                styles.summaryCard,
+                {
+                  transform: [{ 
+                    scale: chartAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    })
+                  }]
+                }
+              ]}
+            >
+              <Icon name="cash" size={24} color={Colors.secondary} />
+              <Text style={styles.summaryValue}>₹40,000</Text>
+              <Text style={styles.summaryLabel}>{t('totalValue')}</Text>
+            </Animated.View>
+
+            <Animated.View 
+              style={[
+                styles.summaryCard,
+                {
+                  transform: [{ 
+                    scale: chartAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    })
+                  }]
+                }
+              ]}
+            >
+              <Icon name="chart-line" size={24} color={Colors.accent} />
+              <Text style={styles.summaryValue}>₹400/kg</Text>
+              <Text style={styles.summaryLabel}>{t('avgPrice')}</Text>
+            </Animated.View>
+          </Animated.View>
+
+          {/* Catch History Chart */}
+          <Animated.View 
+            style={[
+              styles.chartContainer,
+              {
+                opacity: chartAnim,
+                transform: [{ 
+                  translateY: chartAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                }],
+              },
+            ]}
+          >
+            <Text style={styles.chartTitle}>{t('catchHistory')}</Text>
+            <LineChart
+              data={{
+                labels: CATCH_HISTORY.map(item => item.day),
+                datasets: [
+                  {
+                    data: CATCH_HISTORY.map(item => item.weight),
+                  },
+                ],
+              }}
+              width={Dimensions.get('window').width - 32}
+              height={220}
+              chartConfig={chartConfig}
+              bezier
+              style={styles.chart}
+            />
+          </Animated.View>
+
+          {/* Species Distribution */}
+          <Animated.View 
+            style={[
+              styles.chartContainer,
+              {
+                opacity: chartAnim,
+                transform: [{ 
+                  translateY: chartAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                }],
+              },
+            ]}
+          >
+            <Text style={styles.chartTitle}>{t('speciesDistribution')}</Text>
+            <PieChart
+              data={SPECIES_DATA}
+              width={Dimensions.get('window').width - 32}
+              height={200}
+              chartConfig={chartConfig}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              style={styles.chart}
+            />
+          </Animated.View>
+
+          {/* Best Fishing Hours */}
+          <Animated.View 
+            style={[
+              styles.chartContainer,
+              {
+                opacity: chartAnim,
+                transform: [{ 
+                  translateY: chartAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                }],
+              },
+            ]}
+          >
+            <Text style={styles.chartTitle}>{t('bestFishingHours')}</Text>
+            <BarChart
+              data={{
+                labels: BEST_HOURS.map(item => item.hour),
+                datasets: [
+                  {
+                    data: BEST_HOURS.map(item => item.success),
+                  },
+                ],
+              }}
+              width={Dimensions.get('window').width - 32}
+              height={220}
+              chartConfig={{
+                ...chartConfig,
+                color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
+              }}
+              style={styles.chart}
+              yAxisLabel=""
+              yAxisSuffix="%"
+              showValuesOnTopOfBars
+            />
+          </Animated.View>
+
+          {/* Insights */}
+          <View style={styles.insightsContainer}>
+            <Text style={styles.insightsTitle}>{t('fishingInsights')}</Text>
+            <View style={styles.insightItem}>
+              <Icon name="lightbulb-on" size={20} color="#f39c12" />
+              <Text style={styles.insightText}>
+                {t('bestTimeInsight')} <Text style={styles.highlight}>6-7 AM</Text> ({t('successRate')}: 85%)
+              </Text>
+            </View>
+            <View style={styles.insightItem}>
+              <Icon name="lightbulb-on" size={20} color="#f39c12" />
+              <Text style={styles.insightText}>
+                {t('bestSpeciesInsight')} <Text style={styles.highlight}>Rohu</Text> (35% {t('ofCatches')})
+              </Text>
+            </View>
+            <View style={styles.insightItem}>
+              <Icon name="lightbulb-on" size={20} color="#f39c12" />
+              <Text style={styles.insightText}>
+                {t('bestZoneInsight')} <Text style={styles.highlight}>North Bay</Text> ({t('avgCatch')}: 18kg/{t('trip')})
+              </Text>
+            </View>
+          </View>
+        </ScrollView>
+      </Animated.View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    ...Layout.container,
+    backgroundColor: Colors.background,
+  },
+  animatedContainer: {
     flex: 1,
-    backgroundColor: '#ecf0f1',
-    padding: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2c3e50',
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    lineHeight: Typography.lineHeight.tight * Typography.fontSize['3xl'],
   },
   timeRangeSelector: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 4,
-    elevation: 2,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.xs,
+    ...Shadows.sm,
   },
   timeButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
   },
   activeTimeButton: {
-    backgroundColor: '#3498db',
+    backgroundColor: Colors.primary,
   },
   timeButtonText: {
-    color: '#7f8c8d',
-    fontWeight: '500',
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.fontWeight.medium,
   },
   activeTimeButtonText: {
-    color: '#fff',
+    color: Colors.textInverse,
   },
   summaryRow: {
     flexDirection: 'row',
