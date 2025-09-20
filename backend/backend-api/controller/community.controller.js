@@ -185,6 +185,8 @@ import Observation from "../models/community.model.js";
 
 export const createObservation = async (req, res) => {
   try {
+        console.log("📥 Incoming body:", req.body);
+    console.log("👤 Authenticated user:", req.user);
     // Quick debug log to see if middleware attached user
     console.log("createObservation - req.user:", !!req.user, req.user ? req.user._id : null);
 
