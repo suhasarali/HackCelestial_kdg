@@ -1,82 +1,50 @@
 // controllers/catchController.js
 
-const Catch = require('../models/catchModel');
-const mongoose = require('mongoose');
+// Use the new Analysis model
+const Analysis = require('../model/analysisModel'); 
 
-/**
- * @desc    Get a summary of all catches for a specific user
- * @route   GET /api/catches/summary/:userId
- * @access  Private
- */
-const getAllCatches = async (req, res) => {
+const getCatchSummary = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.params; // This is a string from the URL
 
-        // Validate the userId
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ message: 'Invalid User ID format.' });
-        }
-
-        const summary = await Catch.aggregate([
-            // Stage 1: Match only the documents for the specified user
+        const summary = await Analysis.aggregate([
             {
+                // CRITICAL CHANGE: Match the string directly, no ObjectId conversion
                 $match: {
-                    userId: new mongoose.Types.ObjectId(userId)
+                    user_id: userId 
                 }
             },
-            // Stage 2: Group the matched documents to calculate sums
             {
                 $group: {
-                    _id: null, // Group all matched documents into a single result
+                    _id: null,
                     totalWeight: { $sum: '$weight_kg' },
                     totalValue: { $sum: '$total_price' },
                 }
             },
-            // Stage 3: Reshape the output and calculate the average price
             {
                 $project: {
                     _id: 0,
-                    totalWeight: '$totalWeight',
-                    totalValue: '$totalValue',
+                    totalWeight: 1,
+                    totalValue: 1,
                     averagePricePerKg: {
-                        $cond: {
-                            if: { $eq: ['$totalWeight', 0] },
-                            then: 0,
-                            else: { $divide: ['$totalValue', '$totalWeight'] }
-                        }
+                        $cond: [{ $eq: ['$totalWeight', 0] }, 0, { $divide: ['$totalValue', '$totalWeight'] }]
                     }
                 }
             }
         ]);
 
-        // If the user has no catches, return a default object with zero values.
         if (summary.length === 0) {
-            return res.status(200).json({
-                totalWeight: 0,
-                totalValue: 0,
-                averagePricePerKg: 0,
-            });
+            return res.status(200).json({ totalWeight: 0, totalValue: 0, averagePricePerKg: 0 });
         }
-
         res.status(200).json(summary[0]);
-
     } catch (error) {
-        res.status(500).json({ message: 'Server Error: Could not fetch catch summary.', error: error.message });
+        res.status(500).json({ message: 'Server Error: Could not fetch catch summary.' });
     }
 };
 
-/**
- * @desc    Get weekly catch data for a user, formatted for a graph
- * @route   GET /api/catches/weekly/:userId
- * @access  Private
- */
 const getWeeklyCatches = async (req, res) => {
     try {
-        const { userId } = req.params;
-
-        if (!mongoose.Types.ObjectId.isValid(userId)) {
-            return res.status(400).json({ message: 'Invalid User ID format.' });
-        }
+        const { userId } = req.params; // This is a string from the URL
 
         const today = new Date();
         const dayOfWeek = today.getDay();
@@ -88,37 +56,78 @@ const getWeeklyCatches = async (req, res) => {
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         endOfWeek.setHours(23, 59, 59, 999);
         
-        const weeklyData = await Catch.aggregate([
+        const weeklyData = await Analysis.aggregate([
             {
                 $match: {
-                    userId: new mongoose.Types.ObjectId(userId),
+                    // CRITICAL CHANGE: Match the string directly
+                    user_id: userId,
+                    // IMPORTANT: This requires a `createdAt` field in your documents
                     createdAt: { $gte: startOfWeek, $lte: endOfWeek },
                 },
             },
             {
                 $group: {
                     _id: { $dayOfWeek: '$createdAt' },
-                    totalQuantity: { $sum: '$quantity' },
+                    totalQuantity: { $sum: '$qty_captured' },
                 },
             },
             { $sort: { _id: 1 } },
         ]);
 
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const formattedData = days.map((day, index) => {
-            const dayData = weeklyData.find(item => item._id === index + 1);
+        let formattedData = days.map((day, index) => {
+            const dayData = weeklyData.find(d => d._id === index + 1);
             return { day, quantity: dayData ? dayData.totalQuantity : 0 };
         });
         
-        const weekStartOnMonday = [...formattedData.slice(1), formattedData[0]];
-        res.status(200).json(weekStartOnMonday);
+        formattedData = [...formattedData.slice(1), formattedData[0]];
+        res.status(200).json(formattedData);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error: Could not fetch weekly data.' });
+    }
+};
+
+const getSpeciesDistribution = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const speciesData = await Analysis.aggregate([
+            // Stage 1: Find all documents for the specified user
+            {
+                $match: {
+                    user_id: userId
+                }
+            },
+            // Stage 2: Group by the fish species and sum their quantities
+            {
+                $group: {
+                    _id: '$fish_class', // Group by the species name
+                    totalQuantity: { $sum: '$qty_captured' } // Sum the quantity for each species
+                }
+            },
+            // Stage 3: Format the output for the pie chart
+            {
+                $project: {
+                    _id: 0, // Remove the default _id field
+                    species: '$_id', // Rename _id to 'species'
+                    quantity: '$totalQuantity' // Rename totalQuantity to 'quantity'
+                }
+            }
+        ]);
+
+        if (speciesData.length === 0) {
+            return res.status(200).json([]); // Return an empty array if no data
+        }
+
+        res.status(200).json(speciesData);
 
     } catch (error) {
-        res.status(500).json({ message: 'Server Error: Could not fetch weekly data.', error: error.message });
+        res.status(500).json({ message: 'Server Error: Could not fetch species data.' });
     }
 };
 
 module.exports = {
-    getAllCatches,
+    getCatchSummary,
     getWeeklyCatches,
+    getSpeciesDistribution
 };
