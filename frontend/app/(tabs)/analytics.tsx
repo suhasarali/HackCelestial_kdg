@@ -17,6 +17,17 @@ import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout } from '../../constants/design';
 import { fadeIn, scaleIn } from '../../utils/animations';
 
+
+const CATCH_HISTORY = [
+  { day: 'Mon', weight: 12, value: 4800 },
+  { day: 'Tue', weight: 18, value: 7200 },
+  { day: 'Wed', weight: 8, value: 3200 },
+  { day: 'Thu', weight: 22, value: 8800 },
+  { day: 'Fri', weight: 15, value: 6000 },
+  { day: 'Sat', weight: 25, value: 10000 },
+  { day: 'Sun', weight: 0, value: 0 },
+];
+
 // Mock fallback data
 const BEST_HOURS = [
   { hour: '5-6 AM', success: 80 },
@@ -70,6 +81,7 @@ export default function AnalyticsScreen() {
       setLoading(true);
       try {
         const userId = await AsyncStorage.getItem('userId');
+        console.log(userId)
         if (!userId) {
           console.warn('No userId found in storage');
           setLoading(false);
@@ -78,13 +90,16 @@ export default function AnalyticsScreen() {
 
         // 1) Summary API
         try {
+          const cleanUserId = String(userId).replace(/['"]+/g, ''); // remove quotes
+
           const resp = await fetch(
-            `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${userId}`,
+            `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${cleanUserId}`,
             {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' },
             }
           );
+          //console.log(resp);
           if (resp.ok) {
             const data = await resp.json();
             console.log('Summary data:', data);
@@ -95,37 +110,11 @@ export default function AnalyticsScreen() {
         } catch (err) {
           console.error('Error fetching summary:', err);
         }
-
-        // 2) Daily Catch API
-        try {
-          const resp = await fetch(
-            `https://hackcelestial-kdg-1.onrender.com/api/catches/weekly/${userId}`,
-            {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-            }
-          );
-          if (resp.ok) {
-            const data = await resp.json();
-            console.log('Daily data:', data);
-            const formatted = Array.isArray(data)
-              ? data.map((item) => ({
-                  day: typeof item.day === 'string' ? item.day.slice(0, 3) : item.day,
-                  quantity: Number(item.quantity) || 0,
-                }))
-              : [];
-            if (mounted) setDailyData(formatted);
-          } else {
-            console.warn('Daily fetch failed:', resp.status);
-          }
-        } catch (err) {
-          console.error('Error fetching daily data:', err);
-        }
-
         // 3) Species API
         try {
+           const cleanUserId = String(userId).replace(/['"]+/g, ''); // remove quotes
           const resp = await fetch(
-            `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${userId}`,
+            `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${cleanUserId}`,
             {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' },
@@ -239,11 +228,31 @@ export default function AnalyticsScreen() {
             </View>
           </Animated.View>
 
-          {/* Catch History */}
-          <Animated.View style={styles.chartContainer}>
+         {/* Catch History Chart */}
+          <Animated.View 
+            style={[
+              styles.chartContainer,
+              {
+                opacity: chartAnim,
+                transform: [{ 
+                  translateY: chartAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                }],
+              },
+            ]}
+          >
             <Text style={styles.chartTitle}>Catch History</Text>
             <LineChart
-              data={{ labels: chartLabels, datasets: [{ data: chartQuantities }] }}
+              data={{
+                labels: CATCH_HISTORY.map(item => item.day),
+                datasets: [
+                  {
+                    data: CATCH_HISTORY.map(item => item.weight),
+                  },
+                ],
+              }}
               width={Dimensions.get('window').width - 32}
               height={220}
               chartConfig={chartConfig}
@@ -251,6 +260,7 @@ export default function AnalyticsScreen() {
               style={styles.chart}
             />
           </Animated.View>
+
 
           {/* Species Distribution */}
           <Animated.View style={styles.chartContainer}>
