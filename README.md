@@ -50,13 +50,14 @@ India's fishing industry faces critical challenges:
 - Price fluctuation patterns
 - Optimal fishing zone identification
 - Region-wise profitability analysis
-
+<p align="center">
 <img width="523" height="1079" alt="image" src="https://github.com/user-attachments/assets/0f8b92de-12a0-4722-b0f7-3e5f8bb52a26" />
 <img width="519" height="873" alt="image" src="https://github.com/user-attachments/assets/0bb8473e-94bd-458a-87d9-fe8ca629fab1" />
 <img width="702" height="1600" alt="image" src="https://github.com/user-attachments/assets/b14db27b-fca7-48c4-84a6-348dd6e675db" />
 <img width="702" height="1600" alt="image" src="https://github.com/user-attachments/assets/2d1337b5-9008-487c-b74a-74b4671663c2" />
 <img width="702" height="1600" alt="image" src="https://github.com/user-attachments/assets/653144b4-ca7a-4504-9b58-f6a7bc4945c4" />
 <img width="702" height="1600" alt="image" src="https://github.com/user-attachments/assets/7a4a9d77-c798-4d08-8fba-64e583ca30c6" />
+</p>
 
 
 
