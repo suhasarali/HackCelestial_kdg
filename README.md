@@ -1,10 +1,24 @@
-analysis url: https://hackcelestial-kdg-1.onrender.com/api/catches/summary/68cda34fbedae2fb5e505890
-              https://hackcelestial-kdg-1.onrender.com/api/catches/weekly/68cda34fbedae2fb5e505890
-              https://hackcelestial-kdg-1.onrender.com/api/catches/species/68cda34fbedae2fb5e505890
+## 🔗 Live Services
 
-backend-model :  https://mlservice-146a.onrender.com/
-Backend-api : https://hackcelestial-kdg.onrender.com/
-Backend-service : https://hackcelestial-kdg-1.onrender.com/
+### 🌐 Backend Services
+
+- **ML Model Service**: [https://mlservice-146a.onrender.com/](https://mlservice-146a.onrender.com/)
+- **Backend API**: [https://hackcelestial-kdg.onrender.com/](https://hackcelestial-kdg.onrender.com/)
+- **Analytics Service**: [https://hackcelestial-kdg-1.onrender.com/](https://hackcelestial-kdg-1.onrender.com/)
+
+### 📊 Analysis API Endpoints
+
+#### Summary Analytics:
+https://hackcelestial-kdg-1.onrender.com/api/catches/summary/68cda34fbedae2fb5e505890
+
+#### Weekly Catch Data:
+https://hackcelestial-kdg-1.onrender.com/api/catches/weekly/68cda34fbedae2fb5e505890
+
+
+#### Species Distribution:
+https://hackcelestial-kdg-1.onrender.com/api/catches/species/68cda34fbedae2fb5e505890
+
+---
 
 # 🐟 Matsya – Ocean Hazard Analytics
 
