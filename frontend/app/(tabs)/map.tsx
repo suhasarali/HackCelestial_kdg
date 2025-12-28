@@ -36,7 +36,7 @@ interface HeatmapZone {
 
 // --- GEMINI API SETUP ---
 // TODO: Move this to environment variables for security
-const GEMINI_API_KEY = "AIzaSyByhQtHInSbKVlTfRpeMnWeMNRRuDmebGY"; 
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 // Corrected URL
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 // --- Gemini AI call ---
