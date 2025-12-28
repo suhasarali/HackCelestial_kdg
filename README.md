@@ -68,12 +68,16 @@ India's fishing industry faces critical challenges:
 <img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/0f8b92de-12a0-4722-b0f7-3e5f8bb52a26" />
 <img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/0bb8473e-94bd-458a-87d9-fe8ca629fab1" />
 <img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/b14db27b-fca7-48c4-84a6-348dd6e675db" />
+<img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/2d1337b5-9008-487c-b74a-74b4671663c2" />
    <br />
    <br />
   
-<img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/2d1337b5-9008-487c-b74a-74b4671663c2" />
+
 <img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/653144b4-ca7a-4504-9b58-f6a7bc4945c4" />
 <img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/7a4a9d77-c798-4d08-8fba-64e583ca30c6" />
+<img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/8792ff5d-0936-4b4a-97fe-3e722e0a0e32" />
+<img width="250" height="1600" alt="image" src="https://github.com/user-attachments/assets/33d00605-a848-4197-9353-bef1b7798259" />
+
 </p>
 
 
