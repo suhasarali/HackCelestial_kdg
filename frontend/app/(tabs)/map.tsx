@@ -6,7 +6,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { Magnetometer } from 'expo-sensors'; // Integrated Magnetometer
+import { Magnetometer } from 'expo-sensors';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Added for Business Brain
 import { Ionicons } from '@expo/vector-icons';
 
 // --- CONSTANTS ---
@@ -118,10 +119,25 @@ export default function MapScreen() {
     }
   };
 
-  const startNavigation = () => {
+  // ✅ UPDATED ACTION: START NAVIGATION & LOG TRIP AUTOMATICALLY
+  const startNavigation = async () => {
     setActiveTarget(selectedZone);
     setIsNavigating(true);
     setShowProbabilityModal(false);
+
+    // Business Brain: Automated Trip Logging
+    const initialTripData = {
+      startTime: new Date().toISOString(),
+      startLat: userLocation.latitude,
+      startLon: userLocation.longitude,
+      targetZone: selectedZone.id,
+      targetSpecies: mostProbableFish || "General Catch",
+      estimatedRevenue: selectedZone.probability * 50, // Mock calculation
+      estimatedFuel: selectedZone.fuelReq
+    };
+    
+    await AsyncStorage.setItem('active_trip', JSON.stringify(initialTripData));
+
     mapRef.current?.animateToRegion({
       ...selectedZone.center,
       latitudeDelta: 0.01,
@@ -175,7 +191,6 @@ export default function MapScreen() {
       );
     };
 
-    // Magnetometer Logic
     Magnetometer.setUpdateInterval(100);
     const sensorSubscription = Magnetometer.addListener((data) => {
       let angle = Math.atan2(data.y, data.x) * (180 / Math.PI);
@@ -218,7 +233,6 @@ export default function MapScreen() {
     setIsGeminiLoading(false);
   };
 
-  // Helper to rotate the arrow based on Target Bearing vs Phone Heading
   const getArrowRotation = () => {
     if (!userLocation || !activeTarget) return 0;
     const bearing = calculateBearing(
@@ -331,7 +345,6 @@ export default function MapScreen() {
         </>
       )}
 
-      {/* Modal logic unchanged as per request */}
       <Modal visible={showProbabilityModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
