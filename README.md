@@ -64,6 +64,13 @@ India's fishing industry faces critical challenges:
 - Price fluctuation patterns
 - Optimal fishing zone identification
 - Region-wise profitability analysis
+
+#### Key Features
+- 🔍 Precision Fish Search: Real-time targeting engine that allows fishermen to search for specific species (e.g., Pomfret, Mackerel) and recalibrate the maritime heatmap instantly.
+- 📡 Offshore Navigation Engine: A fully localized navigation system that provides turn-by-turn guidance, live ETA, and distance tracking using hardware GPS—functional even without internet deep at sea.
+- 🧭 Smart Compass & Steering: Integrated Magnetometer sensor logic that offers a live rotating steering guide, showing the exact bearing and direction to the chosen fishing zone.
+- 🔥 Dynamic Heatmap & Zone Ranking: Automatically identifies and ranks fishing zones based on catch probability, travel distance, and fuel efficiency.
+- ⛽ Fuel & Cost Estimator: Real-time calculation of fuel requirements and trip costs (INR) for each zone to ensure profitable fishing expeditions.
 <p align="center">
 <img width="200" height="1600" alt="image" src="https://github.com/user-attachments/assets/0f8b92de-12a0-4722-b0f7-3e5f8bb52a26" />
 <img width="200" height="1600" alt="image" src="https://github.com/user-attachments/assets/0bb8473e-94bd-458a-87d9-fe8ca629fab1" />
