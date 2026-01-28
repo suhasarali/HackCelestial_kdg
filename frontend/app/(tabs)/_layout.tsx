@@ -33,7 +33,7 @@ export default function TabLayout() {
         name="map" 
         options={{ 
           title: ('map'), 
-          tabBarIcon: ({ color, size }) => <Ionicons name="map" size={size} color={color} /> 
+          tabBarIcon: ({ color, size }) => <Ionicons name="map-outline" size={size} color={color} /> 
         }} 
       />
       <Tabs.Screen 
