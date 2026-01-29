@@ -35,7 +35,7 @@ mongoose.connect(process.env.MONGO_URI)
 app.use("/api/catches", catchRoutes);
 
 // The alert notification route
-app.post('/notifications', async (req, res) => {
+app.get('/notifications', async (req, res) => {
     const { latitude, longitude } = req.body;
     if (!latitude || !longitude) {
         return res.status(400).json({ error: "Latitude and longitude are required." });

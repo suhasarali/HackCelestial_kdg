@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   View, 
@@ -7,11 +6,10 @@ import {
   ScrollView, 
   TouchableOpacity,
   Image,
-  Switch,
   Alert,
   TextInput,
   Modal,
-  FlatList
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons as Icon, Ionicons } from '@expo/vector-icons';
@@ -20,6 +18,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Shadows } from '../../constants/design';
+import i18nInstance from '../../i18n';
+
+const API_BASE_URL = 'https://hackcelestial-kdg.onrender.com/api';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English' },
@@ -29,20 +30,104 @@ const LANGUAGES = [
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
 ];
 
-import i18nInstance from '../../i18n'; // Import directly
-
 export default function ProfileScreen() {
   const router = useRouter();
   const { t, i18n } = useTranslation();
+  
+  // State Management
   const [langModalVisible, setLangModalVisible] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(false);
   
   const [user, setUser] = useState({
-    name: 'Suhas A',
-    phone: '+91 98765 43210',
-    vessel: 'Ocean Spirit',
-    homePort: 'Mumbai',
-    experience: '5',
+    name: '',
+    email: '',
+    vessel: '',
+    homePort: '',
+    experience: '',
   });
+
+  const [editUser, setEditUser] = useState(user);
+
+  // Fetch Profile Data
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/profile/profile`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        const data = await res.json();
+        console.log('Profile Data:', data.profile);
+        if (data.success) {
+          const profileData = {
+            name: data.profile.name,
+            email: data.profile.email || '',
+            vessel: data.profile.boatLicenseId || '',
+            homePort: data.profile.port || '',
+            experience: data.profile.experience ? `${data.profile.experience} years` : '',
+          };
+          setUser(profileData);
+          setEditUser(profileData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleEditProfile = async () => {
+    if (!editMode) {
+      setEditMode(true);
+      return;
+    }
+    
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/profile/profile-update`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editUser.name,
+          experience: editUser.experience.replace(' years', ''),
+          boatLicenseId: editUser.vessel,
+          port: editUser.homePort,
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        Alert.alert(t('profile.success'), t('profile.profileUpdated'));
+        const updatedData = {
+          name: data.profile.name,
+          email: data.profile.email || '',
+          vessel: data.profile.boatLicenseId || '',
+          homePort: data.profile.port || '',
+          experience: data.profile.experience ? `${data.profile.experience} years` : '',
+        };
+        setUser(updatedData);
+        setEditMode(false);
+      } else {
+        Alert.alert("Error", data.message || "Update failed");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Could not connect to server");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const changeLanguage = async (langCode: string) => {
     // Navigate with the direct instance to be safe
@@ -51,8 +136,6 @@ export default function ProfileScreen() {
     } else if (i18n && i18n.changeLanguage) {
         await i18n.changeLanguage(langCode);
     }
-    await AsyncStorage.setItem('user-language', langCode);
-    setLangModalVisible(false);
   };
 
   const getLanguageName = (code: string) => {
@@ -68,86 +151,97 @@ export default function ProfileScreen() {
               <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>{t('profile.title')}</Text>
-            <View style={{ width: 40 }} />
+            <TouchableOpacity onPress={handleEditProfile} style={styles.backButton}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Icon name={editMode ? "check" : "pencil"} size={22} color="#fff" />
+              )}
+            </TouchableOpacity>
           </View>
           
           <View style={styles.profileHeader}>
             <View style={styles.avatarContainer}>
               <Image 
-                source={{ uri: 'https://i.pravatar.cc/100?img=11' }} 
+                source={{ uri: 'https://st.depositphotos.com/2218212/2938/i/950/depositphotos_29387653-stock-photo-facebook-profile.jpg' }} 
                 style={styles.avatar} 
               />
-              <View style={styles.editAvatarBtn}>
-                <Icon name="camera" size={16} color="#fff" />
-              </View>
             </View>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userPhone}>{user.phone}</Text>
+            {editMode ? (
+              <TextInput 
+                style={[styles.userName, styles.inputUnderline]} 
+                value={editUser.name}
+                onChangeText={(text) => setEditUser({...editUser, name: text})}
+              />
+            ) : (
+              <Text style={styles.userName}>{user.name}</Text>
+            )}
+            <Text style={styles.userPhone}>{user.email}</Text>
           </View>
         </SafeAreaView>
       </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Info Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('profile.profileInfo')}</Text>
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
-              <Icon name="ship-wheel" size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>{t('profile.vessel')}</Text>
-              <Text style={styles.infoValue}>{user.vessel}</Text>
-            </View>
-          </View>
+          
+          {/* Vessel Info */}
+          <InfoRow 
+            icon="ship-wheel" 
+            label={t('profile.vessel')} 
+            value={editMode ? editUser.vessel : user.vessel}
+            isEditing={editMode}
+            onChange={(text:any) => setEditUser({...editUser, vessel: text})}
+          />
           <View style={styles.divider} />
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
-              <Icon name="map-marker" size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>{t('profile.homePort')}</Text>
-              <Text style={styles.infoValue}>{user.homePort}</Text>
-            </View>
-          </View>
+          
+          {/* Home Port */}
+          <InfoRow 
+            icon="map-marker" 
+            label={t('profile.homePort')} 
+            value={editMode ? editUser.homePort : user.homePort}
+            isEditing={editMode}
+            onChange={(text:any) => setEditUser({...editUser, homePort: text})}
+          />
           <View style={styles.divider} />
-          <View style={styles.infoRow}>
-            <View style={styles.infoIconBox}>
-              <Icon name="clock-outline" size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>{t('profile.experience')}</Text>
-              <Text style={styles.infoValue}>{user.experience} years</Text>
-            </View>
-          </View>
+
+          {/* Experience */}
+          <InfoRow 
+            icon="clock-outline" 
+            label={t('profile.experience')} 
+            value={editMode ? editUser.experience : user.experience}
+            isEditing={editMode}
+            onChange={(text:any) => setEditUser({...editUser, experience: text})}
+            keyboardType="numeric"
+          />
         </View>
 
-        {/* Language Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
-          <TouchableOpacity style={styles.settingRow} onPress={() => setLangModalVisible(true)}>
-            <View style={styles.settingLeft}>
-              <View style={[styles.settingIconBox, { backgroundColor: '#E0F2F1' }]}>
-                <Icon name="translate" size={20} color={Colors.primary} />
+        {/* Language & Settings */}
+        {!editMode && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('profile.settings')}</Text>
+            <TouchableOpacity style={styles.settingRow} onPress={() => setLangModalVisible(true)}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIconBox, { backgroundColor: '#E0F2F1' }]}>
+                  <Icon name="translate" size={20} color={Colors.primary} />
+                </View>
+                <Text style={styles.settingLabel}>{t('profile.language')}</Text>
               </View>
-              <Text style={styles.settingLabel}>{t('profile.language')}</Text>
-            </View>
-            <View style={styles.settingRight}>
-              <Text style={styles.settingValue}>{getLanguageName(i18n.language)}</Text>
-              <Icon name="chevron-right" size={20} color={Colors.textSecondary} />
-            </View>
-          </TouchableOpacity>
-        </View>
+              <View style={styles.settingRight}>
+                <Text style={styles.settingValue}>{getLanguageName(i18n.language)}</Text>
+                <Icon name="chevron-right" size={20} color={Colors.textSecondary} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Logout Button */}
         <TouchableOpacity style={styles.logoutBtn}>
           <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
-        
-        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Language Modal */}
+      {/* Language Modal remains the same... */}
+       {/* Language Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -189,6 +283,28 @@ export default function ProfileScreen() {
     </View>
   );
 }
+
+// Helper component for cleaner rows
+const InfoRow = ({ icon, label, value, isEditing, onChange, keyboardType = "default" }: any) => (
+  <View style={styles.infoRow}>
+    <View style={styles.infoIconBox}>
+      <Icon name={icon} size={22} color={Colors.primary} />
+    </View>
+    <View style={styles.infoContent}>
+      <Text style={styles.infoLabel}>{label}</Text>
+      {isEditing ? (
+        <TextInput 
+          style={styles.inputField} 
+          value={value} 
+          onChangeText={onChange}
+          keyboardType={keyboardType}
+        />
+      ) : (
+        <Text style={styles.infoValue}>{value || 'Not set'}</Text>
+      )}
+    </View>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -398,5 +514,20 @@ const styles = StyleSheet.create({
   langNameActive: {
     color: Colors.primary,
     fontWeight: '700',
+  },
+
+  inputUnderline: {
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.5)',
+    minWidth: 150,
+    textAlign: 'center'
+  },
+  inputField: {
+    fontSize: 16,
+    color: Colors.textPrimary,
+    fontWeight: '600',
+    paddingVertical: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.primary,
   },
 });
