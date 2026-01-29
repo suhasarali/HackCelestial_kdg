@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Matsya",
-    "slug": "matsya-app",
+    "slug": "matsya",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/matsyaicon.png",
@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.frontend",
+      "bundleIdentifier": "com.anonymous.matsya",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to location to track your fishing location and provide location-based services.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to track your fishing location and provide location-based services.",

@@ -5,6 +5,7 @@ import { AuthProvider } from '../context/AuthContext';
 import { LocationProvider } from '../context/LocationContext';
 import React from 'react';
 import { AlertProvider } from '@/context/AlertContext';
+import '../i18n';
 
 export default function RootLayout() {
   return (

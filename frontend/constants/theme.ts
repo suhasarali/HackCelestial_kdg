@@ -1,41 +1,57 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Theme colors for the Fisherman App
+ * Deep teal aquatic palette for a calming, outdoor-ready UI
  */
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Primary teal colors
+const tintColorLight = '#2C7A7B';  // Deep Teal
+const tintColorDark = '#4FD1C5';   // Light teal for dark mode
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#1A202C',           // Dark slate
+    textSecondary: '#718096',  // Cool grey
+    background: '#F7F9FC',     // Light grey-blue
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#718096',
+    tabIconDefault: '#A0AEC0',
     tabIconSelected: tintColorLight,
+    card: '#FFFFFF',
+    border: '#E2E8F0',
+    notification: '#E53E3E',
+    success: '#38A169',
+    warning: '#D69E2E',
+    // Gradient colors
+    gradientStart: '#319795',
+    gradientEnd: '#285E61',
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F7FAFC',
+    textSecondary: '#A0AEC0',
+    background: '#1A202C',
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#A0AEC0',
+    tabIconDefault: '#718096',
     tabIconSelected: tintColorDark,
+    card: '#2D3748',
+    border: '#4A5568',
+    notification: '#FC8181',
+    success: '#68D391',
+    warning: '#F6E05E',
+    // Gradient colors
+    gradientStart: '#2C7A7B',
+    gradientEnd: '#1D5A5B',
   },
 };
 
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
+    /** iOS system fonts with rounded design */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
@@ -45,9 +61,9 @@ export const Fonts = Platform.select({
     mono: 'monospace',
   },
   web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    sans: "Inter, Poppins, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace",
   },
 });

@@ -10,331 +10,333 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground, // Import ImageBackground
+  Dimensions,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
-import { Ionicons } from '@expo/vector-icons'; // Import icons
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
 
-// A placeholder ocean image. Replace with your own!
-const oceanImage = { uri: 'https://unsplash.com/photos/a-group-of-fish-swimming-in-an-aquarium-sInnJmPJfCw' };
+const { height } = Dimensions.get('window');
 
 export default function RegisterScreen() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  // New fields
   const [boatLicenseId, setBoatLicenseId] = useState('');
   const [experience, setExperience] = useState('');
   const [port, setPort] = useState('');
 
   const [loading, setLoading] = useState(false);
-  
-  // State for the information tooltip
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [tooltip, setTooltip] = useState({ visible: false, message: '' });
 
   const { register } = useAuth();
-  
-  // Effect to hide the tooltip after 5 seconds
-  useEffect(() => {
-    if (tooltip.visible) {
-      const timer = setTimeout(() => {
-        setTooltip({ visible: false, message: '' });
-      }, 5000);
-      return () => clearTimeout(timer); // Cleanup timer on component unmount or if tooltip changes
-    }
-  }, [tooltip]);
-
-
-  const showTooltip = (message: string) => {
-    setTooltip({ visible: true, message });
-  };
 
   const handleRegister = async () => {
-    // Updated validation to include new fields
     if (!name || !email || !password || !confirmPassword || !boatLicenseId || !experience || !port) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Incomplete', 'Please fill in all fields to join our community.');
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password should be at least 6 characters');
+      Alert.alert('Password Too Short', 'Password should be at least 6 characters');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Mismatch', 'Passwords do not match');
       return;
     }
 
     setLoading(true);
 
-    // IMPORTANT: You'll need to update your `register` function in `AuthContext`
-    // to accept these new fields (boatLicenseId, experience, port).
-    const success = await register(name, email, password, {
-      boatLicenseId,
-      experience,
-      port,
-    });
+    try {
+      const success = await register(name, email, password, {
+        boatLicenseId,
+        experience,
+        port,
+      });
 
-    setLoading(false);
-
-    if (success) {
-      router.replace('/(tabs)/home' as any);
+      if (success) {
+        router.replace('/(tabs)/home' as any);
+      }
+    } catch (error) {
+        // Handled by context usually
+    } finally {
+        setLoading(false);
     }
   };
 
-  return (
-    <ImageBackground source={oceanImage} style={styles.backgroundImage} resizeMode="cover">
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.container} edges={['top']}>
-          <KeyboardAvoidingView
-            style={styles.keyboardContainer}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-              <Text style={styles.title}>Create an Account</Text>
-              <Text style={styles.subtitle}>Join our fishing community</Text>
+  const showTooltip = (message: string) => {
+    setTooltip({ visible: true, message });
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+        setTooltip({ visible: false, message: '' });
+    }, 3000);
+  };
 
-              {/* Tooltip Display Area */}
+  const renderInput = (
+    value: string,
+    onChange: (text: string) => void,
+    placeholder: string,
+    icon: keyof typeof Ionicons.glyphMap,
+    keyType: any = 'default',
+    isSecure: boolean = false,
+    showSecureToggle: boolean = false,
+    toggleSecure?: () => void,
+    infoMessage?: string
+  ) => (
+    <View style={styles.inputContainer}>
+      <Ionicons name={icon} size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+      <TextInput
+        style={styles.input}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.textTertiary}
+        value={value}
+        onChangeText={onChange}
+        autoCapitalize={keyType === 'email-address' ? 'none' : 'words'}
+        keyboardType={keyType}
+        secureTextEntry={isSecure}
+        editable={!loading}
+      />
+      {showSecureToggle && toggleSecure && (
+        <TouchableOpacity onPress={toggleSecure} style={styles.actionIcon}>
+             <Ionicons name={!isSecure ? "eye-outline" : "eye-off-outline"} size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      )}
+      {infoMessage && (
+        <TouchableOpacity onPress={() => showTooltip(infoMessage)} style={styles.actionIcon}>
+          <Ionicons name="information-circle-outline" size={22} color={Colors.primary} />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  return (
+    <LinearGradient
+      colors={Colors.gradientPrimary}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            
+            <View style={styles.header}>
+               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                 <Ionicons name="arrow-back" size={24} color={Colors.textInverse} />
+               </TouchableOpacity>
+               <View>
+                 <Text style={styles.title}>Create Account</Text>
+                 <Text style={styles.subtitle}>Join the fleet</Text>
+               </View>
+            </View>
+
+            <View style={styles.card}>
+               {/* Tooltip Overlay */}
               {tooltip.visible && (
-                <View style={styles.tooltipContainer}>
+                <View style={styles.tooltipBubble}>
                   <Text style={styles.tooltipText}>{tooltip.message}</Text>
                 </View>
               )}
 
-              <View style={styles.form}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Name"
-                  placeholderTextColor="#999"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                  editable={!loading}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#999"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  editable={!loading}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Boat License ID"
-                  placeholderTextColor="#999"
-                  value={boatLicenseId}
-                  onChangeText={setBoatLicenseId}
-                  autoCapitalize="none"
-                  editable={!loading}
-                />
-                
-                {/* Experience Field with Info Icon */}
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.inputWithIcon}
-                    placeholder="Experience (in years)"
-                    placeholderTextColor="#999"
-                    value={experience}
-                    onChangeText={setExperience}
-                    keyboardType="numeric"
-                    editable={!loading}
-                  />
-                  <TouchableOpacity onPress={() => showTooltip('Enter the number of years you have been a fisherman.')}>
-                    <Ionicons name="information-circle-outline" size={24} color="#007AFF" style={styles.infoIcon} />
-                  </TouchableOpacity>
-                </View>
+              {renderInput(name, setName, "Full Name", "person-outline")}
+              {renderInput(email, setEmail, "Email Address", "mail-outline", "email-address")}
+              {renderInput(boatLicenseId, setBoatLicenseId, "Boat License ID", "card-outline")}
+              {renderInput(
+                  experience, 
+                  setExperience, 
+                  "Experience (years)", 
+                  "time-outline", 
+                  "numeric", 
+                  false, 
+                  false, 
+                  undefined, 
+                  "Enter the number of years you have been a fisherman."
+              )}
+              {renderInput(
+                  port, 
+                  setPort, 
+                  "Home Port / Region", 
+                  "location-outline", 
+                  "default", 
+                  false, 
+                  false, 
+                  undefined, 
+                  "Enter the port or region where you primarily fish."
+              )}
 
-                {/* Port Field with Info Icon */}
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    style={styles.inputWithIcon}
-                    placeholder="Port / Region"
-                    placeholderTextColor="#999"
-                    value={port}
-                    onChangeText={setPort}
-                    autoCapitalize="words"
-                    editable={!loading}
-                  />
-                  <TouchableOpacity onPress={() => showTooltip('Enter the port or region where you primarily fish.')}>
-                    <Ionicons name="information-circle-outline" size={24} color="#007AFF" style={styles.infoIcon} />
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.divider} />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  placeholderTextColor="#999"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  editable={!loading}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  placeholderTextColor="#999"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  editable={!loading}
-                />
+              {renderInput(password, setPassword, "Password", "lock-closed-outline", "default", !showPassword, true, () => setShowPassword(!showPassword))}
+              {renderInput(confirmPassword, setConfirmPassword, "Confirm Password", "lock-closed-outline", "default", !showConfirmPassword, true, () => setShowConfirmPassword(!showConfirmPassword))}
 
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
-                  onPress={handleRegister}
-                  disabled={loading}
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={handleRegister}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={Colors.gradientTeal}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.button}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={Colors.textInverse} />
                   ) : (
-                    <Text style={styles.buttonText}>Create Account</Text>
+                    <Text style={styles.buttonText}>Register</Text>
                   )}
-                </TouchableOpacity>
+                </LinearGradient>
+              </TouchableOpacity>
 
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>Already have an account? </Text>
-                  <Link href="/auth/login" asChild>
-                    <TouchableOpacity disabled={loading}>
-                      <Text style={styles.link}>Sign In</Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account? </Text>
+                <Link href="/auth/login" asChild>
+                  <TouchableOpacity disabled={loading}>
+                    <Text style={styles.link}>Sign In</Text>
+                  </TouchableOpacity>
+                </Link>
               </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </View>
-    </ImageBackground>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 20, 40, 0.75)', // Dark blue overlay
-  },
   container: {
     flex: 1,
-    backgroundColor: 'transparent', // Container should be transparent
   },
-  keyboardContainer: {
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
     flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
+    padding: Spacing.lg,
+    paddingBottom: Spacing['3xl'], // Extra padding for scroll
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.md,
+  },
+  backButton: {
+    marginRight: Spacing.md,
+    padding: Spacing.xs,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#fff', // White text
+    fontSize: Typography.fontSize['2xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textInverse,
   },
   subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#ddd', // Light grey text
+    fontSize: Typography.fontSize.sm,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
-  form: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Semi-transparent white form
-    padding: 25,
-    borderRadius: 15,
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd'
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius['2xl'],
+    padding: Spacing.lg,
+    ...Shadows.xl,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    borderColor: '#ddd',
-    marginBottom: 15,
+    borderColor: Colors.cardBorder,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    height: 56,
   },
-  inputWithIcon: {
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  actionIcon: {
+    padding: Spacing.xs,
+  },
+  input: {
     flex: 1,
-    height: 50,
-    paddingHorizontal: 15,
-    fontSize: 16,
+    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.base,
+    height: '100%',
   },
-  infoIcon: {
-    paddingHorizontal: 10,
+  divider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    marginVertical: Spacing.sm,
+    marginBottom: Spacing.lg,
+  },
+  buttonContainer: {
+    borderRadius: BorderRadius.lg,
+    ...Shadows.teal,
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.xs,
   },
   button: {
-    backgroundColor: '#007AFF', // A nice blue
-    height: 50,
-    borderRadius: 8,
+    height: 56,
+    borderRadius: BorderRadius.lg,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-    backgroundColor: '#0056b3'
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: Colors.textInverse,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
   },
   footerText: {
-    color: '#333',
-    fontSize: 15,
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.base,
   },
   link: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-    fontSize: 15,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.bold,
+    fontSize: Typography.fontSize.base,
   },
-  tooltipContainer: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    marginBottom: 20,
+  tooltipBubble: {
+    position: 'absolute',
+    top: -50,
     alignSelf: 'center',
-    elevation: 5,
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    zIndex: 10,
+    ...Shadows.md,
   },
   tooltipText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
+    color: Colors.textInverse,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
   },
 });

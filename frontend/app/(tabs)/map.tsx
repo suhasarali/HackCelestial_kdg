@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Dimensions,
-  Alert, ActivityIndicator, Modal, ScrollView, TextInput
+  Alert, ActivityIndicator, Modal, ScrollView, TextInput, StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, Circle, Polyline } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Magnetometer } from 'expo-sensors';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Added for Business Brain
-import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons, MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
 
 // --- CONSTANTS ---
 const BACKEND_API_URL = 'https://VolcanicBat64-fish3.hf.space/predict';
@@ -16,8 +18,8 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 const BOAT_SPEED_KNOTS = 15; 
-const FUEL_BURN_RATE = 0.5; // Liters per KM
-const FUEL_PRICE = 105; // INR per Liter
+const FUEL_BURN_RATE = 0.5;
+const FUEL_PRICE = 105;
 
 const HEATMAP_ZONES = [
   { id: 'zone-1', radius: 2000, offset: { lat: 0.01, lng: 0.01 } },
@@ -25,6 +27,8 @@ const HEATMAP_ZONES = [
   { id: 'zone-3', radius: 1800, offset: { lat: 0.015, lng: -0.01 } },
   { id: 'zone-4', radius: 1200, offset: { lat: -0.012, lng: -0.008 } },
 ];
+
+const { width, height } = Dimensions.get('window');
 
 // --- NAVIGATION HELPERS ---
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -67,8 +71,6 @@ export default function MapScreen() {
 
   const [activeTarget, setActiveTarget] = useState<any>(null);
   const [isNavigating, setIsNavigating] = useState(false);
-
-  // --- MAGNETOMETER STATE ---
   const [heading, setHeading] = useState(0);
 
   // --- API CALLS ---
@@ -106,8 +108,7 @@ export default function MapScreen() {
       });
       const data = await res.json();
       let rawText = data.candidates[0].content.parts[0].text.trim();
-      const cleanedText = rawText.replace(/```(?:[a-z]+)?\n([\s\S]*?)\n```/g, '$1').trim();
-      return cleanedText;
+      return rawText.replace(/```(?:[a-z]+)?\n([\s\S]*?)\n```/g, '$1').trim();
     } catch (e) { return "Error fetching advice."; }
   };
 
@@ -119,30 +120,23 @@ export default function MapScreen() {
     }
   };
 
-  // ✅ UPDATED ACTION: START NAVIGATION & LOG TRIP AUTOMATICALLY
   const startNavigation = async () => {
     setActiveTarget(selectedZone);
     setIsNavigating(true);
     setShowProbabilityModal(false);
 
-    // Business Brain: Automated Trip Logging
     const initialTripData = {
       startTime: new Date().toISOString(),
       startLat: userLocation.latitude,
       startLon: userLocation.longitude,
       targetZone: selectedZone.id,
       targetSpecies: mostProbableFish || "General Catch",
-      estimatedRevenue: selectedZone.probability * 50, // Mock calculation
+      estimatedRevenue: selectedZone.probability * 50,
       estimatedFuel: selectedZone.fuelReq
     };
     
     await AsyncStorage.setItem('active_trip', JSON.stringify(initialTripData));
-
-    mapRef.current?.animateToRegion({
-      ...selectedZone.center,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01
-    }, 1000);
+    mapRef.current?.animateToRegion({ ...selectedZone.center, latitudeDelta: 0.01, longitudeDelta: 0.01 }, 1000);
   };
 
   const generateHeatmap = async (centerLat: number, centerLon: number) => {
@@ -180,13 +174,12 @@ export default function MapScreen() {
       locationSubscription = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, distanceInterval: 10 },
         (location) => {
-          const newLoc = {
+          setUserLocation({
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
-          };
-          setUserLocation(newLoc);
+          });
         }
       );
     };
@@ -199,7 +192,6 @@ export default function MapScreen() {
     });
 
     startTracking();
-
     return () => {
       locationSubscription?.remove();
       sensorSubscription?.remove();
@@ -242,40 +234,32 @@ export default function MapScreen() {
     return Math.round(bearing - heading);
   };
 
-  const getHeatmapColor = (p: number) => p > 70 ? 'rgba(244, 67, 54, 0.4)' : 'rgba(76, 175, 80, 0.4)';
-  const getStrokeColor = (p: number) => p > 70 ? '#f44336' : '#4caf50';
+  const getHeatmapColor = (p: number) => p > 70 ? 'rgba(56, 161, 105, 0.4)' : 'rgba(44, 122, 123, 0.4)';
+  const getStrokeColor = (p: number) => p > 70 ? Colors.success : Colors.primary;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007BFF" />
-          <Text style={styles.loadingText}>Calibrating Ocean Data...</Text>
+          <LinearGradient
+            colors={['#0D4F4F', '#1A8585']}
+            style={styles.loadingGradient}
+          >
+            <View style={styles.loadingContent}>
+              <View style={styles.loadingIconCircle}>
+                <Icon name="radar" size={40} color="#fff" />
+              </View>
+              <Text style={styles.loadingTitle}>Scanning Ocean</Text>
+              <Text style={styles.loadingSubtitle}>Finding the best fishing spots...</Text>
+              <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
+            </View>
+          </LinearGradient>
         </View>
       ) : (
         <>
-          <View style={styles.searchBox}>
-            <TextInput 
-              style={styles.searchInput}
-              placeholder="Search Fish Type..."
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-            <TouchableOpacity onPress={handleSearch}>
-              <Ionicons name="search" size={24} color="#007BFF" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.fishNameContainer}>
-            <View style={styles.fishNameCard}>
-              <View style={styles.fishNameHeader}>
-                <Ionicons name="fish" size={20} color="#007BFF" />
-                <Text style={styles.fishNameTitle}>Current Target</Text>
-              </View>
-              <Text style={styles.fishNameText}>{mostProbableFish || "Scanning..."}</Text>
-            </View>
-          </View>
-
+          {/* Map */}
           <MapView ref={mapRef} style={styles.map} initialRegion={userLocation} showsUserLocation>
             {heatmapZones.map(zone => (
               <React.Fragment key={zone.id}>
@@ -300,120 +284,630 @@ export default function MapScreen() {
                   { latitude: userLocation.latitude, longitude: userLocation.longitude },
                   { latitude: activeTarget.center.latitude, longitude: activeTarget.center.longitude }
                 ]}
-                strokeColor="#007BFF"
+                strokeColor={Colors.primary}
                 strokeWidth={3}
-                lineDashPattern={[5, 5]}
+                lineDashPattern={[10, 5]}
               />
             )}
           </MapView>
 
+          {/* Top Search Area */}
+          <SafeAreaView style={styles.topOverlay} edges={['top']}>
+            <View style={styles.searchContainer}>
+              <View style={styles.searchBox}>
+                <Ionicons name="search" size={20} color={Colors.textSecondary} />
+                <TextInput 
+                  style={styles.searchInput}
+                  placeholder="Search fish species..."
+                  placeholderTextColor={Colors.textTertiary}
+                  value={searchTerm}
+                  onChangeText={setSearchTerm}
+                  onSubmitEditing={handleSearch}
+                />
+              </View>
+            </View>
+
+            {/* Fish Target Card */}
+            {mostProbableFish && (
+              <View style={styles.targetCard}>
+                <LinearGradient
+                  colors={[Colors.primary, '#1D5A5B']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.targetCardGradient}
+                >
+                  <View style={styles.targetIconCircle}>
+                    <Icon name="fish" size={24} color="#fff" />
+                  </View>
+                  <View style={styles.targetInfo}>
+                    <Text style={styles.targetLabel}>Target Species</Text>
+                    <Text style={styles.targetName}>{mostProbableFish}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.targetChangeBtn}>
+                    <Ionicons name="refresh" size={20} color="rgba(255,255,255,0.8)" />
+                  </TouchableOpacity>
+                </LinearGradient>
+              </View>
+            )}
+          </SafeAreaView>
+
+          {/* Navigation Overlay */}
           {isNavigating && activeTarget && userLocation && (
             <View style={styles.navOverlay}>
-              <View>
-                <Text style={styles.navText}>
-                  ETA: {Math.round((calculateDistance(userLocation.latitude, userLocation.longitude, activeTarget.center.latitude, activeTarget.center.longitude) / (BOAT_SPEED_KNOTS * 1.85)) * 60)}m
-                </Text>
-                <Text style={styles.navSubText}>
-                  {calculateDistance(userLocation.latitude, userLocation.longitude, activeTarget.center.latitude, activeTarget.center.longitude).toFixed(2)} km
-                </Text>
-              </View>
+              <LinearGradient
+                colors={[Colors.primary, '#1D5A5B']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.navCard}
+              >
+                <View style={styles.navLeft}>
+                  <View style={styles.navCompass}>
+                    <Ionicons 
+                      name="navigate" 
+                      size={32} 
+                      color="#fff" 
+                      style={{ transform: [{ rotate: `${getArrowRotation()}deg` }] }} 
+                    />
+                  </View>
+                  <View>
+                    <Text style={styles.navDistance}>
+                      {calculateDistance(userLocation.latitude, userLocation.longitude, activeTarget.center.latitude, activeTarget.center.longitude).toFixed(1)} km
+                    </Text>
+                    <Text style={styles.navEta}>
+                      ETA: {Math.round((calculateDistance(userLocation.latitude, userLocation.longitude, activeTarget.center.latitude, activeTarget.center.longitude) / (BOAT_SPEED_KNOTS * 1.85)) * 60)} min
+                    </Text>
+                  </View>
+                </View>
 
-              <View style={styles.steeringContainer}>
-                 <Ionicons 
-                    name="navigate" 
-                    size={28} 
-                    color="#fff" 
-                    style={{ transform: [{ rotate: `${getArrowRotation()}deg` }] }} 
-                 />
-                 <Text style={styles.steeringText}>{Math.round(getArrowRotation())}°</Text>
-              </View>
-
-              <TouchableOpacity style={styles.stopBtn} onPress={() => setIsNavigating(false)}>
-                <Text style={styles.stopText}>END</Text>
-              </TouchableOpacity>
+                <TouchableOpacity style={styles.endNavBtn} onPress={() => setIsNavigating(false)}>
+                  <Ionicons name="close" size={24} color={Colors.error} />
+                </TouchableOpacity>
+              </LinearGradient>
             </View>
           )}
 
-          <View style={styles.zoomControls}>
-            <TouchableOpacity style={styles.geminiButton} onPress={handleGeminiPress}>
-              <Ionicons name="sparkles" size={24} color="#fff" />
+          {/* Floating Action Buttons */}
+          <View style={styles.fabContainer}>
+            <TouchableOpacity style={styles.fabAI} onPress={handleGeminiPress}>
+              <LinearGradient colors={['#9333EA', '#7C3AED']} style={styles.fabGradient}>
+                <Icon name="robot" size={24} color="#fff" />
+              </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.zoomButton} onPress={() => mapRef.current?.animateToRegion(userLocation)}>
-              <Ionicons name="locate" size={24} color="#fff" />
+            
+            <TouchableOpacity style={styles.fabLocate} onPress={() => mapRef.current?.animateToRegion(userLocation)}>
+              <View style={styles.fabSolid}>
+                <Ionicons name="locate" size={24} color="#fff" />
+              </View>
             </TouchableOpacity>
+          </View>
+
+          {/* Zone List Preview */}
+          <View style={styles.zonePreview}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.zonePreviewScroll}>
+              {heatmapZones.slice(0, 3).map((zone, index) => (
+                <TouchableOpacity 
+                  key={zone.id}
+                  style={[styles.zonePreviewCard, index === 0 && styles.zonePreviewCardTop]}
+                  onPress={() => { setSelectedZone(zone); setShowProbabilityModal(true); }}
+                >
+                  <View style={[styles.zonePreviewBadge, { backgroundColor: index === 0 ? Colors.success : Colors.primary }]}>
+                    <Text style={styles.zonePreviewBadgeText}>{Math.round(zone.probability)}%</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.zonePreviewTitle}>Zone {index + 1}</Text>
+                    <Text style={styles.zonePreviewMeta}>{zone.distance.toFixed(1)} km away</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </>
       )}
 
+      {/* Zone Modal */}
       <Modal visible={showProbabilityModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Zone Intelligence</Text>
+            <View style={styles.modalHandle} />
+            
             {selectedZone && (
-              <View style={styles.probabilityInfo}>
-                <Text style={styles.rankBadge}>{heatmapZones[0].id === selectedZone.id ? "🏆 TOP RANKED ZONE" : "Fishing Zone"}</Text>
-                <Text style={styles.probabilityValue}>{Math.round(selectedZone.probability)}% Catch Rate</Text>
-                <View style={styles.navStatsRow}>
-                  <View style={styles.statBox}><Ionicons name="speedometer-outline" size={20} color="#666" /><Text>{selectedZone.distance.toFixed(1)} km</Text></View>
-                  <View style={styles.statBox}><Ionicons name="water-outline" size={20} color="#666" /><Text>{selectedZone.fuelReq.toFixed(1)} L</Text></View>
-                  <View style={styles.statBox}><Ionicons name="cash-outline" size={20} color="#666" /><Text>₹{Math.round(selectedZone.fuelReq * FUEL_PRICE)}</Text></View>
+              <>
+                <View style={styles.modalHeader}>
+                  <View style={[styles.modalRankBadge, { backgroundColor: heatmapZones[0]?.id === selectedZone.id ? '#FEF3C7' : Colors.surfaceVariant }]}>
+                    <Text style={styles.modalRankText}>
+                      {heatmapZones[0]?.id === selectedZone.id ? '🏆 Best Spot' : 'Fishing Zone'}
+                    </Text>
+                  </View>
                 </View>
-                <TouchableOpacity style={styles.startNavBtn} onPress={startNavigation}><Text style={styles.startNavText}>Start Boat Navigation</Text></TouchableOpacity>
-              </View>
+
+                <View style={styles.probCircle}>
+                  <Text style={styles.probValue}>{Math.round(selectedZone.probability)}</Text>
+                  <Text style={styles.probUnit}>%</Text>
+                </View>
+                <Text style={styles.probLabel}>Catch Probability</Text>
+
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCard}>
+                    <Ionicons name="navigate-outline" size={24} color={Colors.primary} />
+                    <Text style={styles.statCardValue}>{selectedZone.distance.toFixed(1)} km</Text>
+                    <Text style={styles.statCardLabel}>Distance</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Icon name="gas-station" size={24} color={Colors.warning} />
+                    <Text style={styles.statCardValue}>{selectedZone.fuelReq.toFixed(1)} L</Text>
+                    <Text style={styles.statCardLabel}>Fuel Needed</Text>
+                  </View>
+                  <View style={styles.statCard}>
+                    <Icon name="cash" size={24} color={Colors.success} />
+                    <Text style={styles.statCardValue}>₹{Math.round(selectedZone.fuelReq * FUEL_PRICE)}</Text>
+                    <Text style={styles.statCardLabel}>Est. Cost</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.startNavBtn} onPress={startNavigation}>
+                  <LinearGradient colors={[Colors.success, '#2F855A']} style={styles.startNavBtnGradient}>
+                    <Ionicons name="navigate" size={22} color="#fff" />
+                    <Text style={styles.startNavBtnText}>Start Navigation</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setShowProbabilityModal(false)} style={styles.cancelBtn}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+              </>
             )}
-            <TouchableOpacity onPress={() => setShowProbabilityModal(false)} style={styles.closeBtnSmall}><Text>Close</Text></TouchableOpacity>
           </View>
         </View>
       </Modal>
 
+      {/* AI Advice Modal */}
       <Modal visible={showGeminiModal} animationType="slide" transparent>
-         <View style={styles.modalOverlay}>
-           <View style={[styles.modalContent, { maxHeight: '80%' }]}>
-              <Text style={styles.modalTitle}>Best Practices</Text>
-              <ScrollView>{isGeminiLoading ? <ActivityIndicator /> : <Text>{geminiAdvice}</Text>}</ScrollView>
-              <TouchableOpacity style={styles.closeButtonLarge} onPress={() => setShowGeminiModal(false)}><Text style={styles.closeButtonText}>Close</Text></TouchableOpacity>
-           </View>
-         </View>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '75%' }]}>
+            <View style={styles.modalHandle} />
+            
+            <View style={styles.aiHeader}>
+              <LinearGradient colors={['#9333EA', '#7C3AED']} style={styles.aiIconCircle}>
+                <Icon name="robot" size={24} color="#fff" />
+              </LinearGradient>
+              <View>
+                <Text style={styles.aiTitle}>AI Fishing Tips</Text>
+                <Text style={styles.aiSubtitle}>Powered by Gemini</Text>
+              </View>
+            </View>
+            
+            <ScrollView style={styles.aiAdviceScroll} showsVerticalScrollIndicator={false}>
+              {isGeminiLoading ? (
+                <View style={styles.aiLoading}>
+                  <ActivityIndicator color="#9333EA" size="large" />
+                  <Text style={styles.aiLoadingText}>Analyzing conditions...</Text>
+                </View>
+              ) : (
+                <Text style={styles.aiAdviceText}>{geminiAdvice}</Text>
+              )}
+            </ScrollView>
+            
+            <TouchableOpacity style={styles.aiCloseBtn} onPress={() => setShowGeminiModal(false)}>
+              <Text style={styles.aiCloseBtnText}>Got it!</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
-  map: { width: '100%', height: '100%' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 10, fontSize: 16, color: '#34495e' },
-  searchBox: { position: 'absolute', top: 50, left: 20, right: 20, zIndex: 1001, backgroundColor: '#fff', borderRadius: 25, flexDirection: 'row', paddingHorizontal: 20, alignItems: 'center', height: 50, elevation: 5 },
-  searchInput: { flex: 1 },
-  fishNameContainer: { position: 'absolute', top: 110, left: 20, right: 20, zIndex: 1000 },
-  fishNameCard: { backgroundColor: '#fff', borderRadius: 12, padding: 12, elevation: 4, borderLeftWidth: 4, borderLeftColor: '#007BFF' },
-  fishNameHeader: { flexDirection: 'row', alignItems: 'center' },
-  fishNameTitle: { fontSize: 14, color: '#666', marginLeft: 8 },
-  fishNameText: { fontSize: 18, fontWeight: 'bold', color: '#2c3e50', textAlign: 'center' },
-  zoneMarker: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#fff' },
-  zoneMarkerText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  zoomControls: { position: 'absolute', right: 20, bottom: 40 },
-  geminiButton: { backgroundColor: '#8e44ad', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 15, elevation: 5 },
-  zoomButton: { backgroundColor: '#007BFF', width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 5 },
-  navOverlay: { position: 'absolute', bottom: 120, left: 20, right: 20, backgroundColor: '#007BFF', borderRadius: 15, padding: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  navText: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-  navSubText: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
-  steeringContainer: { alignItems: 'center', justifyContent: 'center' },
-  steeringText: { color: '#fff', fontWeight: 'bold', marginTop: 2 },
-  stopBtn: { backgroundColor: '#fff', padding: 10, borderRadius: 8 },
-  stopText: { color: '#ff3b30', fontWeight: 'bold' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 25, width: '85%' },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 15 },
-  probabilityValue: { fontSize: 28, fontWeight: 'bold', color: '#007BFF', textAlign: 'center', marginVertical: 10 },
-  navStatsRow: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 15 },
-  statBox: { alignItems: 'center' },
-  probabilityInfo: { marginVertical: 10 },
-  rankBadge: { alignSelf: 'center', backgroundColor: '#FFD700', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, fontSize: 12, fontWeight: 'bold' },
-  startNavBtn: { backgroundColor: '#28a745', padding: 15, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-  startNavText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  closeBtnSmall: { alignSelf: 'center', marginTop: 15 },
-  closeButtonLarge: { backgroundColor: '#007BFF', padding: 15, borderRadius: 10, marginTop: 20, alignItems: 'center' },
-  closeButtonText: { color: '#fff', fontWeight: 'bold' }
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background 
+  },
+  map: { 
+    width: '100%', 
+    height: '100%' 
+  },
+  
+  // Loading
+  loadingContainer: { 
+    flex: 1,
+  },
+  loadingGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+  },
+  loadingIconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  loadingTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  loadingSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.7)',
+  },
+
+  // Top Overlay
+  topOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  searchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 52,
+    ...Shadows.lg,
+  },
+  searchInput: {
+    flex: 1,
+    marginLeft: 12,
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  targetCard: {
+    marginHorizontal: 20,
+    marginTop: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  targetCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 14,
+  },
+  targetIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  targetInfo: {
+    flex: 1,
+  },
+  targetLabel: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.7)',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  targetName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  targetChangeBtn: {
+    padding: 8,
+  },
+
+  // Zone Markers
+  zoneMarker: { 
+    width: 52, 
+    height: 52, 
+    borderRadius: 16, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderWidth: 3, 
+    borderColor: '#fff',
+    ...Shadows.lg,
+  },
+  zoneMarkerText: { 
+    color: '#fff', 
+    fontSize: 14, 
+    fontWeight: '700',
+  },
+
+  // FABs
+  fabContainer: { 
+    position: 'absolute', 
+    right: 20, 
+    bottom: 200,
+    gap: 12,
+  },
+  fabAI: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+  fabLocate: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+  fabGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fabSolid: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Navigation Overlay
+  navOverlay: {
+    position: 'absolute',
+    top: 180,
+    left: 20,
+    right: 20,
+    zIndex: 100,
+  },
+  navCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 20,
+    ...Shadows.lg,
+  },
+  navLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  navCompass: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navDistance: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  navEta: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  endNavBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Zone Preview
+  zonePreview: {
+    position: 'absolute',
+    bottom: 110,
+    left: 0,
+    right: 0,
+  },
+  zonePreviewScroll: {
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  zonePreviewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    gap: 12,
+    ...Shadows.md,
+    marginRight: 12,
+  },
+  zonePreviewCardTop: {
+    borderWidth: 2,
+    borderColor: Colors.success,
+  },
+  zonePreviewBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  zonePreviewBadgeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  zonePreviewTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  zonePreviewMeta: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+
+  // Modal
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.5)', 
+    justifyContent: 'flex-end',
+  },
+  modalContent: { 
+    backgroundColor: Colors.surface, 
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.divider,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalRankBadge: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  modalRankText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  probCircle: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  probValue: {
+    fontSize: 64,
+    fontWeight: '200',
+    color: Colors.primary,
+  },
+  probUnit: {
+    fontSize: 28,
+    fontWeight: '400',
+    color: Colors.primary,
+    marginBottom: 12,
+    marginLeft: 4,
+  },
+  probLabel: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 28,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: Colors.surfaceVariant,
+    padding: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  statCardValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginTop: 10,
+  },
+  statCardLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 4,
+  },
+  startNavBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  startNavBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    gap: 10,
+  },
+  startNavBtnText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    padding: 12,
+  },
+  cancelBtnText: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+  },
+
+  // AI Modal
+  aiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 20,
+  },
+  aiIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  aiTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  aiSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  aiAdviceScroll: {
+    maxHeight: 280,
+    marginBottom: 20,
+  },
+  aiLoading: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  aiLoadingText: {
+    marginTop: 12,
+    color: Colors.textSecondary,
+  },
+  aiAdviceText: {
+    fontSize: 15,
+    color: Colors.textPrimary,
+    lineHeight: 24,
+  },
+  aiCloseBtn: {
+    backgroundColor: '#9333EA',
+    padding: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  aiCloseBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });

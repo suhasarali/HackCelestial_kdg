@@ -7,22 +7,24 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
-  ImageBackground,
-  ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { Colors, Typography, Spacing, BorderRadius, Shadows, Layout } from '../../constants/design';
 
-// A placeholder ocean image. Replace with your own!
-const oceanImage = { uri: 'https://unsplash.com/photos/a-group-of-fish-swimming-in-an-aquarium-sInnJmPJfCw' };
+const { width } = Dimensions.get('window');
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
   const handleLogin = async () => {
@@ -33,158 +35,219 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    const success = await login(email, password);
-    setLoading(false);
-
-    if (success) {
-      router.replace('/(tabs)/home' as any);
+    try {
+      const success = await login(email, password);
+      if (success) {
+        router.replace('/(tabs)/home' as any);
+      }
+    } catch (error) {
+      // Error handling is usually done in login function, 
+      // but strictly ensuring loading is false
+    } finally {
+        setLoading(false);
     }
   };
 
   return (
-    <ImageBackground source={oceanImage} style={styles.backgroundImage} resizeMode="cover">
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.container} edges={['top']}>
-          <KeyboardAvoidingView
-            style={styles.keyboardContainer}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <LinearGradient
+      colors={Colors.gradientPrimary}
+      style={styles.container}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          <View style={styles.content}>
+            <View style={styles.headerContainer}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="boat" size={40} color={Colors.primary} />
+              </View>
               <Text style={styles.title}>Welcome Back</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+              <Text style={styles.subtitle}>Sign in to continue your journey</Text>
+            </View>
 
-              <View style={styles.form}>
+            <View style={styles.card}>
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#999"
+                  placeholder="Email Address"
+                  placeholderTextColor={Colors.textTertiary}
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   editable={!loading}
                 />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Password"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={Colors.textTertiary}
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={!showPassword}
                   editable={!loading}
                 />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                   <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={Colors.textSecondary} />
+                </TouchableOpacity>
+              </View>
 
-                <TouchableOpacity
-                  style={[styles.button, loading && styles.buttonDisabled]}
-                  onPress={handleLogin}
-                  disabled={loading}
+              <TouchableOpacity
+                onPress={() => { /* Forgot password logic */ }}
+                style={styles.forgotPassword}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buttonContainer}
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={Colors.gradientTeal}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.button}
                 >
                   {loading ? (
-                    <ActivityIndicator color="#fff" />
+                    <ActivityIndicator color={Colors.textInverse} />
                   ) : (
                     <Text style={styles.buttonText}>Sign In</Text>
                   )}
-                </TouchableOpacity>
+                </LinearGradient>
+              </TouchableOpacity>
 
-                <View style={styles.footer}>
-                  <Text style={styles.footerText}>Don't have an account? </Text>
-                  <Link href="/auth/register" asChild>
-                    <TouchableOpacity disabled={loading}>
-                      <Text style={styles.link}>Sign Up</Text>
-                    </TouchableOpacity>
-                  </Link>
-                </View>
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <Link href="/auth/register" asChild>
+                  <TouchableOpacity disabled={loading}>
+                    <Text style={styles.link}>Sign Up</Text>
+                  </TouchableOpacity>
+                </Link>
               </View>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </View>
-    </ImageBackground>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
-    flex: 1,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 20, 40, 0.75)',
-  },
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
   },
-  keyboardContainer: {
+  safeArea: {
     flex: 1,
   },
-  scrollContainer: {
-    flexGrow: 1,
+  keyboardView: {
+    flex: 1,
     justifyContent: 'center',
-    padding: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#fff',
+  content: {
+    padding: Spacing.xl,
+    justifyContent: 'center',
   },
-  subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    marginBottom: 30,
-    color: '#ddd',
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing['2xl'],
   },
-  form: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 25,
-    borderRadius: 15,
-  },
-  input: {
-    height: 50,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    height: 50,
-    borderRadius: 8,
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    marginBottom: Spacing.lg,
+    ...Shadows.lg,
   },
-  buttonDisabled: {
-    opacity: 0.7,
-    backgroundColor: '#0056b3',
+  title: {
+    fontSize: Typography.fontSize['3xl'],
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textInverse,
+    marginBottom: Spacing.xs,
+  },
+  subtitle: {
+    fontSize: Typography.fontSize.base,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  card: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius['2xl'],
+    padding: Spacing.xl,
+    ...Shadows.xl,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  input: {
+    flex: 1,
+    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.base,
+    height: '100%',
+  },
+  eyeIcon: {
+    padding: Spacing.xs,
+  },
+  forgotPassword: {
+    alignSelf: 'flex-end',
+    marginBottom: Spacing.lg,
+  },
+  forgotPasswordText: {
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+    fontSize: Typography.fontSize.sm,
+  },
+  buttonContainer: {
+    borderRadius: BorderRadius.lg,
+    ...Shadows.teal, // Use the colored shadow
+    marginBottom: Spacing.lg,
+  },
+  button: {
+    height: 56,
+    borderRadius: BorderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    color: Colors.textInverse,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
   },
   footerText: {
-    color: '#333',
-    fontSize: 15,
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.base,
   },
   link: {
-    color: '#007AFF',
-    fontWeight: 'bold',
-    fontSize: 15,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.bold,
+    fontSize: Typography.fontSize.base,
   },
 });

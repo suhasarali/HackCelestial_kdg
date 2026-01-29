@@ -4,22 +4,24 @@ import { useState, useRef, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, TouchableOpacity, TextInput,
   ScrollView, Image, Alert, ActivityIndicator, Dimensions,
-  Vibration
+  Vibration, StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../../context/AuthContext';
 import { useLocation } from '../../context/LocationContext';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
 
 const { width } = Dimensions.get('window');
 
 const MARKET_SPIKES = [
-  { id: 's1', species: 'Silver Pomfret', price: 850, status: 'High Demand', location: 'Kalyan Mandi' },
-  { id: 's2', species: 'Kingfish (Surmai)', price: 720, status: 'Rising', location: 'Thane Market' },
-  { id: 's3', species: 'Tuna', price: 400, status: 'Spiking', location: 'Navi Mumbai' },
+  { id: 's1', species: 'Silver Pomfret', price: 850, change: '+18%', trend: 'up', location: 'Mumbai' },
+  { id: 's2', species: 'Kingfish', price: 720, change: '+12%', trend: 'up', location: 'Thane' },
+  { id: 's3', species: 'Tuna', price: 400, change: '+8%', trend: 'up', location: 'Ratnagiri' },
 ];
 
 export default function CatchLogScreen() {
@@ -36,19 +38,16 @@ export default function CatchLogScreen() {
   const [summaryReport, setSummaryReport] = useState<any>(null);
   
   const [formData, setFormData] = useState({
-    species: '', weight: '', qty: '', priceType: 'Retail'
+    species: '', weight: '', qty: '1', priceType: 'Retail'
   });
 
   const cameraRef = useRef<any>(null);
 
-  // ✅ ALWAYS KEEP CHECKING LOCAL STORAGE
   useEffect(() => {
     const checkTrip = async () => {
       const tripData = await AsyncStorage.getItem('active_trip');
       if (tripData) {
         const parsed = JSON.parse(tripData);
-        //console.log('Fetched active trip from storage:', parsed);
-        // Only update state if data has changed to prevent re-renders
         if (JSON.stringify(parsed) !== JSON.stringify(activeTrip)) {
           setActiveTrip(parsed);
         }
@@ -57,12 +56,11 @@ export default function CatchLogScreen() {
       }
     };
 
-    checkTrip(); // Initial check
-    const interval = setInterval(checkTrip, 2000); // Check every 2 seconds for background changes
+    checkTrip();
+    const interval = setInterval(checkTrip, 2000);
     return () => clearInterval(interval);
   }, [activeTrip]);
 
-  // --- API FUNCTIONS ---
   const detectSpecies = async (imageUri: string) => {
     setIsDetecting(true);
     try {
@@ -73,10 +71,8 @@ export default function CatchLogScreen() {
         body: form,
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      console.log('Detection response status:', response);
       if (response.ok) {
         const result = await response.json();
-        console.log('Detection result:', result);
         const species = result.roboflow_result || 'Unknown';
         setFormData(prev => ({ ...prev, species }));
       }
@@ -104,14 +100,12 @@ export default function CatchLogScreen() {
           lon: (currentLoc?.longitude || 72.8777).toString(),
           price_type: item.priceType
         });
-        console.log('Fetching price with params:', priceParams.toString());
         const res = await fetch(`https://mlservice-146a.onrender.com/price?${priceParams}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
         if (res.ok) {
           const data = await res.json();
-          console.log('Price result:', data);
           totalRevenue += parseFloat(data.predicted_price || 0);
         }
       }
@@ -140,203 +134,784 @@ export default function CatchLogScreen() {
   const addToHaul = () => {
     if (!formData.weight) return;
     setHaulItems([...haulItems, { ...formData, id: Date.now().toString() }]);
-    setFormData({ species: '', weight: '', qty: '', priceType: 'Retail' });
+    setFormData({ species: '', weight: '', qty: '1', priceType: 'Retail' });
     setCapturedImage(null);
   };
 
   if (isCameraActive) {
     return (
-      <SafeAreaView style={styles.cameraContainer}>
+      <View style={styles.cameraContainer}>
+        <StatusBar barStyle="light-content" />
         <CameraView style={styles.camera} ref={cameraRef}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => setIsCameraActive(false)}>
-            <Ionicons name="close" size={28} color="#fff" />
-          </TouchableOpacity>
-          <View style={styles.cameraControls}>
-            <TouchableOpacity style={styles.captureButton} onPress={async () => {
+          <SafeAreaView style={styles.cameraOverlay}>
+            <TouchableOpacity style={styles.cameraCloseBtn} onPress={() => setIsCameraActive(false)}>
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            
+            <View style={styles.cameraGuide}>
+              <View style={styles.cameraFrame} />
+              <Text style={styles.cameraHint}>Position the fish within the frame</Text>
+            </View>
+
+            <TouchableOpacity style={styles.cameraCaptureBtn} onPress={async () => {
               const photo = await cameraRef.current.takePictureAsync();
               setCapturedImage(photo.uri);
               setIsCameraActive(false);
               await detectSpecies(photo.uri);
             }}>
-              <View style={styles.captureButtonInner} />
+              <View style={styles.cameraCaptureInner} />
             </TouchableOpacity>
-          </View>
+          </SafeAreaView>
         </CameraView>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
-        {/* Live Market Spikes */}
-        <View style={styles.spikeHeaderContainer}>
-          <Text style={styles.spikeTitle}>Thane Market Spikes</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {MARKET_SPIKES.map((spike) => (
-              <View key={spike.id} style={styles.spikeCard}>
-                <Text style={styles.spikeBadgeText}>{spike.status}</Text>
-                <Text style={styles.spikeSpecies}>{spike.species}</Text>
-                <Text style={styles.spikePrice}>₹{spike.price}/kg</Text>
-              </View>
-            ))}
-          </ScrollView>
+        {/* Header */}
+        <SafeAreaView edges={['top']}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.pageTitle}>Catch Log</Text>
+              <Text style={styles.pageSubtitle}>Log and track your catches</Text>
+            </View>
+            <TouchableOpacity style={styles.historyBtn}>
+              <Ionicons name="time-outline" size={22} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+
+        {/* Market Spikes */}
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionTitleRow}>
+            <Icon name="trending-up" size={20} color={Colors.success} />
+            <Text style={styles.sectionTitle}>Market Spikes</Text>
+          </View>
+          <Text style={styles.sectionSubtitle}>Live prices</Text>
         </View>
 
-        {/* --- 💰 ACTIVE TRIP INTELLIGENCE CARD --- */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.spikesScroll}>
+          {MARKET_SPIKES.map((spike, index) => (
+            <View key={spike.id} style={styles.spikeCard}>
+              <LinearGradient
+                colors={index === 0 ? ['#38A169', '#2F855A'] : [Colors.surface, Colors.surface]}
+                style={styles.spikeCardGradient}
+              >
+                <View style={styles.spikeHeader}>
+                  <View style={[styles.spikeTrendBadge, { backgroundColor: index === 0 ? 'rgba(255,255,255,0.2)' : '#DCFCE7' }]}>
+                    <Ionicons name="trending-up" size={12} color={index === 0 ? '#fff' : Colors.success} />
+                    <Text style={[styles.spikeTrendText, { color: index === 0 ? '#fff' : Colors.success }]}>{spike.change}</Text>
+                  </View>
+                </View>
+                <Text style={[styles.spikeSpecies, { color: index === 0 ? '#fff' : Colors.textPrimary }]}>{spike.species}</Text>
+                <Text style={[styles.spikePrice, { color: index === 0 ? '#fff' : Colors.success }]}>₹{spike.price}<Text style={styles.spikePriceUnit}>/kg</Text></Text>
+                <Text style={[styles.spikeLocation, { color: index === 0 ? 'rgba(255,255,255,0.7)' : Colors.textSecondary }]}>{spike.location}</Text>
+              </LinearGradient>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Active Trip Card */}
         {activeTrip && (
-          <View style={styles.activeTripCard}>
-            <View style={styles.rowBetween}>
-              <View style={styles.bizHeader}>
-                <View style={styles.statusDot} />
-                <Text style={styles.bizTitle}>Active Trip: {activeTrip.targetSpecies}</Text>
+          <View style={styles.tripCard}>
+            <LinearGradient
+              colors={['#1A202C', '#2D3748']}
+              style={styles.tripCardGradient}
+            >
+              <View style={styles.tripHeader}>
+                <View style={styles.tripHeaderLeft}>
+                  <View style={styles.tripStatusDot} />
+                  <Text style={styles.tripStatusText}>Active Trip</Text>
+                </View>
+                <TouchableOpacity onPress={handleEndTrip} style={styles.tripEndBtn}>
+                  <Ionicons name="close-circle" size={24} color={Colors.error} />
+                </TouchableOpacity>
               </View>
-              {/* DELETE BUTTON FOR ACTIVE TRIP */}
-              <TouchableOpacity onPress={handleEndTrip}>
-                <Ionicons name="trash-outline" size={20} color="#ff4d4d" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.bizStatsRow}>
-                <View>
-                    <Text style={styles.bizLabel}>Pre-Trip Target</Text>
-                    <Text style={styles.whiteText}>₹{activeTrip.estimatedRevenue}</Text>
+              
+              <Text style={styles.tripTarget}>{activeTrip.targetSpecies}</Text>
+              
+              <View style={styles.tripStats}>
+                <View style={styles.tripStatItem}>
+                  <Icon name="target" size={18} color="rgba(255,255,255,0.6)" />
+                  <Text style={styles.tripStatValue}>₹{activeTrip.estimatedRevenue}</Text>
+                  <Text style={styles.tripStatLabel}>Target</Text>
                 </View>
-                <View>
-                    <Text style={styles.bizLabel}>Est. Fuel</Text>
-                    <Text style={styles.whiteText}>₹{(activeTrip.estimatedFuel * 105).toFixed(0)}</Text>
+                <View style={styles.tripStatDivider} />
+                <View style={styles.tripStatItem}>
+                  <Icon name="gas-station" size={18} color="rgba(255,255,255,0.6)" />
+                  <Text style={styles.tripStatValue}>₹{(activeTrip.estimatedFuel * 105).toFixed(0)}</Text>
+                  <Text style={styles.tripStatLabel}>Fuel Cost</Text>
                 </View>
-            </View>
+              </View>
+            </LinearGradient>
           </View>
         )}
 
+        {/* Species Entry Form */}
+        <View style={styles.formCard}>
+          <View style={styles.formHeader}>
+            <View style={styles.formIconCircle}>
+              <Icon name="fish" size={24} color={Colors.primary} />
+            </View>
+            <View>
+              <Text style={styles.formTitle}>Add Catch</Text>
+              <Text style={styles.formSubtitle}>Snap to identify or enter manually</Text>
+            </View>
+          </View>
+
+          {capturedImage ? (
+            <View style={styles.capturedImageContainer}>
+              <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
+              <TouchableOpacity style={styles.retakeBtn} onPress={() => setCapturedImage(null)}>
+                <Ionicons name="refresh" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.captureArea} onPress={() => setIsCameraActive(true)}>
+              {isDetecting ? (
+                <ActivityIndicator color={Colors.primary} size="large" />
+              ) : (
+                <>
+                  <View style={styles.captureIconCircle}>
+                    <Icon name="camera-plus" size={28} color={Colors.primary} />
+                  </View>
+                  <Text style={styles.captureTitle}>Identify Fish</Text>
+                  <Text style={styles.captureSubtitle}>Take a photo to auto-detect species</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.formInputs}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Species Name</Text>
+              <TextInput 
+                style={styles.input} 
+                value={formData.species} 
+                onChangeText={(t) => setFormData({...formData, species: t})} 
+                placeholder="e.g., Tuna, Mackerel"
+                placeholderTextColor={Colors.textTertiary}
+              />
+            </View>
+            
+            <View style={styles.inputRow}>
+              <View style={[styles.inputContainer, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>Weight (kg)</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={formData.weight} 
+                  onChangeText={(t) => setFormData({...formData, weight: t})} 
+                  keyboardType="numeric" 
+                  placeholder="0.0"
+                  placeholderTextColor={Colors.textTertiary}
+                />
+              </View>
+              <View style={[styles.inputContainer, { flex: 1 }]}>
+                <Text style={styles.inputLabel}>Quantity</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={formData.qty} 
+                  onChangeText={(t) => setFormData({...formData, qty: t})} 
+                  keyboardType="numeric" 
+                  placeholder="1"
+                  placeholderTextColor={Colors.textTertiary}
+                />
+              </View>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.addBtn} onPress={addToHaul}>
+            <LinearGradient colors={[Colors.primary, '#1D5A5B']} style={styles.addBtnGradient}>
+              <Ionicons name="add-circle" size={22} color="#fff" />
+              <Text style={styles.addBtnText}>Add to Haul</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+
         {/* Haul List */}
         {haulItems.length > 0 && (
-          <View style={styles.haulSection}>
-            <View style={styles.rowBetween}>
-               <Text style={styles.haulTitle}>Trip Haul List</Text>
-               <TouchableOpacity onPress={() => setHaulItems([])}><Ionicons name="trash" size={18} color="#e74c3c" /></TouchableOpacity>
+          <View style={styles.haulCard}>
+            <View style={styles.haulHeader}>
+              <Text style={styles.haulTitle}>Current Haul ({haulItems.length})</Text>
+              <TouchableOpacity onPress={() => setHaulItems([])}>
+                <Text style={styles.haulClearText}>Clear All</Text>
+              </TouchableOpacity>
             </View>
+            
             {haulItems.map((item) => (
               <View key={item.id} style={styles.haulItem}>
-                <Text style={styles.haulText}>{item.species || 'Unknown'} • {item.weight}kg</Text>
+                <View style={styles.haulItemIcon}>
+                  <Icon name="fish" size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.haulItemInfo}>
+                  <Text style={styles.haulItemName}>{item.species || 'Unknown Fish'}</Text>
+                  <Text style={styles.haulItemMeta}>{item.weight}kg × {item.qty}</Text>
+                </View>
                 <TouchableOpacity onPress={() => setHaulItems(haulItems.filter(i => i.id !== item.id))}>
-                  <Ionicons name="remove-circle" size={20} color="#e74c3c" />
+                  <Ionicons name="trash-outline" size={20} color={Colors.error} />
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         )}
 
-        <View style={styles.header}>
-          <Text style={styles.title}>Species Entry</Text>
-          <Text style={styles.subtitle}>Snap fish to calculate value</Text>
-        </View>
-
-        <View style={styles.section}>
-          {capturedImage ? (
-            <Image source={{ uri: capturedImage }} style={styles.image} />
-          ) : (
-            <TouchableOpacity style={styles.captureButtonLarge} onPress={() => setIsCameraActive(true)}>
-              {isDetecting ? <ActivityIndicator color="#3498db" /> : (
-                <>
-                  <MaterialCommunityIcons name="camera-plus" size={32} color="#3498db" />
-                  <Text style={styles.captureText}>Identify Species (Optional)</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-
-          <TextInput style={styles.input} value={formData.species} onChangeText={(t) => setFormData({...formData, species: t})} placeholder="Species Name"/>
-          
-          <View style={styles.inputRow}>
-            <TextInput style={[styles.input, {flex: 1}]} value={formData.weight} onChangeText={(t) => setFormData({...formData, weight: t})} keyboardType="numeric" placeholder="Weight (kg)"/>
-            <TextInput style={[styles.input, {flex: 1}]} value={formData.qty} onChangeText={(t) => setFormData({...formData, qty: t})} keyboardType="numeric" placeholder="Qty"/>
-          </View>
-
-          <TouchableOpacity style={styles.addToHaulBtn} onPress={addToHaul}>
-            <Text style={styles.addToHaulText}>Add to Haul List</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Profit Comparison Report */}
+        {/* Profit Report */}
         {summaryReport && (
-          <View style={styles.resultSection}>
-            <Text style={styles.reportTitle}>Trip Financial Report</Text>
-            <View style={styles.reportRow}><Text>Actual Revenue</Text><Text style={styles.reportValue}>₹{summaryReport.totalRevenue}</Text></View>
-            <View style={styles.reportRow}><Text>Fuel Deduction</Text><Text style={{color: '#e74c3c'}}>- ₹{summaryReport.fuelCost.toFixed(0)}</Text></View>
-            <View style={styles.divider} />
-            <View style={styles.reportRow}>
-                <Text style={{fontWeight: 'bold'}}>Net Trip Profit</Text>
-                <Text style={styles.profitFinal}>₹{summaryReport.netProfit.toFixed(0)}</Text>
+          <View style={styles.reportCard}>
+            <View style={styles.reportHeader}>
+              <Icon name="receipt" size={24} color={Colors.success} />
+              <Text style={styles.reportTitle}>Trip Summary</Text>
             </View>
+            
+            <View style={styles.reportBody}>
+              <View style={styles.reportRow}>
+                <Text style={styles.reportLabel}>Total Revenue</Text>
+                <Text style={styles.reportValue}>₹{summaryReport.totalRevenue.toFixed(0)}</Text>
+              </View>
+              <View style={styles.reportRow}>
+                <Text style={styles.reportLabel}>Fuel Cost</Text>
+                <Text style={styles.reportValueRed}>-₹{summaryReport.fuelCost.toFixed(0)}</Text>
+              </View>
+              <View style={styles.reportDivider} />
+              <View style={styles.reportRow}>
+                <Text style={styles.reportLabelBold}>Net Profit</Text>
+                <Text style={styles.reportValueBig}>₹{summaryReport.netProfit.toFixed(0)}</Text>
+              </View>
+            </View>
+            
             {activeTrip && (
-                <View style={[styles.targetBadge, {backgroundColor: summaryReport.isAboveTarget ? '#f0fdf4' : '#fef2f2'}]}>
-                    <Text style={{color: summaryReport.isAboveTarget ? '#166534' : '#991b1b', fontSize: 12}}>
-                        {summaryReport.isAboveTarget ? `🎉 ₹${summaryReport.targetDiff.toFixed(0)} above target!` : `⚠️ ₹${Math.abs(summaryReport.targetDiff).toFixed(0)} below pre-trip target.`}
-                    </Text>
-                </View>
+              <View style={[styles.targetResult, { backgroundColor: summaryReport.isAboveTarget ? '#DCFCE7' : '#FEE2E2' }]}>
+                <Ionicons 
+                  name={summaryReport.isAboveTarget ? 'checkmark-circle' : 'alert-circle'} 
+                  size={20} 
+                  color={summaryReport.isAboveTarget ? Colors.success : Colors.error} 
+                />
+                <Text style={[styles.targetResultText, { color: summaryReport.isAboveTarget ? Colors.success : Colors.error }]}>
+                  {summaryReport.isAboveTarget ? `₹${summaryReport.targetDiff.toFixed(0)} above target!` : `₹${Math.abs(summaryReport.targetDiff).toFixed(0)} below target`}
+                </Text>
+              </View>
             )}
           </View>
         )}
 
-        <TouchableOpacity style={styles.saveButton} onPress={processFullHaul}>
-          {isProcessingHaul ? <ActivityIndicator color="#fff" /> : (
-            <>
-               <MaterialCommunityIcons name="calculator" size={20} color="#fff" style={{marginRight: 10}} />
-               <Text style={styles.saveButtonText}>Analyze Full Haul Profit</Text>
-            </>
-          )}
+        {/* Analyze Button */}
+        <TouchableOpacity style={styles.analyzeBtn} onPress={processFullHaul}>
+          <LinearGradient colors={[Colors.success, '#2F855A']} style={styles.analyzeBtnGradient}>
+            {isProcessingHaul ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <>
+                <Icon name="calculator-variant" size={24} color="#fff" />
+                <Text style={styles.analyzeBtnText}>Calculate Profit</Text>
+              </>
+            )}
+          </LinearGradient>
         </TouchableOpacity>
+
+        {/* Bottom spacing */}
+        <View style={{ height: 120 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f7f6' },
-  cameraContainer: { flex: 1, backgroundColor: '#000' },
-  camera: { flex: 1 },
-  closeButton: { position: 'absolute', top: 50, left: 20, padding: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 25 },
-  cameraControls: { position: 'absolute', bottom: 40, alignSelf: 'center' },
-  captureButton: { width: 70, height: 70, borderRadius: 35, backgroundColor: '#fff', padding: 5 },
-  captureButtonInner: { flex: 1, borderRadius: 30, backgroundColor: '#3498db' },
-  spikeHeaderContainer: { padding: 20 },
-  spikeTitle: { fontSize: 16, fontWeight: 'bold', color: '#2c3e50', marginBottom: 12 },
-  spikeCard: { backgroundColor: '#fff', padding: 12, borderRadius: 15, marginRight: 12, width: 140, elevation: 2 },
-  spikeBadgeText: { fontSize: 10, color: '#2ecc71', fontWeight: 'bold' },
-  spikeSpecies: { fontWeight: 'bold', fontSize: 13, color: '#34495e' },
-  spikePrice: { fontSize: 16, fontWeight: 'bold', color: '#2ecc71' },
-  activeTripCard: { backgroundColor: '#1c2a38', margin: 16, borderRadius: 15, padding: 20 },
-  bizHeader: { flexDirection: 'row', alignItems: 'center' },
-  statusDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#2ecc71', marginRight: 10 },
-  bizTitle: { color: '#fff', fontWeight: 'bold' },
-  bizStatsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
-  bizLabel: { color: '#94a3b8', fontSize: 10, textTransform: 'uppercase' },
-  whiteText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  haulSection: { backgroundColor: '#1c2a38', margin: 16, borderRadius: 15, padding: 15 },
-  haulTitle: { color: '#fff', fontWeight: 'bold' },
-  haulItem: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.1)', padding: 10, borderRadius: 8, marginBottom: 8, justifyContent: 'space-between', alignItems: 'center' },
-  haulText: { color: '#fff', fontSize: 14 },
-  header: { padding: 20, paddingTop: 0 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#2c3e50' },
-  subtitle: { color: '#7f8c8d' },
-  section: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginHorizontal: 16, marginBottom: 16 },
-  captureButtonLarge: { height: 100, borderStyle: 'dashed', borderWidth: 2, borderColor: '#3498db', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  captureText: { color: '#3498db', fontWeight: 'bold' },
-  image: { width: '100%', height: 150, borderRadius: 12, marginBottom: 15 },
-  input: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 12, marginBottom: 10 },
-  inputRow: { flexDirection: 'row', gap: 10 },
-  addToHaulBtn: { backgroundColor: '#3498db', padding: 15, borderRadius: 10, alignItems: 'center' },
-  addToHaulText: { color: '#fff', fontWeight: 'bold' },
-  resultSection: { backgroundColor: '#fff', borderRadius: 20, padding: 20, margin: 16, borderTopWidth: 5, borderTopColor: '#2ecc71' },
-  reportTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  reportRow: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 4 },
-  reportValue: { fontWeight: 'bold' },
-  profitFinal: { fontSize: 22, fontWeight: 'bold', color: '#2ecc71' },
-  targetBadge: { padding: 12, borderRadius: 10, marginTop: 15 },
-  saveButton: { backgroundColor: '#2ecc71', margin: 16, padding: 18, borderRadius: 15, alignItems: 'center', marginBottom: 40, flexDirection: 'row', justifyContent: 'center' },
-  saveButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: 10 }
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  
+  // Camera
+  cameraContainer: { 
+    flex: 1, 
+    backgroundColor: '#000',
+  },
+  camera: { 
+    flex: 1,
+  },
+  cameraOverlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+    padding: 20,
+  },
+  cameraCloseBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraGuide: {
+    alignItems: 'center',
+  },
+  cameraFrame: {
+    width: 280,
+    height: 200,
+    borderWidth: 3,
+    borderColor: '#fff',
+    borderRadius: 20,
+    marginBottom: 16,
+  },
+  cameraHint: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+  },
+  cameraCaptureBtn: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    padding: 6,
+    alignSelf: 'center',
+  },
+  cameraCaptureInner: {
+    flex: 1,
+    borderRadius: 34,
+    backgroundColor: Colors.primary,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 16,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  pageSubtitle: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  historyBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadows.sm,
+  },
+
+  // Section Headers
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+
+  // Market Spikes
+  spikesScroll: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  spikeCard: {
+    width: 150,
+    marginRight: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  spikeCardGradient: {
+    padding: 16,
+  },
+  spikeHeader: {
+    marginBottom: 12,
+  },
+  spikeTrendBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+    gap: 4,
+  },
+  spikeTrendText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  spikeSpecies: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  spikePrice: {
+    fontSize: 22,
+    fontWeight: '700',
+  },
+  spikePriceUnit: {
+    fontSize: 12,
+    fontWeight: '400',
+  },
+  spikeLocation: {
+    fontSize: 12,
+    marginTop: 4,
+  },
+
+  // Trip Card
+  tripCard: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 24,
+    overflow: 'hidden',
+    ...Shadows.lg,
+  },
+  tripCardGradient: {
+    padding: 20,
+  },
+  tripHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  tripHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tripStatusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.success,
+  },
+  tripStatusText: {
+    color: Colors.success,
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  tripEndBtn: {},
+  tripTarget: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 16,
+  },
+  tripStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tripStatItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+  },
+  tripStatDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  tripStatValue: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  tripStatLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+  },
+
+  // Form Card
+  formCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 24,
+    padding: 20,
+    ...Shadows.md,
+  },
+  formHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 20,
+  },
+  formIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  formSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  captureArea: {
+    height: 140,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+    borderStyle: 'dashed',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.primary + '08',
+    marginBottom: 20,
+  },
+  captureIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  captureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: 4,
+  },
+  captureSubtitle: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+  },
+  capturedImageContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  capturedImage: {
+    width: '100%',
+    height: 180,
+    borderRadius: 20,
+  },
+  retakeBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  formInputs: {
+    gap: 14,
+    marginBottom: 16,
+  },
+  inputContainer: {},
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: Colors.surfaceVariant,
+    borderRadius: 14,
+    padding: 16,
+    fontSize: 16,
+    color: Colors.textPrimary,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  addBtn: {
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  addBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 18,
+    gap: 10,
+  },
+  addBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+
+  // Haul Card
+  haulCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 24,
+    padding: 20,
+    ...Shadows.md,
+  },
+  haulHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  haulTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  haulClearText: {
+    fontSize: 14,
+    color: Colors.error,
+    fontWeight: '500',
+  },
+  haulItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surfaceVariant,
+    padding: 14,
+    borderRadius: 14,
+    marginBottom: 10,
+    gap: 12,
+  },
+  haulItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  haulItemInfo: {
+    flex: 1,
+  },
+  haulItemName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  haulItemMeta: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+
+  // Report Card
+  reportCard: {
+    backgroundColor: Colors.surface,
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 24,
+    padding: 20,
+    borderTopWidth: 4,
+    borderTopColor: Colors.success,
+    ...Shadows.md,
+  },
+  reportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+  },
+  reportTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  reportBody: {},
+  reportRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  reportLabel: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+  },
+  reportValue: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.textPrimary,
+  },
+  reportValueRed: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.error,
+  },
+  reportDivider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    marginVertical: 12,
+  },
+  reportLabelBold: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  reportValueBig: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.success,
+  },
+  targetResult: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 14,
+    marginTop: 8,
+    gap: 8,
+  },
+  targetResultText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+
+  // Analyze Button
+  analyzeBtn: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+    ...Shadows.md,
+  },
+  analyzeBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    gap: 12,
+  },
+  analyzeBtnText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
 });
