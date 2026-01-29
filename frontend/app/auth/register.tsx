@@ -18,6 +18,7 @@ import { Link, router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
 
 const { height } = Dimensions.get('window');
@@ -37,26 +38,27 @@ export default function RegisterScreen() {
   const [tooltip, setTooltip] = useState({ visible: false, message: '' });
 
   const { register } = useAuth();
+  const { t } = useTranslation();
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword || !boatLicenseId || !experience || !port) {
-      Alert.alert('Incomplete', 'Please fill in all fields to join our community.');
+      Alert.alert(t('auth.incomplete'), t('auth.incompleteMsg'));
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address');
+      Alert.alert(t('auth.invalidEmail'), t('auth.invalidEmailMsg'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Password Too Short', 'Password should be at least 6 characters');
+      Alert.alert(t('auth.passwordShort'), t('auth.passwordShortMsg'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Mismatch', 'Passwords do not match');
+      Alert.alert(t('auth.mismatch'), t('auth.mismatchMsg'));
       return;
     }
 
@@ -143,8 +145,8 @@ export default function RegisterScreen() {
                  <Ionicons name="arrow-back" size={24} color={Colors.textInverse} />
                </TouchableOpacity>
                <View>
-                 <Text style={styles.title}>Create Account</Text>
-                 <Text style={styles.subtitle}>Join the fleet</Text>
+                 <Text style={styles.title}>{t('auth.createAccount')}</Text>
+                 <Text style={styles.subtitle}>{t('auth.joinFleet')}</Text>
                </View>
             </View>
 
@@ -156,36 +158,36 @@ export default function RegisterScreen() {
                 </View>
               )}
 
-              {renderInput(name, setName, "Full Name", "person-outline")}
-              {renderInput(email, setEmail, "Email Address", "mail-outline", "email-address")}
-              {renderInput(boatLicenseId, setBoatLicenseId, "Boat License ID", "card-outline")}
+              {renderInput(name, setName, t('auth.fullName'), "person-outline")}
+              {renderInput(email, setEmail, t('auth.emailPlaceholder'), "mail-outline", "email-address")}
+              {renderInput(boatLicenseId, setBoatLicenseId, t('auth.boatLicense'), "card-outline")}
               {renderInput(
                   experience, 
                   setExperience, 
-                  "Experience (years)", 
+                  t('auth.experience'), 
                   "time-outline", 
                   "numeric", 
                   false, 
                   false, 
                   undefined, 
-                  "Enter the number of years you have been a fisherman."
+                  t('auth.experienceTooltip')
               )}
               {renderInput(
                   port, 
                   setPort, 
-                  "Home Port / Region", 
+                  t('auth.port'), 
                   "location-outline", 
                   "default", 
                   false, 
                   false, 
                   undefined, 
-                  "Enter the port or region where you primarily fish."
+                  t('auth.portTooltip')
               )}
 
               <View style={styles.divider} />
 
-              {renderInput(password, setPassword, "Password", "lock-closed-outline", "default", !showPassword, true, () => setShowPassword(!showPassword))}
-              {renderInput(confirmPassword, setConfirmPassword, "Confirm Password", "lock-closed-outline", "default", !showConfirmPassword, true, () => setShowConfirmPassword(!showConfirmPassword))}
+              {renderInput(password, setPassword, t('auth.passwordPlaceholder'), "lock-closed-outline", "default", !showPassword, true, () => setShowPassword(!showPassword))}
+              {renderInput(confirmPassword, setConfirmPassword, t('auth.confirmPassword'), "lock-closed-outline", "default", !showConfirmPassword, true, () => setShowConfirmPassword(!showConfirmPassword))}
 
               <TouchableOpacity
                 style={styles.buttonContainer}
@@ -202,16 +204,16 @@ export default function RegisterScreen() {
                   {loading ? (
                     <ActivityIndicator color={Colors.textInverse} />
                   ) : (
-                    <Text style={styles.buttonText}>Register</Text>
+                    <Text style={styles.buttonText}>{t('auth.register')}</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>Already have an account? </Text>
+                <Text style={styles.footerText}>{t('auth.alreadyHaveAccount')} </Text>
                 <Link href="/auth/login" asChild>
                   <TouchableOpacity disabled={loading}>
-                    <Text style={styles.link}>Sign In</Text>
+                    <Text style={styles.link}>{t('auth.signIn')}</Text>
                   </TouchableOpacity>
                 </Link>
               </View>

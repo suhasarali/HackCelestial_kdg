@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, MaterialCommunityIcons as Icon } from "@expo/vector-icons";
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from "../../constants/design";
 
@@ -69,6 +70,7 @@ interface PostCardProps {
 const PostCard: React.FC<PostCardProps> = ({
   firstName, lastName, userName, userHandle, content, likes, tags, timeAgo, hasImage
 }) => {
+  const { t } = useTranslation();
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(likes);
 
@@ -128,12 +130,12 @@ const PostCard: React.FC<PostCardProps> = ({
         
         <TouchableOpacity style={styles.postActionBtn}>
           <Ionicons name="chatbubble-outline" size={20} color={Colors.textSecondary} />
-          <Text style={styles.postActionText}>Reply</Text>
+          <Text style={styles.postActionText}>{t('community.reply')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.postActionBtn}>
           <Ionicons name="share-outline" size={20} color={Colors.textSecondary} />
-          <Text style={styles.postActionText}>Share</Text>
+          <Text style={styles.postActionText}>{t('community.share')}</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.postActionBtn}>
@@ -157,6 +159,7 @@ interface Observation {
 
 // Main Community Component
 const Community = () => {
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -184,7 +187,7 @@ const Community = () => {
     const now = new Date();
     const date = new Date(dateString);
     const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-    if (diff < 60) return 'Just now';
+    if (diff < 60) return t('community.justNow');
     if (diff < 3600) return `${Math.floor(diff / 60)}m`;
     if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
     return `${Math.floor(diff / 86400)}d`;
@@ -194,7 +197,7 @@ const Community = () => {
     const token = await AsyncStorage.getItem("token");
     try {
       if (!token) {
-        Alert.alert("Authentication Error", "Please log in to add a post.");
+        Alert.alert(t('auth.error'), t('community.loginRequired'));
         setModalVisible(false);
         return;
       }
@@ -212,8 +215,11 @@ const Community = () => {
       if (res.data && res.data._id) {
         setPosts([res.data, ...posts]);
       }
+
     } catch (err) {
-      Alert.alert("Post Failed", "An error occurred. Please try again.");
+      Alert.alert(t('community.postFailed'), t('common.error')); // Using common error message as subtitle or generic
+      // Or: Alert.alert("Post Failed", "An error occurred. Please try again.");
+      // I'll stick to a simple translation for the title
     } finally {
       setModalVisible(false);
       setTitle("");
@@ -229,8 +235,8 @@ const Community = () => {
           <View style={styles.loadingIconCircle}>
             <Icon name="account-group" size={36} color="#fff" />
           </View>
-          <Text style={styles.loadingTitle}>Community</Text>
-          <Text style={styles.loadingSubtitle}>Loading posts...</Text>
+          <Text style={styles.loadingTitle}>{t('community.title')}</Text>
+          <Text style={styles.loadingSubtitle}>{t('common.loading')}</Text>
           <ActivityIndicator size="large" color="#fff" style={{ marginTop: 20 }} />
         </LinearGradient>
       </View>
@@ -245,8 +251,8 @@ const Community = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.pageTitle}>Community</Text>
-            <Text style={styles.pageSubtitle}>{posts.length} posts from fishers</Text>
+            <Text style={styles.pageTitle}>{t('community.title')}</Text>
+            <Text style={styles.pageSubtitle}>{posts.length} {t('community.postsFromFishers')}</Text>
           </View>
           <TouchableOpacity style={styles.headerBtn}>
             <Ionicons name="search" size={22} color={Colors.primary} />
@@ -258,7 +264,7 @@ const Community = () => {
           <View style={styles.quickPostAvatar}>
             <Icon name="account" size={22} color={Colors.textSecondary} />
           </View>
-          <Text style={styles.quickPostText}>Share something with the community...</Text>
+          <Text style={styles.quickPostText}>{t('community.shareWithCommunity')}</Text>
           <View style={styles.quickPostBtn}>
             <Ionicons name="add" size={20} color={Colors.primary} />
           </View>
@@ -307,7 +313,7 @@ const Community = () => {
             <View style={styles.modalHandle} />
             
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create Post</Text>
+              <Text style={styles.modalTitle}>{t('community.createPost')}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color={Colors.textSecondary} />
               </TouchableOpacity>
@@ -317,14 +323,14 @@ const Community = () => {
               style={styles.input}
               onChangeText={setTitle}
               value={title}
-              placeholder="Title (optional)"
+              placeholder={t('community.titleOptional')}
               placeholderTextColor={Colors.textTertiary}
             />
             <TextInput
               style={[styles.input, styles.textArea]}
               onChangeText={setDescription}
               value={description}
-              placeholder="What's on your mind?"
+              placeholder={t('community.whatsOnMind')}
               placeholderTextColor={Colors.textTertiary}
               multiline
               numberOfLines={5}
@@ -333,14 +339,14 @@ const Community = () => {
               style={styles.input}
               onChangeText={setTags}
               value={tags}
-              placeholder="Tags (comma separated)"
+              placeholder={t('community.tagsCommaSeparated')}
               placeholderTextColor={Colors.textTertiary}
             />
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleAddPost}>
               <LinearGradient colors={[Colors.primary, '#1D5A5B']} style={styles.submitBtnGradient}>
                 <Ionicons name="paper-plane" size={20} color="#fff" />
-                <Text style={styles.submitBtnText}>Post</Text>
+                <Text style={styles.submitBtnText}>{t('community.post')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>

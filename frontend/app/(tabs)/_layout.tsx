@@ -23,7 +23,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="home" 
         options={{ 
-          title: 'Home', 
+          title: t('navigation.home'), 
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 
@@ -39,7 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="catch-log" 
         options={{ 
-          title: 'Catch', 
+          title: t('navigation.catchLog'), 
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 
@@ -55,7 +55,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="analytics" 
         options={{ 
-          title: 'Stats', 
+          title: t('navigation.analytics'), 
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 
@@ -71,7 +71,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="map" 
         options={{ 
-          title: 'Map', 
+          title: t('navigation.map'), 
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 
@@ -87,7 +87,7 @@ export default function TabLayout() {
       <Tabs.Screen 
         name="alerts" 
         options={{ 
-          title: 'Alerts', 
+          title: t('navigation.alerts'), 
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 
@@ -103,7 +103,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
+          title: t('navigation.community'),
           tabBarIcon: ({ color, focused }) => (
             <View style={styles.iconContainer}>
               <Ionicons 

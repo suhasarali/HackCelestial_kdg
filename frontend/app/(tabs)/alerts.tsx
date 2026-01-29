@@ -9,9 +9,9 @@ import {
   StatusBar
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTranslation } from 'react-i18next';
 import { Ionicons, MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
 
@@ -75,62 +75,64 @@ const MOCK_ALERTS: AlertItem[] = [
   },
 ];
 
-const getCategoryConfig = (category: string) => {
-  switch (category) {
-    case 'weather':
-      return { 
-        icon: 'weather-windy', 
-        color: '#3B82F6', 
-        bgColor: '#DBEAFE',
-        label: 'Weather'
-      };
-    case 'regulation':
-      return { 
-        icon: 'file-document', 
-        color: '#9333EA', 
-        bgColor: '#F3E8FF',
-        label: 'Regulation'
-      };
-    case 'market':
-      return { 
-        icon: 'trending-up', 
-        color: '#16A34A', 
-        bgColor: '#DCFCE7',
-        label: 'Market'
-      };
-    case 'safety':
-      return { 
-        icon: 'shield-check', 
-        color: '#EA580C', 
-        bgColor: '#FFEDD5',
-        label: 'Safety'
-      };
-    default:
-      return { 
-        icon: 'bell', 
-        color: Colors.primary, 
-        bgColor: Colors.primary + '15',
-        label: 'General'
-      };
-  }
-};
 
-const getPriorityConfig = (priority: string) => {
-  switch (priority) {
-    case 'high':
-      return { color: Colors.error, bg: '#FEE2E2', label: 'Urgent' };
-    case 'medium':
-      return { color: Colors.warning, bg: '#FEF3C7', label: 'Important' };
-    default:
-      return { color: Colors.success, bg: '#DCFCE7', label: 'Info' };
-  }
-};
 
 export default function AlertsScreen() {
   const { t } = useTranslation();
   const [alerts, setAlerts] = useState<AlertItem[]>(MOCK_ALERTS);
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+
+  const getCategoryConfig = (category: string) => {
+    switch (category) {
+      case 'weather':
+        return { 
+          icon: 'weather-windy', 
+          color: '#3B82F6', 
+          bgColor: '#DBEAFE',
+          label: t('alerts.catWeather')
+        } as const;
+      case 'regulation':
+        return { 
+          icon: 'file-document', 
+          color: '#9333EA', 
+          bgColor: '#F3E8FF',
+          label: t('alerts.catRegulation')
+        } as const;
+      case 'market':
+        return { 
+          icon: 'trending-up', 
+          color: '#16A34A', 
+          bgColor: '#DCFCE7',
+          label: t('alerts.catMarket')
+        } as const;
+      case 'safety':
+        return { 
+          icon: 'shield-check', 
+          color: '#EA580C', 
+          bgColor: '#FFEDD5',
+          label: t('alerts.catSafety')
+        } as const;
+      default:
+        return { 
+          icon: 'bell', 
+          color: Colors.primary, 
+          bgColor: Colors.primary + '15',
+          label: t('alerts.catGeneral')
+        } as const;
+    }
+  };
+
+  const getPriorityConfig = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return { color: Colors.error, bg: '#FEE2E2', label: t('alerts.prioUrgent') };
+      case 'medium':
+        return { color: Colors.warning, bg: '#FEF3C7', label: t('alerts.prioImportant') };
+      default:
+        return { color: Colors.success, bg: '#DCFCE7', label: t('alerts.prioInfo') };
+    }
+  };
 
   const filteredAlerts = filter === 'all' 
     ? alerts 
@@ -161,16 +163,16 @@ export default function AlertsScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.pageTitle}>Alerts</Text>
+            <Text style={styles.pageTitle}>{t('alerts.title')}</Text>
             <Text style={styles.pageSubtitle}>
-              {unreadCount > 0 ? `${unreadCount} unread notifications` : 'All caught up!'}
+              {unreadCount > 0 ? `${unreadCount} ${t('alerts.unreadNotifications')}` : t('alerts.allCaughtUp')}
             </Text>
           </View>
           
           {unreadCount > 0 && (
             <TouchableOpacity style={styles.markReadBtn} onPress={markAllAsRead}>
               <Ionicons name="checkmark-done" size={18} color={Colors.primary} />
-              <Text style={styles.markReadText}>Mark all read</Text>
+              <Text style={styles.markReadText}>{t('alerts.markAllRead')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -182,12 +184,12 @@ export default function AlertsScreen() {
           contentContainerStyle={styles.filterScroll}
         >
           {[
-            { key: 'all', label: 'All', count: alerts.length },
-            { key: 'unread', label: 'Unread', count: unreadCount },
-            { key: 'weather', label: 'Weather' },
-            { key: 'regulation', label: 'Regulation' },
-            { key: 'market', label: 'Market' },
-            { key: 'safety', label: 'Safety' },
+            { key: 'all', label: t('alerts.filterAll'), count: alerts.length },
+            { key: 'unread', label: t('alerts.filterUnread'), count: unreadCount },
+            { key: 'weather', label: t('alerts.filterWeather') },
+            { key: 'regulation', label: t('alerts.filterRegulation') },
+            { key: 'market', label: t('alerts.filterMarket') },
+            { key: 'safety', label: t('alerts.filterSafety') },
           ].map(item => (
             <TouchableOpacity
               key={item.key}
@@ -221,8 +223,8 @@ export default function AlertsScreen() {
             <View style={styles.emptyIconCircle}>
               <Ionicons name="notifications-off-outline" size={40} color={Colors.textTertiary} />
             </View>
-            <Text style={styles.emptyTitle}>No alerts</Text>
-            <Text style={styles.emptyText}>You're all caught up! No alerts match this filter.</Text>
+            <Text style={styles.emptyTitle}>{t('alerts.noAlerts')}</Text>
+            <Text style={styles.emptyText}>{t('alerts.noAlertsMsg')}</Text>
           </View>
         ) : (
           filteredAlerts.map((alert) => {
@@ -263,7 +265,7 @@ export default function AlertsScreen() {
                   <View style={styles.alertFooter}>
                     <Text style={styles.alertTimestamp}>{alert.timestamp}</Text>
                     <TouchableOpacity style={styles.alertAction}>
-                      <Text style={styles.alertActionText}>View Details</Text>
+                      <Text style={styles.alertActionText}>{t('alerts.viewDetails')}</Text>
                       <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
                     </TouchableOpacity>
                   </View>

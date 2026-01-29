@@ -15,6 +15,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../consta
 // --- CONSTANTS ---
 const BACKEND_API_URL = 'https://VolcanicBat64-fish3.hf.space/predict';
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+console.log("DEBUG: GEMINI_API_KEY loaded:", GEMINI_API_KEY ? "YES" : "NO");
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
 
 const BOAT_SPEED_KNOTS = 15; 

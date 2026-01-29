@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
@@ -55,6 +56,7 @@ interface SpeciesData {
 
 export default function AnalyticsScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
 
   const [summary, setSummary] = useState<SummaryData>({
     totalWeight: 120,
@@ -160,22 +162,22 @@ export default function AnalyticsScreen() {
 
   const summaryCards = [
     { 
-      icon: 'scale', 
-      label: 'Total Catch', 
+      icon: 'scale' as any, 
+      label: t('analytics.totalCatch'), 
       value: `${summary.totalWeight}kg`,
       change: '+12%',
       gradient: ['#2C7A7B', '#1D5A5B'],
     },
     { 
-      icon: 'cash-multiple', 
-      label: 'Revenue', 
+      icon: 'cash-multiple' as any, 
+      label: t('analytics.revenue'), 
       value: `₹${(summary.totalValue/1000).toFixed(1)}k`,
       change: '+8%',
       gradient: ['#38A169', '#2F855A'],
     },
     { 
-      icon: 'trending-up', 
-      label: 'Avg Price', 
+      icon: 'trending-up' as any, 
+      label: t('analytics.avgPrice'), 
       value: `₹${summary.averagePricePerKg}`,
       change: '+5%',
       gradient: ['#3182CE', '#2B6CB0'],
@@ -195,8 +197,8 @@ export default function AnalyticsScreen() {
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.pageTitle}>Analytics</Text>
-              <Text style={styles.pageSubtitle}>Your fishing performance</Text>
+              <Text style={styles.pageTitle}>{t('analytics.title')}</Text>
+              <Text style={styles.pageSubtitle}>{t('analytics.subtitle')}</Text>
             </View>
             
             <View style={styles.timeRangeContainer}>
@@ -207,7 +209,7 @@ export default function AnalyticsScreen() {
                   onPress={() => setTimeRange(range.toLowerCase())}
                 >
                   <Text style={[styles.timeButtonText, timeRange === range.toLowerCase() && styles.activeTimeButtonText]}>
-                    {range}
+                    {t(`analytics.${range.toLowerCase()}`)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -249,8 +251,8 @@ export default function AnalyticsScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>Catch Trend</Text>
-              <Text style={styles.chartSubtitle}>Weight in kg over time</Text>
+              <Text style={styles.chartTitle}>{t('analytics.catchTrend')}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.catchTrendSubtitle')}</Text>
             </View>
             <TouchableOpacity style={styles.chartMenuBtn}>
               <Ionicons name="ellipsis-horizontal" size={20} color={Colors.textSecondary} />
@@ -282,8 +284,8 @@ export default function AnalyticsScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>Best Hours</Text>
-              <Text style={styles.chartSubtitle}>Success rate by time of day</Text>
+              <Text style={styles.chartTitle}>{t('analytics.bestHours')}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.bestHoursSubtitle')}</Text>
             </View>
           </View>
           
@@ -307,8 +309,8 @@ export default function AnalyticsScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>Species Caught</Text>
-              <Text style={styles.chartSubtitle}>Distribution this {timeRange}</Text>
+              <Text style={styles.chartTitle}>{t('analytics.speciesCaught')}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.distribution')} {t(`analytics.${timeRange}`)}</Text>
             </View>
           </View>
           
@@ -330,8 +332,8 @@ export default function AnalyticsScreen() {
               <View style={styles.emptyIconCircle}>
                 <Icon name="fish" size={32} color={Colors.textTertiary} />
               </View>
-              <Text style={styles.emptyTitle}>No catches logged</Text>
-              <Text style={styles.emptyText}>Start logging your catches to see species distribution</Text>
+              <Text style={styles.emptyTitle}>{t('analytics.noCatches')}</Text>
+              <Text style={styles.emptyText}>{t('analytics.noCatchesSubtitle')}</Text>
             </View>
           )}
         </View>
@@ -344,7 +346,7 @@ export default function AnalyticsScreen() {
             </View>
             <View>
               <Text style={styles.quickStatValue}>23</Text>
-              <Text style={styles.quickStatLabel}>Trips</Text>
+              <Text style={styles.quickStatLabel}>{t('analytics.trips')}</Text>
             </View>
           </View>
           
@@ -354,7 +356,7 @@ export default function AnalyticsScreen() {
             </View>
             <View>
               <Text style={styles.quickStatValue}>4.8</Text>
-              <Text style={styles.quickStatLabel}>Avg Rating</Text>
+              <Text style={styles.quickStatLabel}>{t('analytics.avgRating')}</Text>
             </View>
           </View>
           
@@ -364,7 +366,7 @@ export default function AnalyticsScreen() {
             </View>
             <View>
               <Text style={styles.quickStatValue}>#12</Text>
-              <Text style={styles.quickStatLabel}>Rank</Text>
+              <Text style={styles.quickStatLabel}>{t('analytics.rank')}</Text>
             </View>
           </View>
         </View>

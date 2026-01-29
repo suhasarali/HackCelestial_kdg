@@ -1,4 +1,5 @@
 'use client';
+import { useTranslation } from 'react-i18next';
 
 import { useState, useRef, useEffect } from 'react';
 import { 
@@ -26,6 +27,7 @@ const MARKET_SPIKES = [
 
 export default function CatchLogScreen() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { location, getCurrentLocation } = useLocation();
   const [permission, requestPermission] = useCameraPermissions();
   
@@ -83,7 +85,7 @@ export default function CatchLogScreen() {
 
   const processFullHaul = async () => {
     if (haulItems.length === 0) {
-      Alert.alert("Empty Haul", "Add items to the haul list first.");
+      Alert.alert(t('common.error'), t('catchLog.noCatches'));
       return;
     }
     setIsProcessingHaul(true);
@@ -116,14 +118,14 @@ export default function CatchLogScreen() {
       setSummaryReport({ totalRevenue, fuelCost, netProfit, targetDiff, isAboveTarget: targetDiff >= 0 });
       Vibration.vibrate(200);
     } catch (error) {
-      Alert.alert("Error", "Failed to process prices.");
+      Alert.alert(t('common.error'), t('catchLog.noCatches')); // Fallback or appropriate error
     } finally { setIsProcessingHaul(false); }
   };
 
   const handleEndTrip = async () => {
-    Alert.alert("End Trip", "Permanently remove active trip data?", [
-        { text: "Cancel" },
-        { text: "End Trip", style: "destructive", onPress: async () => {
+    Alert.alert(t('catchLog.endTrip'), "Permanently remove active trip data?", [
+        { text: t('common.cancel') },
+        { text: t('catchLog.endTrip'), style: "destructive", onPress: async () => {
             await AsyncStorage.removeItem('active_trip');
             setActiveTrip(null);
             setSummaryReport(null);
@@ -150,7 +152,7 @@ export default function CatchLogScreen() {
             
             <View style={styles.cameraGuide}>
               <View style={styles.cameraFrame} />
-              <Text style={styles.cameraHint}>Position the fish within the frame</Text>
+              <Text style={styles.cameraHint}>{t('catchLog.positionFish')}</Text>
             </View>
 
             <TouchableOpacity style={styles.cameraCaptureBtn} onPress={async () => {
@@ -177,8 +179,8 @@ export default function CatchLogScreen() {
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.pageTitle}>Catch Log</Text>
-              <Text style={styles.pageSubtitle}>Log and track your catches</Text>
+              <Text style={styles.pageTitle}>{t('catchLog.title')}</Text>
+              <Text style={styles.pageSubtitle}>{t('catchLog.subtitle')}</Text>
             </View>
             <TouchableOpacity style={styles.historyBtn}>
               <Ionicons name="time-outline" size={22} color={Colors.primary} />
@@ -190,9 +192,9 @@ export default function CatchLogScreen() {
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
             <Icon name="trending-up" size={20} color={Colors.success} />
-            <Text style={styles.sectionTitle}>Market Spikes</Text>
+            <Text style={styles.sectionTitle}>{t('catchLog.marketSpikes')}</Text>
           </View>
-          <Text style={styles.sectionSubtitle}>Live prices</Text>
+          <Text style={styles.sectionSubtitle}>{t('catchLog.livePrices')}</Text>
         </View>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.spikesScroll}>
@@ -245,7 +247,7 @@ export default function CatchLogScreen() {
                 <View style={styles.tripStatItem}>
                   <Icon name="gas-station" size={18} color="rgba(255,255,255,0.6)" />
                   <Text style={styles.tripStatValue}>₹{(activeTrip.estimatedFuel * 105).toFixed(0)}</Text>
-                  <Text style={styles.tripStatLabel}>Fuel Cost</Text>
+                  <Text style={styles.tripStatLabel}>{t('catchLog.fuelCost')}</Text>
                 </View>
               </View>
             </LinearGradient>
@@ -259,8 +261,8 @@ export default function CatchLogScreen() {
               <Icon name="fish" size={24} color={Colors.primary} />
             </View>
             <View>
-              <Text style={styles.formTitle}>Add Catch</Text>
-              <Text style={styles.formSubtitle}>Snap to identify or enter manually</Text>
+              <Text style={styles.formTitle}>{t('catchLog.addCatch')}</Text>
+              <Text style={styles.formSubtitle}>{t('catchLog.snapToIdentify')}</Text>
             </View>
           </View>
 
@@ -280,8 +282,8 @@ export default function CatchLogScreen() {
                   <View style={styles.captureIconCircle}>
                     <Icon name="camera-plus" size={28} color={Colors.primary} />
                   </View>
-                  <Text style={styles.captureTitle}>Identify Fish</Text>
-                  <Text style={styles.captureSubtitle}>Take a photo to auto-detect species</Text>
+                  <Text style={styles.captureTitle}>{t('catchLog.identifyFish')}</Text>
+                  <Text style={styles.captureSubtitle}>{t('catchLog.takePhoto')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -289,19 +291,19 @@ export default function CatchLogScreen() {
 
           <View style={styles.formInputs}>
             <View style={styles.inputContainer}>
-              <Text style={styles.inputLabel}>Species Name</Text>
+              <Text style={styles.inputLabel}>{t('catchLog.speciesName')}</Text>
               <TextInput 
                 style={styles.input} 
                 value={formData.species} 
                 onChangeText={(t) => setFormData({...formData, species: t})} 
-                placeholder="e.g., Tuna, Mackerel"
+                placeholder={t('catchLog.speciesName')}
                 placeholderTextColor={Colors.textTertiary}
               />
             </View>
             
             <View style={styles.inputRow}>
               <View style={[styles.inputContainer, { flex: 1 }]}>
-                <Text style={styles.inputLabel}>Weight (kg)</Text>
+                <Text style={styles.inputLabel}>{t('catchLog.weight')}</Text>
                 <TextInput 
                   style={styles.input} 
                   value={formData.weight} 
@@ -312,7 +314,7 @@ export default function CatchLogScreen() {
                 />
               </View>
               <View style={[styles.inputContainer, { flex: 1 }]}>
-                <Text style={styles.inputLabel}>Quantity</Text>
+                <Text style={styles.inputLabel}>{t('catchLog.quantity')}</Text>
                 <TextInput 
                   style={styles.input} 
                   value={formData.qty} 
@@ -328,7 +330,7 @@ export default function CatchLogScreen() {
           <TouchableOpacity style={styles.addBtn} onPress={addToHaul}>
             <LinearGradient colors={[Colors.primary, '#1D5A5B']} style={styles.addBtnGradient}>
               <Ionicons name="add-circle" size={22} color="#fff" />
-              <Text style={styles.addBtnText}>Add to Haul</Text>
+              <Text style={styles.addBtnText}>{t('catchLog.addToHaul')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
@@ -337,9 +339,9 @@ export default function CatchLogScreen() {
         {haulItems.length > 0 && (
           <View style={styles.haulCard}>
             <View style={styles.haulHeader}>
-              <Text style={styles.haulTitle}>Current Haul ({haulItems.length})</Text>
+              <Text style={styles.haulTitle}>{t('catchLog.currentHaul')} ({haulItems.length})</Text>
               <TouchableOpacity onPress={() => setHaulItems([])}>
-                <Text style={styles.haulClearText}>Clear All</Text>
+                <Text style={styles.haulClearText}>{t('catchLog.clearAll')}</Text>
               </TouchableOpacity>
             </View>
             
@@ -365,21 +367,21 @@ export default function CatchLogScreen() {
           <View style={styles.reportCard}>
             <View style={styles.reportHeader}>
               <Icon name="receipt" size={24} color={Colors.success} />
-              <Text style={styles.reportTitle}>Trip Summary</Text>
+              <Text style={styles.reportTitle}>{t('catchLog.tripSummary')}</Text>
             </View>
             
             <View style={styles.reportBody}>
               <View style={styles.reportRow}>
-                <Text style={styles.reportLabel}>Total Revenue</Text>
+                <Text style={styles.reportLabel}>{t('catchLog.totalRevenue')}</Text>
                 <Text style={styles.reportValue}>₹{summaryReport.totalRevenue.toFixed(0)}</Text>
               </View>
               <View style={styles.reportRow}>
-                <Text style={styles.reportLabel}>Fuel Cost</Text>
+                <Text style={styles.reportLabel}>{t('catchLog.fuelCost')}</Text>
                 <Text style={styles.reportValueRed}>-₹{summaryReport.fuelCost.toFixed(0)}</Text>
               </View>
               <View style={styles.reportDivider} />
               <View style={styles.reportRow}>
-                <Text style={styles.reportLabelBold}>Net Profit</Text>
+                <Text style={styles.reportLabelBold}>{t('catchLog.netProfit')}</Text>
                 <Text style={styles.reportValueBig}>₹{summaryReport.netProfit.toFixed(0)}</Text>
               </View>
             </View>
@@ -392,7 +394,7 @@ export default function CatchLogScreen() {
                   color={summaryReport.isAboveTarget ? Colors.success : Colors.error} 
                 />
                 <Text style={[styles.targetResultText, { color: summaryReport.isAboveTarget ? Colors.success : Colors.error }]}>
-                  {summaryReport.isAboveTarget ? `₹${summaryReport.targetDiff.toFixed(0)} above target!` : `₹${Math.abs(summaryReport.targetDiff).toFixed(0)} below target`}
+                  {summaryReport.isAboveTarget ? `₹${summaryReport.targetDiff.toFixed(0)} ${t('catchLog.aboveTarget')}` : `₹${Math.abs(summaryReport.targetDiff).toFixed(0)} ${t('catchLog.belowTarget')}`}
                 </Text>
               </View>
             )}
@@ -407,7 +409,7 @@ export default function CatchLogScreen() {
             ) : (
               <>
                 <Icon name="calculator-variant" size={24} color="#fff" />
-                <Text style={styles.analyzeBtnText}>Calculate Profit</Text>
+                <Text style={styles.analyzeBtnText}>{t('catchLog.calculateProfit')}</Text>
               </>
             )}
           </LinearGradient>

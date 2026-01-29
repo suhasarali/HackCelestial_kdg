@@ -6,11 +6,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocationUtils } from '../hooks/useLocation';
 import { Colors } from '../constants/theme';
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { useTranslation } from 'react-i18next';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
+  const { t } = useTranslation();
   
   const {
     location,
@@ -28,14 +30,14 @@ export default function SettingsScreen() {
   const handleRequestPermission = async () => {
     const granted = await requestPermission();
     if (granted) {
-      Alert.alert('Success', 'Location permission granted!');
+      Alert.alert(t('common.success'), t('settings.permissionGrantedMsg'));
     }
   };
 
   const handleGetCurrentLocation = async () => {
     const currentLocation = await getCurrentLocation();
     if (currentLocation) {
-      Alert.alert('Location Updated', `Current location: ${formatAddress(currentLocation)}`);
+      Alert.alert(t('settings.locationUpdated'), `${t('settings.currentLocation')}: ${formatAddress(currentLocation)}`);
     }
   };
 
@@ -43,18 +45,18 @@ export default function SettingsScreen() {
     if (hasPermission) {
       if (location) {
         stopLocationTracking();
-        Alert.alert('Location Tracking', 'Location tracking has been stopped.');
+        Alert.alert(t('settings.locationTracking'), t('settings.trackingStopped'));
       } else {
         startLocationTracking();
-        Alert.alert('Location Tracking', 'Location tracking has been started.');
+        Alert.alert(t('settings.locationTracking'), t('settings.trackingStarted'));
       }
     } else {
       Alert.alert(
-        'Permission Required',
-        'Location permission is required to start tracking.',
+        t('settings.permissionRequired'),
+        t('settings.permissionRequiredMsg'),
         [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Grant Permission', onPress: handleRequestPermission }
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('settings.grantPermission'), onPress: handleRequestPermission }
         ]
       );
     }
@@ -70,14 +72,14 @@ export default function SettingsScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Location Settings</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('settings.locationSettings')}</Text>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content}>
         {/* Permission Status */}
         <View style={[styles.section, { backgroundColor: colors.background }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Permission Status</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('settings.permissionStatus')}</Text>
           
           <View style={styles.statusItem}>
             <Ionicons 
@@ -86,13 +88,13 @@ export default function SettingsScreen() {
               color={hasPermission ? "#2ecc71" : "#e74c3c"} 
             />
             <Text style={[styles.statusText, { color: colors.text }]}>
-              {hasPermission ? "Location Permission Granted" : "Location Permission Denied"}
+              {hasPermission ? t('settings.permissionGranted') : t('settings.permissionDenied')}
             </Text>
           </View>
 
           {!hasPermission && (
             <TouchableOpacity style={styles.permissionButton} onPress={handleRequestPermission}>
-              <Text style={styles.permissionButtonText}>Request Permission</Text>
+              <Text style={styles.permissionButtonText}>{t('settings.requestPermission')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -100,7 +102,7 @@ export default function SettingsScreen() {
         {/* Current Location */}
         {hasPermission && (
           <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Current Location</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('settings.currentLocation')}</Text>
             
             {location ? (
               <View style={styles.locationInfo}>
@@ -120,14 +122,14 @@ export default function SettingsScreen() {
                   <View style={styles.locationRow}>
                     <Ionicons name="target" size={20} color={colors.text} />
                     <Text style={[styles.locationText, { color: colors.text }]}>
-                      Accuracy: {Math.round(location.accuracy)}m
+                      {t('settings.accuracy')}: {Math.round(location.accuracy)}m
                     </Text>
                   </View>
                 )}
               </View>
             ) : (
               <Text style={[styles.noLocationText, { color: colors.text }]}>
-                No location data available
+                {t('settings.noLocation')}
               </Text>
             )}
 
@@ -138,7 +140,7 @@ export default function SettingsScreen() {
             >
               <Ionicons name="refresh" size={20} color="#fff" />
               <Text style={styles.refreshButtonText}>
-                {isLoading ? "Getting Location..." : "Refresh Location"}
+                {isLoading ? t('settings.gettingLocation') : t('settings.refreshLocation')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -147,17 +149,17 @@ export default function SettingsScreen() {
         {/* Location Tracking */}
         {hasPermission && (
           <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Location Tracking</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('settings.locationTracking')}</Text>
             
             <View style={styles.trackingItem}>
               <View style={styles.trackingInfo}>
                 <Ionicons name="location" size={24} color={colors.tint} />
                 <View style={styles.trackingTextContainer}>
                   <Text style={[styles.trackingTitle, { color: colors.text }]}>
-                    Background Tracking
+                    {t('settings.backgroundTracking')}
                   </Text>
                   <Text style={[styles.trackingDescription, { color: colors.text }]}>
-                    Continuously track your location for fishing logs and navigation
+                    {t('settings.trackingDesc')}
                   </Text>
                 </View>
               </View>
@@ -174,7 +176,7 @@ export default function SettingsScreen() {
         {/* Error Display */}
         {error && (
           <View style={[styles.section, { backgroundColor: colors.background }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Error</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('common.error')}</Text>
             <View style={styles.errorContainer}>
               <Ionicons name="warning" size={24} color="#e74c3c" />
               <Text style={[styles.errorText, { color: colors.text }]}>{error}</Text>
@@ -184,11 +186,9 @@ export default function SettingsScreen() {
 
         {/* Information */}
         <View style={[styles.section, { backgroundColor: colors.background }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Information</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('settings.information')}</Text>
           <Text style={[styles.infoText, { color: colors.text }]}>
-            Location data is used to provide accurate fishing zone recommendations, 
-            track your fishing trips, and provide location-based weather information. 
-            Your location data is stored locally on your device and is not shared with third parties.
+            {t('settings.locationInfo')}
           </Text>
         </View>
       </ScrollView>

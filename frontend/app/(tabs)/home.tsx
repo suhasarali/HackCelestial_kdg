@@ -85,7 +85,9 @@ export default function HomeScreen() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [zones, setZones] = useState<FishingZone[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+
   const [userName, setUserName] = useState('Fisher');
+  const [currentLocation, setCurrentLocation] = useState<{latitude: number, longitude: number} | null>(null);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -116,6 +118,7 @@ export default function HomeScreen() {
       const location = JSON.parse(locationStr);
       const lat = location.latitude;
       const lon = location.longitude;
+      setCurrentLocation({ latitude: lat, longitude: lon });
 
       const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
       const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lon}&hourly=wave_height&timezone=auto`;
@@ -264,7 +267,14 @@ export default function HomeScreen() {
             <View style={styles.header}>
               <View style={styles.headerCenter}>
                 <Ionicons name="location" size={14} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.locationText}>Mumbai, India</Text>
+                <View>
+                  <Text style={styles.locationText}>Mumbai, India</Text>
+                  {currentLocation && (
+                    <Text style={styles.latLongText}>
+                      {currentLocation.latitude.toFixed(4)}, {currentLocation.longitude.toFixed(4)}
+                    </Text>
+                  )}
+                </View>
               </View>
 
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -351,13 +361,13 @@ export default function HomeScreen() {
                   {/* Fishing Conditions Banner */}
                   <View style={styles.conditionsBanner}>
                     <Icon name="check-circle" size={18} color={Colors.success} />
-                    <Text style={styles.conditionsText}>Perfect fishing conditions today!</Text>
+                    <Text style={styles.conditionsText}>{t('home.perfectConditions')}</Text>
                   </View>
                 </>
               ) : (
                 <View style={styles.weatherLoading}>
                   <Icon name="weather-cloudy" size={60} color="rgba(255,255,255,0.5)" />
-                  <Text style={styles.loadingText}>Loading weather...</Text>
+                  <Text style={styles.loadingText}>{t('home.loading')}</Text>
                 </View>
               )}
             </View>
@@ -380,8 +390,8 @@ export default function HomeScreen() {
                   <Icon name="navigation" size={28} color="#fff" />
                 </View>
                 <View>
-                  <Text style={styles.primaryActionTitle}>Start Fishing</Text>
-                  <Text style={styles.primaryActionSubtitle}>Find best spots nearby</Text>
+                  <Text style={styles.primaryActionTitle}>{t('home.startFishing')}</Text>
+                  <Text style={styles.primaryActionSubtitle}>{t('home.findBestSpots')}</Text>
                 </View>
                 <Ionicons name="arrow-forward" size={22} color="#fff" />
               </LinearGradient>
@@ -395,7 +405,7 @@ export default function HomeScreen() {
                 <View style={[styles.secondaryIconCircle, { backgroundColor: '#DCFCE7' }]}>
                   <Icon name="fish" size={22} color={Colors.success} />
                 </View>
-                <Text style={styles.secondaryActionText}>Log Catch</Text>
+                <Text style={styles.secondaryActionText}>{t('home.logCatch')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -405,7 +415,7 @@ export default function HomeScreen() {
                 <View style={[styles.secondaryIconCircle, { backgroundColor: '#DBEAFE' }]}>
                   <Icon name="chart-line" size={22} color={Colors.accent} />
                 </View>
-                <Text style={styles.secondaryActionText}>Analytics</Text>
+                <Text style={styles.secondaryActionText}>{t('home.analytics')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
@@ -415,16 +425,16 @@ export default function HomeScreen() {
                 <View style={[styles.secondaryIconCircle, { backgroundColor: '#F3E8FF' }]}>
                   <Icon name="account-group" size={22} color="#9333EA" />
                 </View>
-                <Text style={styles.secondaryActionText}>Community</Text>
+                <Text style={styles.secondaryActionText}>{t('home.community')}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Popular Fishing Spots */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Spots</Text>
+            <Text style={styles.sectionTitle}>{t('home.popularSpots')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/map')}>
-              <Text style={styles.seeAllButton}>See All</Text>
+              <Text style={styles.seeAllButton}>{t('home.seeAll')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -489,9 +499,9 @@ export default function HomeScreen() {
           {alerts.length > 0 && (
             <>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Active Alerts</Text>
+                <Text style={styles.sectionTitle}>{t('home.activeAlerts')}</Text>
                 <TouchableOpacity onPress={() => router.push('/(tabs)/alerts')}>
-                  <Text style={styles.seeAllButton}>View All</Text>
+                  <Text style={styles.seeAllButton}>{t('home.viewAll')}</Text>
                 </TouchableOpacity>
               </View>
 
@@ -514,7 +524,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.alertContent}>
                     <Text style={styles.alertTitle}>
-                      {alert.type === 'weather' ? 'Weather Alert' : 'Regulation Update'}
+                      {alert.type === 'weather' ? t('home.weatherAlert') : t('home.regulationUpdate')}
                     </Text>
                     <Text style={styles.alertMessage}>{alert.message}</Text>
                   </View>
@@ -571,6 +581,11 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     fontWeight: '500',
+  },
+  latLongText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 10,
+    marginTop: 2,
   },
   notificationButton: {
     width: 44,
