@@ -106,10 +106,10 @@ async function getWeatherAPIAlerts(latitude, longitude) {
 
 
 async function getIndianFishingAlerts() {
-    const alerts = [];
+    let allStructuredAlerts = [];
 
     try {
-        // ================= 1️⃣ PHP SEA BULLETINS =================
+        // 1. Process Sea Bulletins
         const seaAreas = [
             { name: "Arabian Sea", url: "https://mausam.imd.gov.in/Forecast/seaarea_bulletin_new.php?id=4" },
             { name: "Bay of Bengal", url: "https://mausam.imd.gov.in/Forecast/seaarea_bulletin_new.php?id=1" }
@@ -122,84 +122,83 @@ async function getIndianFishingAlerts() {
             const $ = cheerio.load(page.data);
             const rawText = $("body").text().replace(/\s+/g, " ").trim();
 
-            const cleaned = await aiCleanText(rawText, "IMD Sea Bulletin");
-
-            alerts.push({
-                source: "IMD India",
-                type: "Sea Bulletin Cleaned",
-                region: area.name,
-                link: area.url,
-                cleaned_text: cleaned,
-                date: new Date().toISOString()
+            const structuredData = await aiStructureData(rawText, `IMD Bulletin for ${area.name}`);
+            
+            // Map the structured data into our global list
+            structuredData.forEach(item => {
+                allStructuredAlerts.push({
+                    ...item,
+                    source: "IMD Bulletin",
+                    region: area.name,
+                    date: new Date().toISOString()
+                });
             });
         }
 
-        // ================= 2️⃣ TWO MAP URLS =================
-        const mapUrls = [
-            "https://rsmcnewdelhi.imd.gov.in/uploads/archive/65/65_9f1a32_probability.png", // new map
-            "https://rsmcnewdelhi.imd.gov.in/uploads/archive/51/51_dfbda3_graphics.png" // your old map
-        ];
+        // 2. Process Map OCR
+        const mapUrl = "https://rsmcnewdelhi.imd.gov.in/uploads/archive/65/65_9f1a32_probability.png";
+        const imageResponse = await axios.get(mapUrl, { responseType: "arraybuffer" });
+        const ocrResult = await Tesseract.recognize(Buffer.from(imageResponse.data), "eng");
+        
+        const mapData = await aiStructureData(ocrResult.data.text, "IMD Probability Map OCR");
+        
+        mapData.forEach(item => {
+            allStructuredAlerts.push({
+                ...item,
+                source: "IMD Map OCR",
+                image: mapUrl,
+                date: new Date().toISOString()
+            });
+        });
 
-        for (const mapUrl of mapUrls) {
-            try {
-                const imageResponse = await axios.get(mapUrl, { responseType: "arraybuffer" });
-                const imageBuffer = Buffer.from(imageResponse.data);
-
-                const ocrResult = await Tesseract.recognize(imageBuffer, "eng");
-                const rawOCR = ocrResult.data.text.trim();
-                console.log("Raw OCR Text:", rawOCR);
-
-                const cleanedOCR = await aiCleanText(rawOCR, "IMD Weather Map");
-
-                alerts.push({
-                    source: "IMD India",
-                    type: "IMD Map OCR Cleaned",
-                    image: mapUrl,
-                    confidence: ocrResult.data.confidence,
-                    cleaned_text: cleanedOCR,
-                    date: new Date().toISOString()
-                });
-
-            } catch (err) {
-                console.error("OCR failed:", mapUrl, err.message);
-            }
-        }
-
-        return alerts;
-    } 
-    catch (err) {
-        console.error("IMD Pipeline Error:", err.message);
+        return allStructuredAlerts;
+    } catch (err) {
+        console.error("Pipeline Error:", err.message);
         return [];
     }
 }
 
-async function aiCleanText(rawText, context) {
-    try {
-        const geminiApiKey = process.env.GEMINI_API_KEY;
+async function aiStructureData(rawText, context) {
+  try {
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const prompt = `
+      You are an expert maritime weather analyst for the India Meteorological Department (IMD).
+      Task: Convert the following unstructured weather text/OCR into a structured JSON array for fishermen.
 
-        const prompt = `
-You are cleaning official IMD weather alerts.
-Extract ONLY meaningful warning text.
-Remove junk, repeated words, UI text, HTML artifacts.
-For  marked areas tell the location as well as it is important for them to know. For portions that are not warnings, discard them.
+      Context: ${context}
+      Text: ${rawText}
 
-Context: ${context}
+      Rules:
+      1. Extract every specific location mentioned (e.g., "Gulf of Mannar", "North Gujarat Coast", "Thane").
+      2. For each location, identify:
+         - "location": Name of the area.
+         - "intensity": Wind speed (e.g., "45-55 kmph") or weather severity.
+         - "status": "Safe", "Warning", or "Danger" based on the advisory.
+         - "meaning": A 1-sentence simple explanation in layman's terms.
+      3. If no specific warning is found for a region, do not invent one.
+      4. RETURN ONLY VALID JSON. No markdown, no backticks, no preamble.
 
-Text:
-${rawText}
+      JSON Format Example:
+      [
+        {"location": "Gulf of Mannar", "intensity": "45-55 kmph", "status": "Danger", "meaning": "Very strong winds; stay away from the sea."},
+        {"location": "Maharashtra Coast", "intensity": "Normal", "status": "Safe", "meaning": "Weather is clear; safe for fishing."}
+      ]
+    `;
 
-Return clean fisherman-friendly warning text.
-`;
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
 
-        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
+    const res = await axios.post(geminiUrl, {
+      contents: [{ parts: [{ text: prompt }] }]
+    });
 
-        const res = await axios.post(geminiUrl, {
-            contents: [{ parts: [{ text: prompt }] }]
-        });
+    // Clean any potential markdown formatting if Gemini adds it
+    let jsonString = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+    jsonString = jsonString.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    return JSON.parse(jsonString);
 
-        return res.data?.candidates?.[0]?.content?.parts?.[0]?.text || rawText;
-
-    } catch {
-        return rawText;
-    }
+  } catch (error) {
+    console.error("AI Structuring Error:", error.message);
+    return []; // Return empty array on failure
+  }
 }
