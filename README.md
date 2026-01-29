@@ -2,9 +2,9 @@
 
 ### 🌐 Backend Services
 
-- **ML Model Service**: [https://mlservice-146a.onrender.com/](https://mlservice-146a.onrender.com/)
+- **ML Model Service(Prakhar's Render)**: [https://mlservice-146a.onrender.com/](https://mlservice-146a.onrender.com/)
 - **Backend API**: [https://hackcelestial-kdg.onrender.com/](https://hackcelestial-kdg.onrender.com/)
-- **Analytics Service**: [https://hackcelestial-kdg-1.onrender.com/](https://hackcelestial-kdg-1.onrender.com/)
+- **Analytics Service(Rohan's Render)**: [https://hackcelestial-kdg-1.onrender.com/](https://hackcelestial-kdg-1.onrender.com/)
 
 ### 📊 Analysis API Endpoints
 
