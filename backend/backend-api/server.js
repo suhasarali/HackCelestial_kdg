@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.route.js";
 import profileRoutes from "./routes/profile.route.js";
 import whetherRouter from "./routes/whether.route.js"; 
 import observationRoutes from "./routes/community.route.js";
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 dotenv.config();
 // import weatherRoutes from "./routes/weatherRoutes.js";
@@ -26,8 +27,9 @@ app.use(express.json());
 
 app.use("/api/observations", observationRoutes);
 app.use("/api/auth", authRouter);
-app.use("/api/data", whetherRouter); 
+app.use("/api/data", whetherRouter);
 app.use("/api/profile", profileRoutes);
+app.use("/api/upload", uploadRoutes); // Mount upload route
 
 // Root Route
 app.get("/", (req, res) => {
