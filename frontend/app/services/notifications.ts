@@ -12,9 +12,23 @@ export interface AlertData {
   isRead: boolean;
 }
 
+export interface SpotItem {
+  id: string;
+  name: string;
+  type: string;
+  distance: string; // mapped from distance_approx
+  rating: number;
+  reason: string;
+  safety: string;   // mapped from difficulty
+  fishTypes: string[]; // split from best_catch
+  image?: any;
+}
+
+
+
 export const fetchNotifications = async (latitude: number, longitude: number): Promise<AlertData[]> => {
   try {
-    console.log(`Sending request to ${BACKEND_URL}/notifications with lat: ${latitude}, lon: ${longitude}`);
+    //console.log(`Sending request to ${BACKEND_URL}/notifications with lat: ${latitude}, lon: ${longitude}`);
     const response = await axios.post(`${BACKEND_URL}/notifications`, {
       latitude,
       longitude,
@@ -76,6 +90,41 @@ export const fetchNotifications = async (latitude: number, longitude: number): P
     return alerts;
   } catch (error) {
     console.error("Error fetching notifications:", error);
+    return [];
+  }
+};
+export const fetchPopularSpots = async (latitude: number, longitude: number): Promise<SpotItem[]> => {
+  try {
+    const response = await axios.post(`${BACKEND_URL}/popular-spots`, {
+      latitude,
+      longitude,
+    });
+
+    const data = response.data;
+    console.log('Popular spots data received:', data);
+
+    if (data.status === "success" && Array.isArray(data.spots)) {
+      return data.spots.map((spot: any, index: number) => {
+        let safetyStatus = "Safe";
+        if (spot.difficulty === "Medium") safetyStatus = "Moderate";
+        if (spot.difficulty === "Hard") safetyStatus = "Caution";
+
+        return {
+          // Unique string ID to prevent $NaN errors
+          id: `spot-${index}-${spot.name.replace(/\s+/g, '-').toLowerCase()}`,
+          name: spot.name,
+          type: spot.type,
+          distance: spot.distance_approx,
+          rating: 4.5,
+          reason: spot.best_catch,
+          safety: safetyStatus,
+          fishTypes: spot.best_catch ? spot.best_catch.split(',').map((f: string) => f.trim()) : [],
+        };
+      });
+    }
+    return [];
+  } catch (error) {
+    console.error("Error fetching popular spots API:", error);
     return [];
   }
 };

@@ -141,8 +141,8 @@
     "weatherAlert": "Weather Alert",
     "regulationUpdate": "Regulation Update",
     "analytics": "Analytics",
-    "community": "Community",
-    "seeAll": "See All"
+    "community":"Community",
+    "seeAll":"see All"
   },
   "map": {
     "fetchingLocation": "Fetching location and generating heatmap...",
