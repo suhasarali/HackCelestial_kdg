@@ -12,7 +12,10 @@ import {
   Alert,
   StatusBar,
   Image,
+  Dimensions,
 } from "react-native";
+import * as ImagePicker from 'expo-image-picker';
+import { uploadImage } from "../services/uploadService";
 import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -65,10 +68,11 @@ interface PostCardProps {
   tags: string[];
   timeAgo: string;
   hasImage?: boolean;
+  imageUrl?: string;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
-  firstName, lastName, userName, userHandle, content, likes, tags, timeAgo, hasImage
+  firstName, lastName, userName, userHandle, content, likes, tags, timeAgo, hasImage, imageUrl
 }) => {
   const { t } = useTranslation();
   const [isLiked, setIsLiked] = useState(false);
@@ -97,7 +101,15 @@ const PostCard: React.FC<PostCardProps> = ({
       <Text style={styles.postContent}>{content}</Text>
 
       {/* Image placeholder */}
-      {hasImage && (
+      {/* Image Display */}
+      {imageUrl ? (
+        <View style={styles.postImageContainer}>
+          <Image 
+            source={{ uri: imageUrl }} 
+            style={{ width: '100%', height: 250, resizeMode: 'cover' }} 
+          />
+        </View>
+      ) : hasImage && (
         <View style={styles.postImageContainer}>
           <LinearGradient
             colors={['#E0F2F1', '#B2DFDB']}
@@ -155,6 +167,7 @@ interface Observation {
   tags: string[];
   createdAt: string;
   likes?: any[];
+  image?: string;
 }
 
 // Main Community Component
@@ -166,8 +179,10 @@ const Community = () => {
   const [tags, setTags] = useState("");
   const [posts, setPosts] = useState<Observation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageUri, setImageUri] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
-  const API_URL = "https://hackcelestial-kdg.onrender.com/api/observations/";
+  const API_URL = "https://hackcelestial-kdg.onrender.com/api/observations/"; 
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -193,6 +208,18 @@ const Community = () => {
     return `${Math.floor(diff / 86400)}d`;
   };
 
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImageUri(result.assets[0].uri);
+    }
+  };
+
   const handleAddPost = async () => {
     const token = await AsyncStorage.getItem("token");
     try {
@@ -202,12 +229,32 @@ const Community = () => {
         return;
       }
 
+      setUploading(true);
+      let uploadedImageUrl = "";
+
+      if (imageUri) {
+        const url = await uploadImage(imageUri);
+        if (url) {
+          uploadedImageUrl = url;
+        } else {
+          Alert.alert(t('common.error'), "Image upload failed");
+          setUploading(false);
+          return;
+        }
+      }
+
       const postData = {
         title,
         description,
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        image: uploadedImageUrl,
       };
 
+      // Use local dev URL if needed, assuming API_URL might need adjustment or is handled by axios base or hardcoded
+      // Since API_URL is hardcoded above, I'll respect it but note that uploadService uses a different base for dev.
+      // If running locally, you might need to change API_URL manually or make it dynamic similarly.
+      // For now, keeping the user's hardcoded URL but be aware of mismatch if developing locally.
+      
       const res = await axios.post(API_URL, postData, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
@@ -217,14 +264,15 @@ const Community = () => {
       }
 
     } catch (err) {
-      Alert.alert(t('community.postFailed'), t('common.error')); // Using common error message as subtitle or generic
-      // Or: Alert.alert("Post Failed", "An error occurred. Please try again.");
-      // I'll stick to a simple translation for the title
+      console.error(err);
+      Alert.alert(t('community.postFailed'), t('common.error')); 
     } finally {
       setModalVisible(false);
       setTitle("");
       setDescription("");
       setTags("");
+      setImageUri(null);
+      setUploading(false);
     }
   };
 
@@ -291,7 +339,8 @@ const Community = () => {
               likes={item.likes?.length || 0}
               tags={item.tags || []}
               timeAgo={getTimeAgo(item.createdAt)}
-              hasImage={Math.random() > 0.7}
+              hasImage={!!item.image}
+              imageUrl={item.image}
             />
           );
         }}
@@ -343,10 +392,22 @@ const Community = () => {
               placeholderTextColor={Colors.textTertiary}
             />
 
+            {/* Image Picker */}
+            <TouchableOpacity style={styles.imagePickerBtn} onPress={handlePickImage}>
+              <Ionicons name="image-outline" size={24} color={Colors.textSecondary} />
+              <Text style={styles.imagePickerText}>
+                {imageUri ? "Change Image" : "Add Image"}
+              </Text>
+            </TouchableOpacity>
+
+            {imageUri && (
+              <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            )}
+
             <TouchableOpacity style={styles.submitBtn} onPress={handleAddPost}>
               <LinearGradient colors={[Colors.primary, '#1D5A5B']} style={styles.submitBtnGradient}>
-                <Ionicons name="paper-plane" size={20} color="#fff" />
-                <Text style={styles.submitBtnText}>{t('community.post')}</Text>
+                {uploading ? <ActivityIndicator color="#fff" /> : <Ionicons name="paper-plane" size={20} color="#fff" />}
+                <Text style={styles.submitBtnText}>{uploading ? "Posting..." : t('community.post')}</Text>
               </LinearGradient>
             </TouchableOpacity>
           </View>
@@ -629,6 +690,26 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '700',
+  },
+  imagePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: Colors.surfaceVariant,
+    borderRadius: 14,
+  },
+  imagePickerText: {
+    color: Colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  previewImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 14,
+    marginBottom: 12,
   },
 });
 

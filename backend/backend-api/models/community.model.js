@@ -15,6 +15,7 @@ const ObservationSchema = new mongoose.Schema(
     title: { type: String },      // optional short heading
     description: { type: String },// optional long text
     tags: { type: [String], default: [] }, // array of tag strings
+    image: { type: String }, // URL of the uploaded image
     // location: {
     //   lat: { type: Number },
     //   lng: { type: Number },

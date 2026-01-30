@@ -192,7 +192,7 @@ export const createObservation = async (req, res) => {
       return res.status(401).json({ message: "Not authenticated. Missing user (protectRoute not applied or token invalid)." });
     }
 
-    const { title, description, tags } = req.body;
+    const { title, description, tags, image } = req.body;
 
     if (!title && !description) {
       return res
@@ -240,6 +240,7 @@ export const createObservation = async (req, res) => {
       title: title ? String(title).trim() : undefined,
       description: description ? String(description).trim() : undefined,
       tags: Array.isArray(tags) ? tags : [],
+      image,
     });
 
     await observation.save();
