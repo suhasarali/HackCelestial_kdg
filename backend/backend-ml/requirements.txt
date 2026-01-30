@@ -1,0 +1,11 @@
+google-genai
+tensorflow
+keras
+numpy
+pillow
+scipy
+pandas
+scikit-learn
+uvicorn
+fastapi
+dotenv

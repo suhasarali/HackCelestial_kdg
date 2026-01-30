@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>Catla_143_jpg.rf.cfc09adc98eeb1d836f3779dd779a5a3.jpg</filename>
+	<path>Catla_143_jpg.rf.cfc09adc98eeb1d836f3779dd779a5a3.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Catla</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>19</xmin>
+			<xmax>620</xmax>
+			<ymin>169</ymin>
+			<ymax>475</ymax>
+		</bndbox>
+	</object>
+</annotation>
