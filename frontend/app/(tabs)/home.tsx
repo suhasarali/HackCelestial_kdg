@@ -22,6 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import LocationDisplay from '../../components/LocationDisplay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
+import { fetchNotifications } from '../services/notifications';
 
 const { width, height } = Dimensions.get('window');
 
@@ -46,7 +47,7 @@ interface FishingZone {
 }
 
 interface AlertItem {
-  id: number;
+  id: string | number;
   type: string;
   message: string;
   priority: string;
@@ -197,21 +198,34 @@ export default function HomeScreen() {
     ]);
   };
 
-  const fetchAlerts = () => {
-    setAlerts([
-      {
-        id: 1,
-        type: 'weather',
-        message: 'High wind warning after 3 PM',
-        priority: 'high'
-      },
-      {
-        id: 2,
-        type: 'regulation',
-        message: 'Fishing restricted in Zone B until next week',
-        priority: 'medium'
+  const fetchAlerts = async () => {
+    try {
+      const locationStr = await AsyncStorage.getItem('app_location');
+      let lat = 19.0760;
+      let lon = 72.8777;
+
+      if (locationStr) {
+        const location = JSON.parse(locationStr);
+        lat = location.latitude;
+        lon = location.longitude;
       }
-    ]);
+
+      console.log('Fetching active alerts for home...');
+      const fetchedAlerts = await fetchNotifications(lat, lon);
+      
+      const mappedAlerts: AlertItem[] = fetchedAlerts.map(alert => ({
+        id: alert.id,
+        type: alert.category, // Map category to type
+        message: alert.title, // Use title as the main message/headline
+        priority: alert.priority
+      }));
+
+      setAlerts(mappedAlerts);
+    } catch (error) {
+      console.error('Error fetching home alerts:', error);
+      // Fallback to empty or keep previous
+      setAlerts([]);
+    }
   };
 
   const onRefresh = () => {

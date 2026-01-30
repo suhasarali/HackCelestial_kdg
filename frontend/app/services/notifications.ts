@@ -18,8 +18,6 @@ export const fetchNotifications = async (latitude: number, longitude: number): P
     const response = await axios.post(`${BACKEND_URL}/notifications`, {
       latitude,
       longitude,
-    }, {
-      timeout: 10000 // 10 second timeout
     });
     console.log('Backend response received:', response.status);
 
