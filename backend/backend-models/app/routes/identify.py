@@ -58,6 +58,9 @@ async def detect_route(image: UploadFile = File(...)):
         }
 
     except Exception as e:
+        # LOG THE ERROR so you can see it in your terminal
+        print(f"CRITICAL ERROR: {e}")
+        
         # Ensure cleanup if error occurs after file creation
         if 'tmp_path' in locals() and os.path.exists(tmp_path):
             os.remove(tmp_path)
