@@ -22,7 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import LocationDisplay from '../../components/LocationDisplay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
-import { fetchNotifications } from '../services/notifications';
+import { fetchNotifications,fetchPopularSpots } from '../services/notifications';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,7 +36,7 @@ interface WeatherData {
 }
 
 interface FishingZone {
-  id: number;
+  id: string;
   name: string;
   distance: string;
   rating: number;
@@ -52,6 +52,42 @@ interface AlertItem {
   message: string;
   priority: string;
 }
+
+const STORAGE_KEY = '@popular_fishing_spots';
+
+export interface SpotItem {
+  id: string;
+  name: string;
+  type: string;
+  distance: string; 
+  rating: number;
+  reason: string;
+  safety: string;
+  fishTypes: string[];
+  image: any;
+}
+
+const saveSpotsToStorage = async (data: SpotItem[]) => {
+  try {
+    const jsonValue = JSON.stringify({
+      lastUpdated: new Date().toISOString(),
+      data: data
+    });
+    await AsyncStorage.setItem(STORAGE_KEY, jsonValue);
+  } catch (e) {
+    console.error("Error saving spots", e);
+  }
+};
+
+const loadSpotsFromStorage = async (): Promise<SpotItem[]> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue).data : [];
+  } catch (e) {
+    console.error("Error loading spots", e);
+    return [];
+  }
+};
 
 // Get greeting based on time of day
 const getGreeting = () => {
@@ -74,9 +110,11 @@ const getWeatherIcon = (condition: string) => {
 
 // Fishing spot images (using Unsplash)
 const SPOT_IMAGES = [
-  'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1468581264429-2548ef9eb732?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
+  'https://seawatersports.com/images/activies/slide/fishing-in-mumbai-in-maharashtra-package.jpg',
+  'https://content.jdmagicbox.com/v2/comp/thane/y3/022pxx22.xx22.141218154425.u9y3/catalogue/talao-pali-lake-thane-west-thane-tourist-attraction-4hvqqim818-250.jpg',
+  'https://content3.jdmagicbox.com/v2/comp/thane/c2/022pxx22.xx22.141212174352.z1c2/catalogue/yeoor-hills-thane-west-thane-tourist-attraction-17v6lrng7u.jpg',
+  'https://thumbs.dreamstime.com/b/fishermen-marari-beach-kerala-india-26991542.jpg',
+  'https://www.treksandtrails.org/system/images/000/718/717/b0531ae51809c6355d44a087120ea7b4/original/fishing_village_mumbai.jpg',
 ];
 
 export default function HomeScreen() {
@@ -97,6 +135,24 @@ export default function HomeScreen() {
     fetchAlerts();
     loadUserName();
   }, []);
+
+useEffect(() => {
+  // Load offline data immediately so the screen isn't empty
+  const loadInitial = async () => {
+    const cached = await loadSpotsFromStorage();
+    if (cached) setZones(cached);
+    
+    // Then try to get fresh data
+    fetchTopZones();
+  };
+  
+  loadInitial();
+
+  // Set interval to refresh every 5 minutes
+  const interval = setInterval(fetchTopZones, 5 * 60 * 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const loadUserName = async () => {
     const name = await AsyncStorage.getItem('userName');
@@ -163,40 +219,103 @@ export default function HomeScreen() {
     }
   };
 
-  const fetchTopZones = () => {
-    setZones([
-      {
-        id: 1,
-        name: 'North Bay Marina',
-        distance: '5.2 km',
-        rating: 4.8,
-        reason: 'High fish activity, calm waters',
-        safety: 'Safe',
-        image: SPOT_IMAGES[0],
-        fishTypes: ['Tuna', 'Mackerel', 'Sardine']
-      },
-      {
-        id: 2,
-        name: 'Coral Reef Point',
-        distance: '8.7 km',
-        rating: 4.5,
-        reason: 'Tuna spotted, moderate currents',
-        safety: 'Moderate',
-        image: SPOT_IMAGES[1],
-        fishTypes: ['Snapper', 'Grouper']
-      },
-      {
-        id: 3,
-        name: 'Deep Sea Trench',
-        distance: '12.3 km',
-        rating: 4.2,
-        reason: 'Good catch reported yesterday',
-        safety: 'Safe',
-        image: SPOT_IMAGES[2],
-        fishTypes: ['Kingfish', 'Pomfret', 'Lobster']
-      }
-    ]);
-  };
+// Main function to orchestrate state and storage
+const DUMMY_DATA = [
+  {
+    id: 'dummy-1',
+    name: 'Thane Creek (near Kopri Bridge)',
+    distance: '10 km',
+    rating: 4.2,
+    reason: 'Mullet, Bream, Crabs',
+    safety: 'Safe',
+    fishTypes: ['Mullet', 'Bream', 'Crabs']
+  },
+  {
+    id: 'dummy-2',
+    name: 'Upvan Lake',
+    distance: '12 km',
+    rating: 4.5,
+    reason: 'Tilapia, Catfish',
+    safety: 'Safe',
+    fishTypes: ['Tilapia', 'Catfish']
+  },
+  {
+    id: 'dummy-3',
+    name: 'Yeoor Hills Reservoir',
+    distance: '15 km',
+    rating: 4.0,
+    reason: 'Rohu, Catla',
+    safety: 'Moderate',
+    fishTypes: ['Rohu', 'Catla']
+  },
+  {
+    id: 'dummy-4',
+    name: 'Ghodbunder Creek',
+    distance: '18 km',
+    rating: 3.8,
+    reason: 'Mullet, Bombay Duck',
+    safety: 'Moderate',
+    fishTypes: ['Mullet', 'Bombay Duck']
+  },
+  {
+    id: 'dummy-5',
+    name: 'Kelva Beach',
+    distance: '35 km',
+    rating: 4.7,
+    reason: 'Sardines, Pomfret, Flathead',
+    safety: 'Moderate',
+    fishTypes: ['Sardines', 'Pomfret', 'Flathead']
+  }
+];
+
+const fetchTopZones = async () => {
+  try {
+    // 1. Get user location from storage
+    const locationStr = await AsyncStorage.getItem('app_location');
+    let lat = 19.0760, lon = 72.8777; 
+    if (locationStr) {
+      const { latitude, longitude } = JSON.parse(locationStr);
+      lat = latitude; lon = longitude;
+    }
+
+    // 2. Try fetching live data from API
+    const fetchedZones = await fetchPopularSpots(lat, lon);
+
+    if (fetchedZones && fetchedZones.length > 0) {
+      // 3. Map local images to the backend results
+      const zonesWithImages = fetchedZones.map((zone, index) => ({
+        ...zone,
+        image: SPOT_IMAGES[index % SPOT_IMAGES.length]
+      }));
+      
+      setZones(zonesWithImages);
+      await saveSpotsToStorage(zonesWithImages);
+      return; // Success, exit function
+    }
+    
+    // If we reach here, API returned empty array. Throw to trigger catch block fallback.
+    throw new Error('Empty data');
+
+  } catch (error) {
+    console.log('API failed or empty. Checking storage/dummy fallback...');
+    
+    // 4. Offline Fallback: Try local storage
+    const offlineData = await loadSpotsFromStorage();
+    
+    if (offlineData && offlineData.length > 0) {
+      setZones(offlineData);
+    } else {
+      // 5. Hard Fallback: Use Dummy Data if everything else fails
+      console.log('Everything failed, showing dummy data');
+      // Map images to dummy data so it doesn't look broken
+      const dummyWithImages = DUMMY_DATA.map((item, index) => ({
+        ...item,
+        image: SPOT_IMAGES[index % SPOT_IMAGES.length]
+      }));
+      setZones(dummyWithImages);
+    }
+  }
+};
 
   const fetchAlerts = async () => {
     try {

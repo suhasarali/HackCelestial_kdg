@@ -139,7 +139,10 @@
     "moderate": "Moderate",
     "caution": "Caution",
     "weatherAlert": "Weather Alert",
-    "regulationUpdate": "Regulation Update"
+    "regulationUpdate": "Regulation Update",
+    "analytics": "Analytics",
+    "community":"Community",
+    "seeAll":"see All"
   },
   "map": {
     "fetchingLocation": "Fetching location and generating heatmap...",
