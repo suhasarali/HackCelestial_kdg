@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>Rohu_84_jpg.rf.002c3da62b30c5f7ba9a2d9de34f7d73.jpg</filename>
+	<path>Rohu_84_jpg.rf.002c3da62b30c5f7ba9a2d9de34f7d73.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Rohu</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>9</xmin>
+			<xmax>583</xmax>
+			<ymin>285</ymin>
+			<ymax>494</ymax>
+		</bndbox>
+	</object>
+</annotation>

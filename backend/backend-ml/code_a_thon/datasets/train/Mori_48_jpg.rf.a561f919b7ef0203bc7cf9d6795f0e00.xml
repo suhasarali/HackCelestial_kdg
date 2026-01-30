@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>Mori_48_jpg.rf.a561f919b7ef0203bc7cf9d6795f0e00.jpg</filename>
+	<path>Mori_48_jpg.rf.a561f919b7ef0203bc7cf9d6795f0e00.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>Mori</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>48</xmin>
+			<xmax>623</xmax>
+			<ymin>327</ymin>
+			<ymax>590</ymax>
+		</bndbox>
+	</object>
+</annotation>

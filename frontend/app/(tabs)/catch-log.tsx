@@ -75,6 +75,7 @@ export default function CatchLogScreen() {
       });
       if (response.ok) {
         const result = await response.json();
+        console.log('Detection result:', result);
         const species = result.roboflow_result || 'Unknown';
         setFormData(prev => ({ ...prev, species }));
       }

@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>CommonCarp_138_jpg.rf.4841f2e2e27c3d31a250f3bc068d81d4.jpg</filename>
+	<path>CommonCarp_138_jpg.rf.4841f2e2e27c3d31a250f3bc068d81d4.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>CommonCarp</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>14</xmin>
+			<xmax>636</xmax>
+			<ymin>174</ymin>
+			<ymax>580</ymax>
+		</bndbox>
+	</object>
+</annotation>

@@ -1,0 +1,27 @@
+<annotation>
+	<folder></folder>
+	<filename>SilverCarp_64_jpg.rf.41429a117ab8505550359988c046fdd7.jpg</filename>
+	<path>SilverCarp_64_jpg.rf.41429a117ab8505550359988c046fdd7.jpg</path>
+	<source>
+		<database>roboflow.ai</database>
+	</source>
+	<size>
+		<width>640</width>
+		<height>640</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>SilverCarp</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<occluded>0</occluded>
+		<bndbox>
+			<xmin>5</xmin>
+			<xmax>637</xmax>
+			<ymin>110</ymin>
+			<ymax>448</ymax>
+		</bndbox>
+	</object>
+</annotation>
