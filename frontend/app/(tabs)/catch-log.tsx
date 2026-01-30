@@ -92,9 +92,26 @@ export default function CatchLogScreen() {
     setIsProcessingHaul(true);
     let totalRevenue = 0;
     try {
-      let currentLoc = location || await getCurrentLocation();
+      // Force get fresh location to avoid stale/cached data
+      let currentLoc = await getCurrentLocation(); 
+      if (!currentLoc) {
+          console.log('Could not get fresh location, falling back to context');
+          currentLoc = location;
+      }
+      
+      console.log('Using Location:', currentLoc);
+      
+      if (!currentLoc) {
+          Alert.alert(t('common.error'), t('settings.noLocation'));
+          setIsProcessingHaul(false);
+          return;
+      }
+      
+      console.log('Starting profit calculation for', haulItems.length, 'items');
+      
       for (const item of haulItems) {
-        const priceParams = new URLSearchParams({
+        console.log('Processing item:', item);
+        const paramsObj = {
           user_id: user?.id || 'default_user',
           species: item.species || 'Unknown',
           qty_captured: item.qty || '1',
@@ -102,14 +119,46 @@ export default function CatchLogScreen() {
           lat: (currentLoc?.latitude || 19.0760).toString(),
           lon: (currentLoc?.longitude || 72.8777).toString(),
           price_type: item.priceType
-        });
-        const res = await fetch(`https://mlservice-146a.onrender.com/price?${priceParams}`, {
+        };
+        console.log('Params for item:', paramsObj);
+
+        // Verify required fields
+        if (!paramsObj.weight_kg) {
+            console.error('Missing weight for item:', item);
+            continue;
+        }
+
+        const priceParams = new URLSearchParams(paramsObj);
+        const url = `https://mlservice-146a.onrender.com/price?${priceParams}`;
+        console.log('Fetching URL:', url);
+
+        const res = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
         });
+
+        console.log('Response status:', res.status);
+        
         if (res.ok) {
           const data = await res.json();
+          console.log('Response data:', data);
           totalRevenue += parseFloat(data.predicted_price || 0);
+        } else {
+            const text = await res.text();
+            console.error('Fetch failed:', text);
+            
+            // Try to parse the error message
+            let errorMsg = t('catchLog.noCatches'); // Default error
+            try {
+              const errorObj = JSON.parse(text);
+              if (errorObj.detail) {
+                errorMsg = errorObj.detail;
+              }
+            } catch (e) {
+              // use default
+            }
+            
+            Alert.alert(t('common.error'), errorMsg);
         }
       }
       const fuelCost = activeTrip ? (activeTrip.estimatedFuel * 105) : 0;
@@ -119,7 +168,8 @@ export default function CatchLogScreen() {
       setSummaryReport({ totalRevenue, fuelCost, netProfit, targetDiff, isAboveTarget: targetDiff >= 0 });
       Vibration.vibrate(200);
     } catch (error) {
-      Alert.alert(t('common.error'), t('catchLog.noCatches')); // Fallback or appropriate error
+      console.error('General error:', error);
+      Alert.alert(t('common.error'), t('catchLog.noCatches')); 
     } finally { setIsProcessingHaul(false); }
   };
 
@@ -300,6 +350,29 @@ export default function CatchLogScreen() {
                 placeholder={t('catchLog.speciesName')}
                 placeholderTextColor={Colors.textTertiary}
               />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>{t('catchLog.priceType') || 'Price Type'}</Text>
+              <View style={styles.priceTypeContainer}>
+                {['Retail', 'FL', 'FH'].map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.priceTypeButton,
+                      formData.priceType === type && styles.priceTypeButtonSelected
+                    ]}
+                    onPress={() => setFormData({...formData, priceType: type})}
+                  >
+                    <Text style={[
+                      styles.priceTypeText,
+                      formData.priceType === type && styles.priceTypeTextSelected
+                    ]}>
+                      {type}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
             
             <View style={styles.inputRow}>
@@ -916,5 +989,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
+  },
+  
+  // Price Type Styles
+  priceTypeContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  priceTypeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.divider || '#E2E8F0',
+    backgroundColor: Colors.surface,
+  },
+  priceTypeButtonSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  priceTypeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+  },
+  priceTypeTextSelected: {
+    color: '#fff',
   },
 });

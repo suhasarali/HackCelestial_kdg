@@ -238,6 +238,7 @@
     "identifyFish": "Identify Fish",
     "takePhoto": "Take a photo to auto-detect species",
     "speciesName": "Species Name",
+    "priceType": "Price Type",
     "weight": "Weight (kg)",
     "quantity": "Quantity",
     "addToHaul": "Add to Haul",

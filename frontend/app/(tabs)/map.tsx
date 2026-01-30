@@ -175,9 +175,13 @@ export default function MapScreen() {
       locationSubscription = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, distanceInterval: 10 },
         (location) => {
-          setUserLocation({
+          const coords = {
             latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
+            longitude: location.coords.longitude
+          };
+          AsyncStorage.setItem('app_location', JSON.stringify(coords));
+          setUserLocation({
+            ...coords,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           });
@@ -204,9 +208,14 @@ export default function MapScreen() {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
       let location = await Location.getCurrentPositionAsync({});
-      const loc = {
+      const coords = {
         latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+        longitude: location.coords.longitude
+      };
+      await AsyncStorage.setItem('app_location', JSON.stringify(coords));
+      
+      const loc = {
+        ...coords,
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       };

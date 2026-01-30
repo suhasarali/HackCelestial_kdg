@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: Colors.textPrimary,
-    marginBottom: -15,
+    marginBottom: 10,
   },
   postImageContainer: {
     marginBottom: 14,
