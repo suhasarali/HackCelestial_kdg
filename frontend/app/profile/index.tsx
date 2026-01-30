@@ -144,7 +144,8 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={[Colors.primary, '#1A5F7A']} style={styles.headerBackground}>
+      <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+        <LinearGradient colors={[Colors.primary, '#1A5F7A']} style={styles.headerBackground}>
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
@@ -181,7 +182,7 @@ export default function ProfileScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('profile.profileInfo')}</Text>
           
@@ -238,6 +239,7 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.logoutBtn}>
           <Text style={styles.logoutText}>{t('profile.logout')}</Text>
         </TouchableOpacity>
+      </View>
       </ScrollView>
 
       {/* Language Modal remains the same... */}

@@ -64,6 +64,7 @@ interface PostCardProps {
   userName: string;
   userHandle: string;
   content: string;
+  title?: string;
   likes: number;
   tags: string[];
   timeAgo: string;
@@ -72,7 +73,7 @@ interface PostCardProps {
 }
 
 const PostCard: React.FC<PostCardProps> = ({
-  firstName, lastName, userName, userHandle, content, likes, tags, timeAgo, hasImage, imageUrl
+  firstName, lastName, userName, userHandle, content, title, likes, tags, timeAgo, hasImage, imageUrl
 }) => {
   const { t } = useTranslation();
   const [isLiked, setIsLiked] = useState(false);
@@ -98,6 +99,7 @@ const PostCard: React.FC<PostCardProps> = ({
       </View>
 
       {/* Content */}
+      {title ? <Text style={styles.postTitle}>{title}</Text> : null}
       <Text style={styles.postContent}>{content}</Text>
 
       {/* Image placeholder */}
@@ -335,6 +337,7 @@ const Community = () => {
               lastName={lastName}
               userName={userName}
               userHandle={`@${firstName.toLowerCase()}`}
+              title={item.title}
               content={item.description}
               likes={item.likes?.length || 0}
               tags={item.tags || []}
@@ -577,6 +580,12 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     lineHeight: 24,
     marginBottom: 12,
+  },
+  postTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+    marginBottom: -15,
   },
   postImageContainer: {
     marginBottom: 14,

@@ -344,9 +344,9 @@ export default function AnalyticsScreen() {
             <View style={[styles.quickStatIcon, { backgroundColor: '#E0E7FF' }]}>
               <Icon name="calendar-check" size={20} color="#4F46E5" />
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.quickStatValue}>23</Text>
-              <Text style={styles.quickStatLabel}>{t('analytics.trips')}</Text>
+              <Text style={styles.quickStatLabel} numberOfLines={1} adjustsFontSizeToFit>{t('analytics.trips')}</Text>
             </View>
           </View>
           
@@ -354,19 +354,9 @@ export default function AnalyticsScreen() {
             <View style={[styles.quickStatIcon, { backgroundColor: '#FEF3C7' }]}>
               <Icon name="star" size={20} color="#D97706" />
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={styles.quickStatValue}>4.8</Text>
-              <Text style={styles.quickStatLabel}>{t('analytics.avgRating')}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.quickStatCard}>
-            <View style={[styles.quickStatIcon, { backgroundColor: '#DCFCE7' }]}>
-              <Icon name="trophy" size={20} color="#16A34A" />
-            </View>
-            <View>
-              <Text style={styles.quickStatValue}>#12</Text>
-              <Text style={styles.quickStatLabel}>{t('analytics.rank')}</Text>
+              <Text style={styles.quickStatLabel} numberOfLines={1} adjustsFontSizeToFit>{t('analytics.avgRating')}</Text>
             </View>
           </View>
         </View>

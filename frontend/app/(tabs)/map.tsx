@@ -294,19 +294,7 @@ export default function MapScreen() {
 
           {/* Top Search Area */}
           <SafeAreaView style={styles.topOverlay} edges={['top']}>
-            <View style={styles.searchContainer}>
-              <View style={styles.searchBox}>
-                <Ionicons name="search" size={20} color={Colors.textSecondary} />
-                <TextInput 
-                  style={styles.searchInput}
-                  placeholder="Search fish species..."
-                  placeholderTextColor={Colors.textTertiary}
-                  value={searchTerm}
-                  onChangeText={setSearchTerm}
-                  onSubmitEditing={handleSearch}
-                />
-              </View>
-            </View>
+            
 
             {/* Fish Target Card */}
             {mostProbableFish && (
@@ -627,7 +615,7 @@ const styles = StyleSheet.create({
   fabContainer: { 
     position: 'absolute', 
     right: 20, 
-    bottom: 200,
+    bottom: 280,
     gap: 12,
   },
   fabAI: {
@@ -659,7 +647,7 @@ const styles = StyleSheet.create({
   // Navigation Overlay
   navOverlay: {
     position: 'absolute',
-    top: 180,
+    top: 140,
     left: 20,
     right: 20,
     zIndex: 100,
@@ -706,7 +694,7 @@ const styles = StyleSheet.create({
   // Zone Preview
   zonePreview: {
     position: 'absolute',
-    bottom: 110,
+    bottom: 130,
     left: 0,
     right: 0,
   },
