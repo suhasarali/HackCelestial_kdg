@@ -298,6 +298,26 @@ app.post('/notifications', async (req, res) => {
     }
 });
 
+// --- NEW ROUTE: Popular Spots Generator ---
+app.post('/popular-spots', async (req, res) => {
+    const { latitude, longitude, state } = req.body;
+
+    // We need at least coordinates OR a state name
+    if ((!latitude || !longitude) && !state) {
+        return res.status(400).json({ error: "Location required (lat/lon OR state name)" });
+    }
+
+    console.log(`🎣 Finding popular spots for: ${state || `${latitude}, ${longitude}`}`);
+
+    try {
+        const spots = await getGeminiFishingSpots(latitude, longitude, state);
+        res.json({ status: "success", location: state || "Detected via GPS", spots: spots });
+    } catch (error) {
+        console.error("❌ Spot Search Error:", error);
+        res.status(500).json({ error: "Failed to find spots" });
+    }
+});
+
 app.get('/', (req, res) => res.send("🌊 Main Backend is running."));
 
 app.listen(PORT, HOST, () => {
@@ -431,4 +451,56 @@ async function aiStructureData(rawText, context) {
     console.error(`❌ AI Error (${context}):`, error.response?.data?.error?.message || error.message);
     return []; 
   }
+}
+
+
+// --- AI HELPER: Find Popular Spots ---
+async function getGeminiFishingSpots(lat, lon, stateInput) {
+    try {
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${geminiApiKey}`;
+
+        // Construct the prompt based on what we have
+        let locationContext = "";
+        if (stateInput) {
+            locationContext = `the state/region of ${stateInput}`;
+        } else {
+            locationContext = `the coordinates ${lat}, ${lon}`;
+        }
+
+        const prompt = `
+            You are a local fishing expert in India. 
+            Identify the city or district for ${locationContext}.
+            
+            Then, list 5-8 POPULAR fishing spots (beaches, creeks, lakes, dams, or river banks) within 50km of this location.
+            
+            Rules:
+            1. Return ONLY valid JSON array.
+            2. For each spot, provide:
+               - "name": Name of the spot (e.g., "Powai Lake", "Sassoon Docks").
+               - "type": (Lake, Beach, Creek, Dam, Deep Sea).
+               - "best_catch": 2-3 common fish found there (e.g., "Rohu, Catla" or "Mackerel, Pomfret").
+               - "difficulty": (Easy/Medium/Hard).
+               - "distance_approx": Estimate distance from the user in km.
+            
+            Example JSON:
+            [
+                { "name": "Marine Drive", "type": "Seaface", "best_catch": "Ghol, Snapper", "difficulty": "Medium", "distance_approx": "5 km" }
+            ]
+        `;
+
+        const res = await axios.post(geminiUrl, {
+            contents: [{ parts: [{ text: prompt }] }]
+        });
+
+        let jsonString = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
+        // Clean markdown backticks if Gemini adds them
+        jsonString = jsonString.replace(/```json/g, "").replace(/```/g, "").trim();
+
+        return JSON.parse(jsonString);
+
+    } catch (error) {
+        console.error("Gemini Spot Search Failed:", error.message);
+        return []; // Return empty list on failure
+    }
 }
