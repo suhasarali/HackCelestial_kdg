@@ -4,7 +4,7 @@ import os
 
 # --- CONFIGURATION ---
 # Paste the key you got from AI Studio between the quotes
-API_KEY = "AIzaSyAO1Ffna91bet1ersCigA33q9DzasyB4R4" 
+API_KEY = "" 
 
 # Initialize the Gemini "Client"
 client = genai.Client(api_key=API_KEY)
