@@ -158,9 +158,11 @@ export default function CatchLogScreen() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           });
+          console.log("Msg from server for item:", res);
           if (res.ok) {
             const data = await res.json();
-            totalRevenue += parseFloat(data.predicted_price || 0);
+            console.log('Fetched price for item:', data.price_details.total_price);
+            totalRevenue += parseFloat(data.price_details.total_price || 0);
           }
         }
       }
