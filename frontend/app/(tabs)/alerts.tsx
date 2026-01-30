@@ -6,7 +6,8 @@ import {
   ScrollView, 
   TouchableOpacity,
   RefreshControl,
-  StatusBar
+  StatusBar,
+  ActivityIndicator
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -14,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
+import { fetchNotifications, AlertData } from '../services/notifications';
+import * as Location from 'expo-location';
 
 // Types
 interface AlertItem {
@@ -26,62 +29,89 @@ interface AlertItem {
   isRead: boolean;
 }
 
-// Mock alerts
-const MOCK_ALERTS: AlertItem[] = [
-  {
-    id: '1',
-    title: 'High Wind Warning',
-    body: 'Wind speeds expected to reach 45 km/h after 3 PM. Consider returning to shore early.',
-    category: 'weather',
-    priority: 'high',
-    timestamp: '2h ago',
-    isRead: false,
-  },
-  {
-    id: '2',
-    title: 'Zone B Restricted',
-    body: 'Fishing is temporarily restricted in Zone B due to spawning season. Effective until next week.',
-    category: 'regulation',
-    priority: 'high',
-    timestamp: '4h ago',
-    isRead: false,
-  },
-  {
-    id: '3',
-    title: 'Pomfret Prices Up',
-    body: 'Silver pomfret prices have increased by 18% at Mumbai market. Good time to sell!',
-    category: 'market',
-    priority: 'medium',
-    timestamp: '6h ago',
-    isRead: true,
-  },
-  {
-    id: '4',
-    title: 'Coast Guard Advisory',
-    body: 'Regular patrols scheduled in sectors 4-7 today. Ensure all documentation is on board.',
-    category: 'safety',
-    priority: 'medium',
-    timestamp: '8h ago',
-    isRead: true,
-  },
-  {
-    id: '5',
-    title: 'Favorable Conditions Tomorrow',
-    body: 'Clear skies and calm waters expected tomorrow. Perfect fishing conditions forecast.',
-    category: 'weather',
-    priority: 'low',
-    timestamp: '12h ago',
-    isRead: true,
-  },
-];
+// Helper to format time
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diffInSeconds < 60) return 'Just now';
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  const diffInDays = Math.floor(diffInHours / 24);
+  return `${diffInDays}d ago`;
+}
+
+// Mock alerts (fallback or initial empty state)
+const MOCK_ALERTS: AlertItem[] = [];
 
 
 
 export default function AlertsScreen() {
   const { t } = useTranslation();
-  const [alerts, setAlerts] = useState<AlertItem[]>(MOCK_ALERTS);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [filter, setFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  const loadAlerts = async () => {
+    try {
+      console.log('Starting loadAlerts...');
+      setLoading(true);
+      
+      // Get permissions
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        console.log('Permission to access location was denied');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Fetching location...');
+      // Try to get current position with a timeout, fallback to last known
+      let location;
+      try {
+        location = await Promise.race([
+          Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Location timeout')), 5000))
+        ]) as Location.LocationObject;
+      } catch (e) {
+        console.log('Location fetch timed out or failed, trying last known...');
+        location = await Location.getLastKnownPositionAsync({});
+      }
+
+      if (!location) {
+        // Fallback or default location if everything fails (e.g. Mumbai)
+        console.log('No location found, using default.');
+        location = { coords: { latitude: 19.0760, longitude: 72.8777 } } as Location.LocationObject; 
+      }
+
+      console.log('Location acquired:', location.coords.latitude, location.coords.longitude);
+      
+      console.log('Fetching notifications from backend...');
+      const fetchedAlerts = await fetchNotifications(location.coords.latitude, location.coords.longitude);
+      console.log('Notifications fetched:', fetchedAlerts.length);
+      
+      // Update timestamps to be relative
+      const processedAlerts = fetchedAlerts.map((alert: AlertData) => ({
+        ...alert,
+        timestamp: formatRelativeTime(alert.timestamp)
+      }));
+
+      setAlerts(processedAlerts);
+    } catch (error) {
+      console.error("Failed to load alerts", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadAlerts();
+  }, []);
 
   const getCategoryConfig = (category: string) => {
     switch (category) {
@@ -144,7 +174,7 @@ export default function AlertsScreen() {
 
   const onRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
+    loadAlerts();
   };
 
   const markAsRead = (id: string) => {
@@ -218,7 +248,12 @@ export default function AlertsScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} />
         }
       >
-        {filteredAlerts.length === 0 ? (
+        {loading ? (
+           <View style={{ marginTop: 40, alignItems: 'center' }}>
+             <ActivityIndicator size="large" color={Colors.primary} />
+             <Text style={{ marginTop: 10, color: Colors.textSecondary }}>Checking for threats...</Text>
+           </View>
+        ) : filteredAlerts.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
               <Ionicons name="notifications-off-outline" size={40} color={Colors.textTertiary} />
