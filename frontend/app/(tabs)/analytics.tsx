@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -82,62 +82,64 @@ export default function AnalyticsScreen() {
     return palette[index % palette.length];
   };
 
-  useEffect(() => {
-    let mounted = true;
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
 
-    const fetchAll = async () => {
-      setLoading(true);
-      try {
-        const userId = await AsyncStorage.getItem('userId');
-        if (!userId) {
-          setLoading(false);
-          return;
-        }
-
+      const fetchAll = async () => {
+        setLoading(true);
         try {
-          const cleanUserId = String(userId).replace(/['"]+/g, '');
-          const resp = await fetch(
-            `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${cleanUserId}`,
-            { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-          );
-          if (resp.ok) {
-            const data: SummaryData = await resp.json();
-            if (mounted) setSummary(data);
+          const userId = await AsyncStorage.getItem('userId');
+          if (!userId) {
+            setLoading(false);
+            return;
           }
-        } catch (err) {
-          console.error('Error fetching summary:', err);
-        }
 
-        try {
-          const cleanUserId = String(userId).replace(/['"]+/g, '');
-          const resp = await fetch(
-            `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${cleanUserId}`,
-            { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-          );
-          if (resp.ok) {
-            const data: any[] = await resp.json();
-            const formatted: SpeciesData[] = Array.isArray(data)
-              ? data.map((item, index) => ({
-                  name: item.species ?? `Species ${index + 1}`,
-                  population: Number(item.quantity) || 0,
-                  color: getColorForIndex(index),
-                  legendFontColor: Colors.textSecondary,
-                  legendFontSize: 12,
-                }))
-              : [];
-            if (mounted) setSpeciesData(formatted);
+          try {
+            const cleanUserId = String(userId).replace(/['"]+/g, '');
+            const resp = await fetch(
+              `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${cleanUserId}`,
+              { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+            );
+            if (resp.ok) {
+              const data: SummaryData = await resp.json();
+              if (mounted) setSummary(data);
+            }
+          } catch (err) {
+            console.error('Error fetching summary:', err);
           }
-        } catch (err) {
-          console.error('Error fetching species data:', err);
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
 
-    fetchAll();
-    return () => { mounted = false; };
-  }, []);
+          try {
+            const cleanUserId = String(userId).replace(/['"]+/g, '');
+            const resp = await fetch(
+              `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${cleanUserId}`,
+              { method: 'GET', headers: { 'Content-Type': 'application/json' } }
+            );
+            if (resp.ok) {
+              const data: any[] = await resp.json();
+              const formatted: SpeciesData[] = Array.isArray(data)
+                ? data.map((item, index) => ({
+                    name: item.species ?? `Species ${index + 1}`,
+                    population: Number(item.quantity) || 0,
+                    color: getColorForIndex(index),
+                    legendFontColor: Colors.textSecondary,
+                    legendFontSize: 12,
+                  }))
+                : [];
+              if (mounted) setSpeciesData(formatted);
+            }
+          } catch (err) {
+            console.error('Error fetching species data:', err);
+          }
+        } finally {
+          if (mounted) setLoading(false);
+        }
+      };
+
+      fetchAll();
+      return () => { mounted = false; };
+    }, [])
+  );
 
   const chartConfig = {
     backgroundGradientFrom: Colors.surface,
