@@ -86,56 +86,59 @@ const getCatchSummary = async (req, res) => {
 //         res.status(500).json({ message: 'Server Error: Could not fetch weekly data.' });
 //     }
 // };
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const getWeeklyCatches = async (req, res) => {
     try {
         const { userId } = req.params;
+        const userTZ = "Asia/Kolkata"; 
 
-        // 1. Calculate the start and end of the current week
-        const today = new Date();
-        const dayOfWeek = today.getDay(); // 0 (Sun) to 6 (Sat)
-        
-        // Calculate Monday (Start of week)
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-        startOfWeek.setHours(0, 0, 0, 0);
+        // 1. Calculate the start and end of the current week (Monday to Sunday)
+        const now = dayjs().tz(userTZ);
+        const startOfWeek = now.startOf('week').add(1, 'day').startOf('day'); // Monday 00:00
+        const endOfWeek = startOfWeek.add(6, 'day').endOf('day'); // Sunday 23:59
 
-        // Calculate Sunday (End of week)
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
-
-        // Debug logs to verify range
-        console.log(`🔎 Weekly Query (Using updatedAt) for ${userId}`);
-        console.log(`📅 Range: ${startOfWeek.toISOString()} to ${endOfWeek.toISOString()}`);
+        console.log(`\n--- 🛠️ DEBUG START ---`);
+        console.log(`Current Time (${userTZ}):`, now.format('YYYY-MM-DD HH:mm:ss'));
+        console.log(`Query Range: ${startOfWeek.format()} to ${endOfWeek.format()}`);
 
         const weeklyData = await Analysis.aggregate([
             {
                 $match: {
                     user_id: userId,
-                    // CHANGE: Check 'updatedAt' instead of 'createdAt'
-                    updatedAt: { $gte: startOfWeek, $lte: endOfWeek },
+                    // Check both created_at and updated_at (with underscores)
+                    $or: [
+                        { created_at: { $gte: startOfWeek.toDate(), $lte: endOfWeek.toDate() } },
+                        { updatedAt: { $gte: startOfWeek.toDate(), $lte: endOfWeek.toDate() } }
+                    ]
                 },
             },
             {
+                $addFields: {
+                    // FALLBACK: Use created_at if exists, otherwise updated_at
+                    effectiveDate: { $ifNull: ["$created_at", "$updatedAt"] }
+                }
+            },
+            {
                 $group: {
-                    // CHANGE: Group by 'updatedAt' day
-                    _id: { $dayOfWeek: '$updatedAt' }, 
+                    // Grouping by day of week (1: Sun, 7: Sat) using local timezone
+                    _id: { $dayOfWeek: { date: '$effectiveDate', timezone: userTZ } }, 
                     totalQuantity: { $sum: '$qty_captured' },
                 },
             },
             { $sort: { _id: 1 } },
         ]);
 
-        console.log("📊 Aggregation Result:", JSON.stringify(weeklyData));
+        console.log("Raw Aggregation Result (per day):", JSON.stringify(weeklyData, null, 2));
 
-        // Format data for the chart (Monday -> Sunday)
+        // 2. Format data for the chart
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        // Map data to days
         let formattedData = days.map((day, index) => {
-            // MongoDB $dayOfWeek returns 1 (Sun) -> 7 (Sat)
-            // Array index is 0 (Sun) -> 6 (Sat)
-            // So we match _id === index + 1
             const dayData = weeklyData.find(d => d._id === (index + 1));
             return { 
                 day, 
@@ -143,14 +146,18 @@ const getWeeklyCatches = async (req, res) => {
             };
         });
         
-        // Shift Sunday (index 0) to the end so array starts with Monday
+        // Reorder array: Sunday (index 0) moves to the end -> [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
         formattedData = [...formattedData.slice(1), formattedData[0]];
         
+        console.log("📊 Final Chart Data Table:");
+        console.table(formattedData);
+        console.log(`--- 🛠️ DEBUG END ---\n`);
+
         res.status(200).json(formattedData);
 
     } catch (error) {
         console.error("❌ Error fetching weekly catches:", error);
-        res.status(500).json({ message: 'Server Error: Could not fetch weekly data.' });
+        res.status(500).json({ message: 'Server Error' });
     }
 };
 
