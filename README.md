@@ -1,25 +1,3 @@
-## 🔗 Live Services
-
-### 🌐 Backend Services
-
-- **ML Model Service(Prakhar's Render)**: [https://mlservice-146a.onrender.com/](https://mlservice-146a.onrender.com/)
-- **Backend API**: [https://hackcelestial-kdg.onrender.com/](https://hackcelestial-kdg.onrender.com/)
-- **Analytics Service(Rohan's Render)**: [https://hackcelestial-kdg-1.onrender.com/](https://hackcelestial-kdg-1.onrender.com/)
-
-### 📊 Analysis API Endpoints
-
-#### Summary Analytics:
-https://hackcelestial-kdg-1.onrender.com/api/catches/summary/68cda34fbedae2fb5e505890
-
-#### Weekly Catch Data:
-https://hackcelestial-kdg-1.onrender.com/api/catches/weekly/68cda34fbedae2fb5e505890
-
-
-#### Species Distribution:
-https://hackcelestial-kdg-1.onrender.com/api/catches/species/68cda34fbedae2fb5e505890
-
----
-
 # 🐟 Matsya – Ocean Hazard Analytics
 
 > **A data-driven analytical platform empowering fishermen and marine authorities with intelligent insights for sustainable and profitable fishing operations**
@@ -27,7 +5,7 @@ https://hackcelestial-kdg-1.onrender.com/api/catches/species/68cda34fbedae2fb5e5
 
 ## 🌊 Overview
 
-**Matsya** is an AI-powered ocean analytics platform developed for **Hack Celestial 2.0 Hackathon** at Pillai College of Engineering, Panvel. It combines **Machine Learning**, **Computer Vision**, and **Business Analytics** to revolutionize India's fishing industry by providing:
+**Matsya** is an AI-powered ocean analytics platform that uses **Machine Learning**, **Computer Vision**, and **Business Analytics** to revolutionize India's fishing industry by providing:
 
 - 🔍 Automated fish species identification
 - 💰 Market price prediction based on fish size
