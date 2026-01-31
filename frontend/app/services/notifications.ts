@@ -1,4 +1,8 @@
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const ALERT_CACHE_KEY = '@recent_alerts_cache';
+
 
 const BACKEND_URL = 'https://hackcelestial-kdg-1.onrender.com';
 
@@ -91,6 +95,25 @@ export const fetchNotifications = async (latitude: number, longitude: number): P
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return [];
+  }
+};
+
+export const loadCachedAlerts = async (): Promise<AlertData[]> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(ALERT_CACHE_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue) : [];
+  } catch (e) {
+    console.error('Error loading cached alerts:', e);
+    return [];
+  }
+};
+
+export const cacheAlerts = async (alerts: AlertData[]): Promise<void> => {
+  try {
+    const top5 = alerts.slice(0, 5);
+    await AsyncStorage.setItem(ALERT_CACHE_KEY, JSON.stringify(top5));
+  } catch (e) {
+    console.error('Error caching alerts:', e);
   }
 };
 export const fetchPopularSpots = async (latitude: number, longitude: number): Promise<SpotItem[]> => {

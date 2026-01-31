@@ -22,7 +22,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import LocationDisplay from '../../components/LocationDisplay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
-import { fetchNotifications,fetchPopularSpots } from '../services/notifications';
+import { fetchNotifications, fetchPopularSpots, loadCachedAlerts, cacheAlerts, AlertData } from '../services/notifications';
 
 const { width, height } = Dimensions.get('window');
 
@@ -319,6 +319,18 @@ const fetchTopZones = async () => {
 
   const fetchAlerts = async () => {
     try {
+      // 1. Load cached alerts first for immediate display
+      const cached = await loadCachedAlerts();
+      if (cached && cached.length > 0) {
+        const mappedCached: AlertItem[] = cached.map((alert: AlertData) => ({
+          id: alert.id,
+          type: alert.category, 
+          message: alert.title, 
+          priority: alert.priority
+        }));
+        setAlerts(mappedCached);
+      }
+
       const locationStr = await AsyncStorage.getItem('app_location');
       let lat = 19.0760;
       let lon = 72.8777;
@@ -332,18 +344,23 @@ const fetchTopZones = async () => {
       console.log('Fetching active alerts for home...');
       const fetchedAlerts = await fetchNotifications(lat, lon);
       
-      const mappedAlerts: AlertItem[] = fetchedAlerts.map(alert => ({
-        id: alert.id,
-        type: alert.category, // Map category to type
-        message: alert.title, // Use title as the main message/headline
-        priority: alert.priority
-      }));
+      // 2. Update with fresh data
+      if (fetchedAlerts.length > 0) {
+        const mappedAlerts: AlertItem[] = fetchedAlerts.map(alert => ({
+          id: alert.id,
+          type: alert.category, // Map category to type
+          message: alert.title, // Use title as the main message/headline
+          priority: alert.priority
+        }));
 
-      setAlerts(mappedAlerts);
+        setAlerts(mappedAlerts);
+        
+        // 3. Cache the new Top 5
+        await cacheAlerts(fetchedAlerts);
+      }
     } catch (error) {
       console.error('Error fetching home alerts:', error);
-      // Fallback to empty or keep previous
-      setAlerts([]);
+      // If network fails, we rely on whatever is in state (which might be cached data)
     }
   };
 

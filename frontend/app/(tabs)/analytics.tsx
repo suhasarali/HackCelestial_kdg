@@ -8,38 +8,21 @@ import {
   Dimensions,
   Animated,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { MaterialCommunityIcons as Icon, Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
+import { LineChart, PieChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
-import { fadeIn, scaleIn } from '../../utils/animations';
+import { Colors, Shadows } from '../../constants/design';
 
 const { width } = Dimensions.get('window');
 
-const CATCH_HISTORY = [
-  { day: 'Mon', weight: 12, value: 4800 },
-  { day: 'Tue', weight: 18, value: 7200 },
-  { day: 'Wed', weight: 8, value: 3200 },
-  { day: 'Thu', weight: 22, value: 8800 },
-  { day: 'Fri', weight: 15, value: 6000 },
-  { day: 'Sat', weight: 25, value: 10000 },
-  { day: 'Sun', weight: 20, value: 8000 },
-];
-
-const BEST_HOURS = [
-  { hour: '5am', success: 85 },
-  { hour: '6am', success: 92 },
-  { hour: '7am', success: 78 },
-  { hour: '5pm', success: 72 },
-  { hour: '6pm', success: 68 },
-];
-
+// --- Interfaces ---
 interface SummaryData {
   totalWeight: number;
   totalValue: number;
@@ -54,19 +37,48 @@ interface SpeciesData {
   legendFontSize: number;
 }
 
+interface WeeklyData {
+  day: string;
+  weight: number;
+}
+
+// Fallback data prevents crashes if API is empty
+const FALLBACK_WEEKLY_DATA: WeeklyData[] = [
+  { day: 'Mon', weight: 0 },
+  { day: 'Tue', weight: 0 },
+  { day: 'Wed', weight: 0 },
+  { day: 'Thu', weight: 0 },
+  { day: 'Fri', weight: 0 },
+  { day: 'Sat', weight: 0 },
+  { day: 'Sun', weight: 0 },
+];
+
+const BEST_HOURS = [
+  { hour: '5am', success: 85 },
+  { hour: '6am', success: 92 },
+  { hour: '7am', success: 78 },
+  { hour: '5pm', success: 72 },
+  { hour: '6pm', success: 68 },
+];
+
 export default function AnalyticsScreen() {
   const router = useRouter();
   const { t } = useTranslation();
 
+  // --- State ---
   const [summary, setSummary] = useState<SummaryData>({
-    totalWeight: 120,
-    totalValue: 48000,
-    averagePricePerKg: 400,
+    totalWeight: 0,
+    totalValue: 0,
+    averagePricePerKg: 0,
   });
-  const [timeRange, setTimeRange] = useState('week');
+  
+  const [weeklyHistory, setWeeklyHistory] = useState<WeeklyData[]>([]);
   const [speciesData, setSpeciesData] = useState<SpeciesData[]>([]);
+  
+  const [timeRange, setTimeRange] = useState('week');
   const [loading, setLoading] = useState(true);
 
+  // --- Animations ---
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -82,41 +94,77 @@ export default function AnalyticsScreen() {
     return palette[index % palette.length];
   };
 
+  // --- Data Fetching ---
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
+      console.log('[DEBUG] Analytics Screen Focused');
 
       const fetchAll = async () => {
         setLoading(true);
         try {
+          // 1. Get User ID
           const userId = await AsyncStorage.getItem('userId');
+          
           if (!userId) {
+            console.log("No User ID found");
             setLoading(false);
             return;
           }
 
+          const cleanUserId = String(userId).replace(/['"]+/g, '');
+          console.log("[DEBUG] Fetching for User:", cleanUserId);
+
+          // 2. Fetch Summary
           try {
-            const cleanUserId = String(userId).replace(/['"]+/g, '');
-            const resp = await fetch(
-              `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${cleanUserId}`,
-              { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-            );
-            if (resp.ok) {
-              const data: SummaryData = await resp.json();
+            const summaryUrl = `https://hackcelestial-kdg-1.onrender.com/api/catches/summary/${cleanUserId}`;
+            const summaryResp = await fetch(summaryUrl);
+            
+            if (summaryResp.ok) {
+              const data = await summaryResp.json();
               if (mounted) setSummary(data);
             }
           } catch (err) {
-            console.error('Error fetching summary:', err);
+            console.error('[DEBUG] Summary Fetch Error:', err);
           }
 
+          // 3. Fetch Weekly History (FIXED MAPPING HERE)
           try {
-            const cleanUserId = String(userId).replace(/['"]+/g, '');
-            const resp = await fetch(
-              `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${cleanUserId}`,
-              { method: 'GET', headers: { 'Content-Type': 'application/json' } }
-            );
-            if (resp.ok) {
-              const data: any[] = await resp.json();
+            const historyUrl = `https://hackcelestial-kdg-1.onrender.com/api/catches/weekly/${cleanUserId}`;
+            const historyResp = await fetch(historyUrl);
+            
+            if (historyResp.ok) {
+              const rawData = await historyResp.json();
+              console.log("[DEBUG] History Raw Data:", JSON.stringify(rawData));
+
+              if (Array.isArray(rawData) && rawData.length > 0) {
+                // FIXED: Map 'quantity' to 'weight'
+                const formattedHistory = rawData.map((item: any) => ({
+                    day: item.day ? String(item.day).substring(0, 3) : '?', 
+                    weight: Number(item.quantity) || 0  // <--- CHANGED FROM item.weight TO item.quantity
+                }));
+                
+                console.log("[DEBUG] Formatted History:", JSON.stringify(formattedHistory));
+                if (mounted) setWeeklyHistory(formattedHistory);
+              } else {
+                if (mounted) setWeeklyHistory(FALLBACK_WEEKLY_DATA);
+              }
+            } else {
+              if (mounted) setWeeklyHistory(FALLBACK_WEEKLY_DATA);
+            }
+          } catch (err) {
+            console.error('[DEBUG] History Exception:', err);
+            if (mounted) setWeeklyHistory(FALLBACK_WEEKLY_DATA);
+          }
+
+          // 4. Fetch Species
+          try {
+            const speciesUrl = `https://hackcelestial-kdg-1.onrender.com/api/catches/species/${cleanUserId}`;
+            const speciesResp = await fetch(speciesUrl);
+            
+            if (speciesResp.ok) {
+              const data: any[] = await speciesResp.json();
+              
               const formatted: SpeciesData[] = Array.isArray(data)
                 ? data.map((item, index) => ({
                     name: item.species ?? `Species ${index + 1}`,
@@ -129,8 +177,9 @@ export default function AnalyticsScreen() {
               if (mounted) setSpeciesData(formatted);
             }
           } catch (err) {
-            console.error('Error fetching species data:', err);
+            console.error('[DEBUG] Species Fetch Error:', err);
           }
+
         } finally {
           if (mounted) setLoading(false);
         }
@@ -141,6 +190,7 @@ export default function AnalyticsScreen() {
     }, [])
   );
 
+  // --- Chart Configuration ---
   const chartConfig = {
     backgroundGradientFrom: Colors.surface,
     backgroundGradientTo: Colors.surface,
@@ -150,13 +200,13 @@ export default function AnalyticsScreen() {
     useShadowColorFromDataset: false,
     decimalPlaces: 0,
     propsForDots: {
-      r: '6',
-      strokeWidth: '3',
+      r: '5',
+      strokeWidth: '2',
       stroke: Colors.primary,
       fill: '#fff',
     },
     propsForBackgroundLines: {
-      strokeDasharray: '',
+      strokeDasharray: '4', 
       stroke: Colors.divider,
       strokeWidth: 1,
     },
@@ -165,26 +215,54 @@ export default function AnalyticsScreen() {
   const summaryCards = [
     { 
       icon: 'scale' as any, 
-      label: t('analytics.totalCatch'), 
-      value: `${summary.totalWeight}kg`,
+      label: t('analytics.totalCatch') || 'Total Catch', 
+      value: `${summary.totalWeight || 0}kg`,
       change: '+12%',
       gradient: ['#2C7A7B', '#1D5A5B'],
     },
     { 
       icon: 'cash-multiple' as any, 
-      label: t('analytics.revenue'), 
-      value: `₹${(summary.totalValue/1000).toFixed(1)}k`,
+      label: t('analytics.revenue') || 'Revenue', 
+      value: `₹${((summary.totalValue || 0)/1000).toFixed(1)}k`,
       change: '+8%',
       gradient: ['#38A169', '#2F855A'],
     },
     { 
       icon: 'trending-up' as any, 
-      label: t('analytics.avgPrice'), 
-      value: `₹${summary.averagePricePerKg}`,
+      label: t('analytics.avgPrice') || 'Avg Price', 
+      value: `₹${summary.averagePricePerKg || 0}`,
       change: '+5%',
       gradient: ['#3182CE', '#2B6CB0'],
     },
   ];
+
+  // --- Safe Data Helper ---
+  const getChartData = () => {
+    if (!weeklyHistory || weeklyHistory.length === 0) {
+      return {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        datasets: [{ data: [0, 0, 0, 0, 0, 0, 0] }]
+      };
+    }
+
+    const labels = weeklyHistory.map(item => item.day);
+    const dataPoints = weeklyHistory.map(item => item.weight);
+
+    return {
+      labels: labels,
+      datasets: [{ 
+        data: dataPoints.length > 0 ? dataPoints : [0] 
+      }]
+    };
+  };
+
+  if (loading && !summary.totalWeight) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -199,8 +277,8 @@ export default function AnalyticsScreen() {
         <SafeAreaView edges={['top']}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.pageTitle}>{t('analytics.title')}</Text>
-              <Text style={styles.pageSubtitle}>{t('analytics.subtitle')}</Text>
+              <Text style={styles.pageTitle}>{t('analytics.title') || 'Analytics'}</Text>
+              <Text style={styles.pageSubtitle}>{t('analytics.subtitle') || 'Overview & Insights'}</Text>
             </View>
             
             <View style={styles.timeRangeContainer}>
@@ -211,7 +289,7 @@ export default function AnalyticsScreen() {
                   onPress={() => setTimeRange(range.toLowerCase())}
                 >
                   <Text style={[styles.timeButtonText, timeRange === range.toLowerCase() && styles.activeTimeButtonText]}>
-                    {t(`analytics.${range.toLowerCase()}`)}
+                    {t(`analytics.${range.toLowerCase()}`) || range}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -242,19 +320,21 @@ export default function AnalyticsScreen() {
                     <Text style={styles.changeText}>{card.change}</Text>
                   </View>
                 </View>
-                <Text style={styles.summaryValue}>{card.value}</Text>
-                <Text style={styles.summaryLabel}>{card.label}</Text>
+                <View>
+                    <Text style={styles.summaryValue}>{card.value}</Text>
+                    <Text style={styles.summaryLabel}>{card.label}</Text>
+                </View>
               </LinearGradient>
             </View>
           ))}
         </ScrollView>
 
-        {/* Catch Trend Chart */}
+        {/* Catch Trend Chart (Dynamic) */}
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>{t('analytics.catchTrend')}</Text>
-              <Text style={styles.chartSubtitle}>{t('analytics.catchTrendSubtitle')}</Text>
+              <Text style={styles.chartTitle}>{t('analytics.catchTrend') || 'Weekly Catch'}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.catchTrendSubtitle') || 'Weight (kg) over time'}</Text>
             </View>
             <TouchableOpacity style={styles.chartMenuBtn}>
               <Ionicons name="ellipsis-horizontal" size={20} color={Colors.textSecondary} />
@@ -262,16 +342,13 @@ export default function AnalyticsScreen() {
           </View>
           
           <LineChart
-            data={{
-              labels: CATCH_HISTORY.map(item => item.day),
-              datasets: [{ data: CATCH_HISTORY.map(item => item.weight) }],
-            }}
-            width={width - 72}
-            height={200}
+            data={getChartData()}
+            width={width - 56} 
+            height={220}
             chartConfig={{
               ...chartConfig,
               fillShadowGradient: Colors.primary,
-              fillShadowGradientOpacity: 0.15,
+              fillShadowGradientOpacity: 0.1,
             }}
             bezier
             style={styles.chart}
@@ -279,6 +356,8 @@ export default function AnalyticsScreen() {
             withOuterLines={false}
             withHorizontalLabels={true}
             withVerticalLabels={true}
+            yAxisSuffix="kg"
+            fromZero={true}
           />
         </View>
 
@@ -286,8 +365,8 @@ export default function AnalyticsScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>{t('analytics.bestHours')}</Text>
-              <Text style={styles.chartSubtitle}>{t('analytics.bestHoursSubtitle')}</Text>
+              <Text style={styles.chartTitle}>{t('analytics.bestHours') || 'Best Hours'}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.bestHoursSubtitle') || 'Based on success rate'}</Text>
             </View>
           </View>
           
@@ -311,8 +390,8 @@ export default function AnalyticsScreen() {
         <View style={styles.chartCard}>
           <View style={styles.chartHeader}>
             <View>
-              <Text style={styles.chartTitle}>{t('analytics.speciesCaught')}</Text>
-              <Text style={styles.chartSubtitle}>{t('analytics.distribution')} {t(`analytics.${timeRange}`)}</Text>
+              <Text style={styles.chartTitle}>{t('analytics.speciesCaught') || 'Species'}</Text>
+              <Text style={styles.chartSubtitle}>{t('analytics.distribution') || 'Distribution'} {t(`analytics.${timeRange}`) || timeRange}</Text>
             </View>
           </View>
           
@@ -320,12 +399,13 @@ export default function AnalyticsScreen() {
             <View style={styles.pieContainer}>
               <PieChart
                 data={speciesData}
-                width={width - 72}
-                height={180}
+                width={width - 56}
+                height={200}
                 chartConfig={chartConfig}
                 accessor="population"
                 backgroundColor="transparent"
-                paddingLeft="0"
+                paddingLeft="15"
+                center={[0, 0]}
                 absolute
               />
             </View>
@@ -334,33 +414,10 @@ export default function AnalyticsScreen() {
               <View style={styles.emptyIconCircle}>
                 <Icon name="fish" size={32} color={Colors.textTertiary} />
               </View>
-              <Text style={styles.emptyTitle}>{t('analytics.noCatches')}</Text>
-              <Text style={styles.emptyText}>{t('analytics.noCatchesSubtitle')}</Text>
+              <Text style={styles.emptyTitle}>{t('analytics.noCatches') || 'No Data'}</Text>
+              <Text style={styles.emptyText}>{t('analytics.noCatchesSubtitle') || 'Start fishing to see stats'}</Text>
             </View>
           )}
-        </View>
-
-        {/* Quick Stats Row */}
-        <View style={styles.quickStatsRow}>
-          <View style={styles.quickStatCard}>
-            <View style={[styles.quickStatIcon, { backgroundColor: '#E0E7FF' }]}>
-              <Icon name="calendar-check" size={20} color="#4F46E5" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.quickStatValue}>23</Text>
-              <Text style={styles.quickStatLabel} numberOfLines={1} adjustsFontSizeToFit>{t('analytics.trips')}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.quickStatCard}>
-            <View style={[styles.quickStatIcon, { backgroundColor: '#FEF3C7' }]}>
-              <Icon name="star" size={20} color="#D97706" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.quickStatValue}>4.8</Text>
-              <Text style={styles.quickStatLabel} numberOfLines={1} adjustsFontSizeToFit>{t('analytics.avgRating')}</Text>
-            </View>
-          </View>
         </View>
 
         {/* Bottom spacing */}
@@ -374,6 +431,11 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: Colors.background,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 1,
   },
   scrollContent: {
     paddingBottom: 20,
@@ -469,13 +531,14 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   summaryValue: { 
-    fontSize: 28, 
+    fontSize: 26, 
     fontWeight: '700', 
     color: '#fff',
+    marginTop: 8,
   },
   summaryLabel: { 
     fontSize: 13, 
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontWeight: '500',
   },
 
@@ -509,7 +572,8 @@ const styles = StyleSheet.create({
   },
   chart: { 
     borderRadius: 16,
-    marginLeft: -12,
+    marginLeft: -16, 
+    marginTop: 10,
   },
 
   // Hours Grid
@@ -578,39 +642,5 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     maxWidth: 220,
-  },
-
-  // Quick Stats
-  quickStatsRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 20,
-    gap: 12,
-  },
-  quickStatCard: {
-    flex: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: 18,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    ...Shadows.sm,
-  },
-  quickStatIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quickStatValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: Colors.textPrimary,
-  },
-  quickStatLabel: {
-    fontSize: 11,
-    color: Colors.textSecondary,
   },
 });
