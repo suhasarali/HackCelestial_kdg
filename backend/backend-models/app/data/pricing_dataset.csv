@@ -14,6 +14,32 @@ Catla,Jharkhand,FH,56
 Catla,Manipur,Retail,285
 Catla,Manipur,FLC,555
 Catla,Manipur,FH,223
+Catla,Assam,Retail,258
+Catla,Assam,FLC,681
+Catla,Assam,FH,765
+Catla,Bihar,Retail,195
+Catla,Bihar,FLC,68
+Catla,Bihar,FH,71
+Catla,Delhi,Retail,288
+Catla,Delhi,FLC,512
+Catla,Delhi,FH,165
+Catla,Jharkhand,Retail,262
+Catla,Jharkhand,FLC,92
+Catla,Jharkhand,FH,54
+Catla,Manipur,Retail,281
+Catla,Assam,Retail,263
+Catla,Assam,FLC,670
+Catla,Assam,FH,779
+Catla,Bihar,Retail,202
+Catla,Bihar,FLC,60
+Catla,Bihar,FH,79
+Catla,Delhi,Retail,294
+Catla,Delhi,FLC,498
+Catla,Delhi,FH,160
+Catla,Jharkhand,Retail,270
+Catla,Jharkhand,FLC,98
+Catla,Jharkhand,FH,59
+Catla,Manipur,Retail,289
 Catla,Meghalaya,Retail,200
 Catla,Meghalaya,FLC,873
 Catla,Meghalaya,FH,891
@@ -31,6 +57,39 @@ Catla,Rajasthan,FLC,726
 Catla,Rajasthan,FH,427
 Catla,Telangana,Retail,295
 Catla,Telangana,FLC,82
+Catla,Assam,Retail,245
+Catla,Assam,FLC,612
+Catla,Assam,FH,801
+Catla,Bihar,Retail,215
+Catla,Bihar,FLC,98
+Catla,Bihar,FH,120
+Catla,Delhi,Retail,278
+Catla,Delhi,FLC,530
+Catla,Delhi,FH,185
+Catla,Jharkhand,Retail,260
+Catla,Jharkhand,FLC,110
+Catla,Jharkhand,FH,90
+Catla,Manipur,Retail,295
+Catla,Manipur,FLC,410
+Catla,Manipur,FH,620
+Catla,Meghalaya,Retail,230
+Catla,Meghalaya,FLC,520
+Catla,Meghalaya,FH,740
+Catla,Nagaland,Retail,210
+Catla,Nagaland,FLC,330
+Catla,Nagaland,FH,560
+Catla,Odisha,Retail,250
+Catla,Odisha,FLC,470
+Catla,Odisha,FH,680
+Catla,Punjab,Retail,265
+Catla,Punjab,FLC,720
+Catla,Punjab,FH,820
+Catla,Rajasthan,Retail,195
+Catla,Rajasthan,FLC,390
+Catla,Rajasthan,FH,610
+Catla,Telangana,Retail,225
+Catla,Telangana,FLC,510
+Catla,Telangana,FH,705
 Catla,Telangana,FH,774
 Catla,Tripura,Retail,274
 Catla,Tripura,FLC,400
@@ -96,6 +155,27 @@ Common carp,Nagaland,Retail,190
 Common carp,Nagaland,FLC,143
 Common carp,Nagaland,FH,631
 Common carp,Odisha,Retail,157
+Common carp,Assam,Retail,260
+Common carp,Assam,FLC,845
+Common carp,Assam,FH,880
+Common carp,Bihar,Retail,220
+Common carp,Bihar,FLC,760
+Common carp,Bihar,FH,95
+Common carp,Delhi,Retail,235
+Common carp,Delhi,FLC,85
+Common carp,Delhi,FH,540
+Common carp,Jharkhand,Retail,205
+Common carp,Jharkhand,FLC,300
+Common carp,Jharkhand,FH,270
+Common carp,Manipur,Retail,240
+Common carp,Manipur,FLC,690
+Common carp,Manipur,FH,710
+Common carp,Meghalaya,Retail,255
+Common carp,Meghalaya,FLC,810
+Common carp,Meghalaya,FH,760
+Common carp,Nagaland,Retail,225
+Common carp,Nagaland,FLC,650
+Common carp,Nagaland,FH,720
 Common carp,Odisha,FLC,124
 Common carp,Odisha,FH,703
 Common carp,Punjab,Retail,145
@@ -141,6 +221,30 @@ Common carp,Andhra Pradesh,Retail,812
 Common carp,Andhra Pradesh,FLC,641
 Common carp,Andhra Pradesh,FH,217
 Common carp,Gujarat,Retail,275
+Common carp,Assam,Retail,271
+Common carp,Assam,FLC,845
+Common carp,Assam,FH,860
+Common carp,Bihar,Retail,210
+Common carp,Bihar,FLC,785
+Common carp,Bihar,FH,54
+Common carp,Delhi,Retail,222
+Common carp,Delhi,FLC,48
+Common carp,Delhi,FH,522
+Common carp,Jharkhand,Retail,205
+Common carp,Jharkhand,FLC,278
+Common carp,Jharkhand,FH,255
+Common carp,Assam,Retail,265
+Common carp,Assam,FLC,859
+Common carp,Assam,FH,872
+Common carp,Bihar,Retail,204
+Common carp,Bihar,FLC,795
+Common carp,Bihar,FH,49
+Common carp,Delhi,Retail,230
+Common carp,Delhi,FLC,54
+Common carp,Delhi,FH,510
+Common carp,Jharkhand,Retail,198
+Common carp,Jharkhand,FLC,286
+Common carp,Jharkhand,FH,248
 Common carp,Gujarat,FLC,288
 Common carp,Gujarat,FH,970
 Common carp,West Bengal,Retail,534
@@ -180,6 +284,42 @@ Grass carp,Rajasthan,Retail,90
 Grass carp,Rajasthan,FLC,525
 Grass carp,Rajasthan,FH,118
 Grass carp,Telangana,Retail,67
+Grass carp,Bihar,Retail,225
+Grass carp,Bihar,FLC,660
+Grass carp,Bihar,FH,450
+Grass carp,Delhi,Retail,245
+Grass carp,Delhi,FLC,810
+Grass carp,Delhi,FH,790
+Grass carp,Jharkhand,Retail,270
+Grass carp,Jharkhand,FLC,480
+Grass carp,Jharkhand,FH,820
+Grass carp,Manipur,Retail,235
+Grass carp,Manipur,FLC,215
+Grass carp,Manipur,FH,440
+Grass carp,Meghalaya,Retail,160
+Grass carp,Bihar,Retail,218
+Grass carp,Bihar,FLC,635
+Grass carp,Bihar,FH,448
+Grass carp,Delhi,Retail,244
+Grass carp,Delhi,FLC,821
+Grass carp,Delhi,FH,788
+Grass carp,Jharkhand,Retail,260
+Grass carp,Jharkhand,FLC,465
+Grass carp,Jharkhand,FH,792
+Grass carp,Manipur,Retail,235
+Grass carp,Manipur,FLC,205
+Grass carp,Manipur,FH,425
+Grass carp,Meghalaya,Retail,155
+Grass carp,Meghalaya,FLC,902
+Grass carp,Meghalaya,FH,410
+Grass carp,Nagaland,Retail,165
+Grass carp,Nagaland,FLC,660
+Grass carp,Nagaland,FH,778
+Grass carp,Meghalaya,FLC,890
+Grass carp,Meghalaya,FH,430
+Grass carp,Nagaland,Retail,175
+Grass carp,Nagaland,FLC,680
+Grass carp,Nagaland,FH,760
 Grass carp,Telangana,FLC,245
 Grass carp,Telangana,FH,851
 Grass carp,Tripura,Retail,193
@@ -248,11 +388,42 @@ Mrigal,Nagaland,FH,247
 Mrigal,Odisha,Retail,168
 Mrigal,Odisha,FLC,697
 Mrigal,Odisha,FH,618
+Mrigal,Assam,Retail,292
+Mrigal,Assam,FLC,270
+Mrigal,Assam,FH,615
+Mrigal,Bihar,Retail,178
+Mrigal,Bihar,FLC,442
+Mrigal,Bihar,FH,635
+Mrigal,Delhi,Retail,244
+Mrigal,Delhi,FLC,282
+Mrigal,Delhi,FH,925
+Mrigal,Jharkhand,Retail,204
+Mrigal,Jharkhand,FLC,865
+Mrigal,Jharkhand,FH,660
+Mrigal,Manipur,Retail,22
+Mrigal,Assam,Retail,299
+Mrigal,Assam,FLC,279
+Mrigal,Assam,FH,627
 Mrigal,Punjab,Retail,160
 Mrigal,Punjab,FLC,804
 Mrigal,Punjab,FH,717
 Mrigal,Rajasthan,Retail,165
 Mrigal,Rajasthan,FLC,606
+Mrigal,Assam,Retail,285
+Mrigal,Assam,FLC,290
+Mrigal,Assam,FH,640
+Mrigal,Bihar,Retail,180
+Mrigal,Bihar,FLC,460
+Mrigal,Bihar,FH,650
+Mrigal,Delhi,Retail,250
+Mrigal,Delhi,FLC,310
+Mrigal,Delhi,FH,920
+Mrigal,Jharkhand,Retail,210
+Mrigal,Jharkhand,FLC,860
+Mrigal,Jharkhand,FH,690
+Mrigal,Manipur,Retail,45
+Mrigal,Manipur,FLC,230
+Mrigal,Manipur,FH,510
 Mrigal,Rajasthan,FH,979
 Mrigal,Telangana,Retail,165
 Mrigal,Telangana,FLC,996
@@ -321,6 +492,28 @@ Pangas catfish,Nagaland,Retail,180
 Pangas catfish,Nagaland,FLC,392
 Pangas catfish,Nagaland,FH,75
 Pangas catfish,Odisha,Retail,178
+Pangas catfish,Jharkhand,FH,585
+Pangas catfish,Manipur,Retail,198
+Pangas catfish,Manipur,FLC,985
+Pangas catfish,Manipur,FH,378
+Pangas catfish,Meghalaya,Retail,190
+Pangas catfish,Meghalaya,FLC,422
+Pangas catfish,Meghalaya,FH,321
+Pangas catfish,Nagaland,Retail,184
+Pangas catfish,Nagaland,FLC,388
+Pangas catfish,Nagaland,FH,72
+Pangas catfish,Odisha,Retail,175
+Pangas catfish,Odisha,FLC,122
+Pangas catfish,Odisha,FH,231
+Pangas catfish,Punjab,Retail,181
+Pangas catfish,Punjab,FLC,204
+Pangas catfish,Punjab,FH,265
+Pangas catfish,Rajasthan,Retail,154
+Pangas catfish,Rajasthan,FLC,548
+Pangas catfish,Rajasthan,FH,252
+Pangas catfish,Telangana,Retail,153
+Pangas catfish,Telangana,FLC,528
+Pangas catfish,Telangana,FH,512
 Pangas catfish,Odisha,FLC,126
 Pangas catfish,Odisha,FH,227
 Pangas catfish,Punjab,Retail,178
@@ -329,6 +522,22 @@ Pangas catfish,Punjab,FH,270
 Pangas catfish,Rajasthan,Retail,157
 Pangas catfish,Rajasthan,FLC,552
 Pangas catfish,Rajasthan,FH,256
+Pangas catfish,Jharkhand,FH,610
+Pangas catfish,Manipur,Retail,215
+Pangas catfish,Manipur,FLC,980
+Pangas catfish,Manipur,FH,400
+Pangas catfish,Meghalaya,Retail,200
+Pangas catfish,Meghalaya,FLC,450
+Pangas catfish,Meghalaya,FH,340
+Pangas catfish,Nagaland,Retail,190
+Pangas catfish,Nagaland,FLC,410
+Pangas catfish,Nagaland,FH,90
+Pangas catfish,Odisha,Retail,185
+Pangas catfish,Odisha,FLC,150
+Pangas catfish,Odisha,FH,260
+Pangas catfish,Punjab,Retail,190
+Pangas catfish,Punjab,FLC,220
+Pangas catfish,Punjab,FH,290
 Pangas catfish,Telangana,Retail,150
 Pangas catfish,Telangana,FLC,524
 Pangas catfish,Telangana,FH,516
@@ -407,9 +616,52 @@ Rohu,Rajasthan,FH,366
 Rohu,Telangana,Retail,155
 Rohu,Telangana,FLC,292
 Rohu,Telangana,FH,503
+Rohu,Assam,FH,140
+Rohu,Bihar,Retail,210
+Rohu,Bihar,FLC,330
+Rohu,Bihar,FH,640
+Rohu,Delhi,Retail,265
+Rohu,Delhi,FLC,160
+Rohu,Delhi,FH,275
+Rohu,Jharkhand,Retail,180
+Rohu,Jharkhand,FLC,270
+Rohu,Jharkhand,FH,110
+Rohu,Manipur,Retail,205
+Rohu,Manipur,FLC,120
+Rohu,Manipur,FH,830
+Rohu,Meghalaya,Retail,245
+Rohu,Meghalaya,FLC,580
+Rohu,Meghalaya,FH,540
 Rohu,Tripura,Retail,135
 Rohu,Tripura,FLC,501
 Rohu,Tripura,FH,916
+Rohu,Assam,FH,115
+Rohu,Bihar,Retail,195
+Rohu,Bihar,FLC,318
+Rohu,Bihar,FH,621
+Rohu,Delhi,Retail,252
+Rohu,Delhi,FLC,131
+Rohu,Delhi,FH,258
+Rohu,Jharkhand,Retail,170
+Rohu,Jharkhand,FLC,248
+Rohu,Jharkhand,FH,92
+Rohu,Manipur,Retail,188
+Rohu,Manipur,FLC,92
+Rohu,Manipur,FH,835
+Rohu,Meghalaya,Retail,232
+Rohu,Meghalaya,FLC,560
+Rohu,Meghalaya,FH,528
+Rohu,Nagaland,Retail,192
+Rohu,Nagaland,FLC,565
+Rohu,Nagaland,FH,194
+Rohu,Odisha,Retail,181
+Rohu,Odisha,FLC,310
+Rohu,Odisha,FH,207
+Rohu,Punjab,Retail,182
+Rohu,Punjab,FLC,898
+Rohu,Punjab,FH,646
+Rohu,Rajasthan,Retail,160
+Rohu,Rajasthan,FLC,112
 Rohu,Andaman and Nicobar Islands,Retail,925
 Rohu,Andaman and Nicobar Islands,FLC,699
 Rohu,Andaman and Nicobar Islands,FH,831
@@ -479,12 +731,45 @@ Indian white prawn,Punjab,FH,793
 Indian white prawn,Rajasthan,Retail,774
 Indian white prawn,Rajasthan,FLC,360
 Indian white prawn,Rajasthan,FH,86
+Indian white prawn,Manipur,FLC,210
+Indian white prawn,Manipur,FH,360
+Indian white prawn,Meghalaya,Retail,500
+Indian white prawn,Meghalaya,FLC,540
+Indian white prawn,Meghalaya,FH,320
+Indian white prawn,Nagaland,Retail,960
+Indian white prawn,Nagaland,FLC,830
+Indian white prawn,Nagaland,FH,490
+Indian white prawn,Odisha,Retail,460
+Indian white prawn,Odisha,FLC,670
+Indian white prawn,Odisha,FH,880
 Indian white prawn,Telangana,Retail,340
 Indian white prawn,Telangana,FLC,557
 Indian white prawn,Telangana,FH,558
 Indian white prawn,Tripura,Retail,232
 Indian white prawn,Tripura,FLC,936
 Indian white prawn,Tripura,FH,704
+Indian white prawn,Manipur,FLC,204
+Indian white prawn,Manipur,FH,335
+Indian white prawn,Meghalaya,Retail,512
+Indian white prawn,Meghalaya,FLC,525
+Indian white prawn,Meghalaya,FH,304
+Indian white prawn,Nagaland,Retail,988
+Indian white prawn,Nagaland,FLC,842
+Indian white prawn,Nagaland,FH,471
+Indian white prawn,Odisha,Retail,479
+Indian white prawn,Odisha,FLC,652
+Indian white prawn,Odisha,FH,851
+Indian white prawn,Manipur,FLC,196
+Indian white prawn,Manipur,FH,344
+Indian white prawn,Meghalaya,Retail,521
+Indian white prawn,Meghalaya,FLC,515
+Indian white prawn,Meghalaya,FH,295
+Indian white prawn,Nagaland,Retail,999
+Indian white prawn,Nagaland,FLC,854
+Indian white prawn,Nagaland,FH,463
+Indian white prawn,Odisha,Retail,487
+Indian white prawn,Odisha,FLC,644
+Indian white prawn,Odisha,FH,860
 Indian white prawn,Andaman and Nicobar Islands,Retail,600
 Indian white prawn,Andaman and Nicobar Islands,FLC,100
 Indian white prawn,Andaman and Nicobar Islands,FH,158
@@ -11125,6 +11410,26 @@ Bronze Croaker,Odisha,FLC,937
 Bronze Croaker,Odisha,FH,281
 Bronze Croaker,Punjab,Retail,474
 Bronze Croaker,Punjab,FLC,855
+Bronze Croaker,Punjab,FH,538
+Bronze Croaker,Rajasthan,Retail,518
+Bronze Croaker,Rajasthan,FLC,888
+Bronze Croaker,Rajasthan,FH,812
+Bronze Croaker,Telangana,Retail,932
+Bronze Croaker,Telangana,FLC,348
+Bronze Croaker,Telangana,FH,135
+Bronze Croaker,Tripura,Retail,82
+Bronze Croaker,Tripura,FLC,902
+Bronze Croaker,Tripura,FH,682
+Bronze Croaker,Punjab,FH,530
+Bronze Croaker,Rajasthan,Retail,525
+Bronze Croaker,Rajasthan,FLC,898
+Bronze Croaker,Rajasthan,FH,800
+Bronze Croaker,Telangana,Retail,920
+Bronze Croaker,Telangana,FLC,340
+Bronze Croaker,Telangana,FH,144
+Bronze Croaker,Tripura,Retail,74
+Bronze Croaker,Tripura,FLC,890
+Bronze Croaker,Tripura,FH,694
 Bronze Croaker,Punjab,FH,534
 Bronze Croaker,Rajasthan,Retail,521
 Bronze Croaker,Rajasthan,FLC,893
@@ -11271,6 +11576,29 @@ Blue swimming crab,Nagaland,Retail,192
 Blue swimming crab,Nagaland,FLC,322
 Blue swimming crab,Nagaland,FH,568
 Blue swimming crab,Odisha,Retail,833
+Blue swimming crab,Assam,FH,392
+Blue swimming crab,Bihar,Retail,478
+Blue swimming crab,Bihar,FLC,918
+Blue swimming crab,Bihar,FH,845
+Blue swimming crab,Delhi,Retail,130
+Blue swimming crab,Delhi,FLC,448
+Blue swimming crab,Delhi,FH,485
+Blue swimming crab,Jharkhand,Retail,858
+Blue swimming crab,Jharkhand,FLC,472
+Blue swimming crab,Jharkhand,FH,202
+Blue swimming crab,Manipur,Retail,242
+Blue swimming crab,Manipur,FLC,352
+Blue swimming crab,Manipur,FH,758
+Blue swimming crab,Meghalaya,Retail,384
+Blue swimming crab,Meghalaya,FLC,190
+Blue swimming crab,Meghalaya,FH,518
+Blue swimming crab,Nagaland,Retail,196
+Blue swimming crab,Nagaland,FLC,328
+Blue swimming crab,Nagaland,FH,562
+Blue swimming crab,Odisha,Retail,828
+Blue swimming crab,Odisha,FLC,650
+Blue swimming crab,Odisha,FH,372
+Blue swimming crab,Punjab,Retail,748
 Blue swimming crab,Odisha,FLC,655
 Blue swimming crab,Odisha,FH,367
 Blue swimming crab,Punjab,Retail,752
@@ -11364,6 +11692,39 @@ Brown shrimp,Andaman and Nicobar Islands,Retail,498
 Brown shrimp,Andaman and Nicobar Islands,FLC,340
 Brown shrimp,Andaman and Nicobar Islands,FH,541
 Brown shrimp,Goa,Retail,669
+Brown shrimp,Goa,FLC,310
+Brown shrimp,Goa,FH,108
+Brown shrimp,Karnataka,Retail,855
+Brown shrimp,Karnataka,FLC,525
+Brown shrimp,Karnataka,FH,262
+Brown shrimp,Kerala,Retail,570
+Brown shrimp,Kerala,FLC,168
+Brown shrimp,Kerala,FH,345
+Brown shrimp,Maharashtra,Retail,852
+Brown shrimp,Maharashtra,FLC,245
+Brown shrimp,Maharashtra,FH,120
+Brown shrimp,Puducherry,Retail,395
+Brown shrimp,Puducherry,FLC,352
+Brown shrimp,Puducherry,FH,68
+Brown shrimp,Sikkim,Retail,320
+Brown shrimp,Sikkim,FLC,988
+Brown shrimp,Sikkim,FH,355
+Brown shrimp,Uttar Pradesh,Retail,385
+Brown shrimp,Uttar Pradesh,FLC,975
+Brown shrimp,Uttar Pradesh,FH,818
+Brown shrimp,All India,Retail,948
+Brown shrimp,All India,FLC,692
+Brown shrimp,All India,FH,882
+Brown shrimp,Andhra Pradesh,Retail,258
+Brown shrimp,Andhra Pradesh,FLC,480
+Brown shrimp,Andhra Pradesh,FH,648
+Brown shrimp,Gujarat,Retail,885
+Brown shrimp,Gujarat,FLC,830
+Brown shrimp,Gujarat,FH,610
+Brown shrimp,West Bengal,Retail,635
+Brown shrimp,West Bengal,FLC,792
+Brown shrimp,West Bengal,FH,918
+Brown shrimp,Tamil Nadu,Retail,662
 Brown shrimp,Goa,FLC,316
 Brown shrimp,Goa,FH,104
 Brown shrimp,Karnataka,Retail,860
@@ -11462,6 +11823,32 @@ Indian halibut,Uttar Pradesh,FH,948
 Indian halibut,All India,Retail,645
 Indian halibut,All India,FLC,566
 Indian halibut,All India,FH,286
+Indian halibut,Assam,FLC,308
+Indian halibut,Assam,FH,212
+Indian halibut,Bihar,Retail,490
+Indian halibut,Bihar,FLC,465
+Indian halibut,Bihar,FH,522
+Indian halibut,Delhi,Retail,258
+Indian halibut,Delhi,FLC,135
+Indian halibut,Delhi,FH,840
+Indian halibut,Jharkhand,Retail,422
+Indian halibut,Jharkhand,FLC,780
+Indian halibut,Jharkhand,FH,545
+Indian halibut,Manipur,Retail,565
+Indian halibut,Manipur,FLC,355
+Indian halibut,Manipur,FH,460
+Indian halibut,Assam,FLC,298
+Indian halibut,Assam,FH,224
+Indian halibut,Bihar,Retail,498
+Indian halibut,Bihar,FLC,452
+Indian halibut,Bihar,FH,515
+Indian halibut,Delhi,Retail,265
+Indian halibut,Delhi,FLC,128
+Indian halibut,Delhi,FH,830
+Indian halibut,Jharkhand,Retail,410
+Indian halibut,Jharkhand,FLC,768
+Indian halibut,Jharkhand,FH,552
+Indian halibut,Manipur,Retail,552
 Indian halibut,Andhra Pradesh,Retail,951
 Indian halibut,Andhra Pradesh,FLC,654
 Indian halibut,Andhra Pradesh,FH,846
@@ -11549,3 +11936,43 @@ Banana Shrimp,West Bengal,FH,964
 Banana Shrimp,Tamil Nadu,Retail,134
 Banana Shrimp,Tamil Nadu,FLC,815
 Banana Shrimp,Tamil Nadu,FH,958
+Banana Shrimp,Andhra Pradesh,FH,242
+Banana Shrimp,Gujarat,Retail,835
+Banana Shrimp,Gujarat,FLC,725
+Banana Shrimp,Gujarat,FH,552
+Banana Shrimp,West Bengal,Retail,145
+Banana Shrimp,West Bengal,FLC,548
+Banana Shrimp,West Bengal,FH,958
+Banana Shrimp,Tamil Nadu,Retail,138
+Banana Shrimp,Tamil Nadu,FLC,820
+Banana Shrimp,Tamil Nadu,FH,964
+Banana Shrimp,Andhra Pradesh,FH,253
+Banana Shrimp,Gujarat,Retail,845
+Banana Shrimp,Gujarat,FLC,738
+Banana Shrimp,Gujarat,FH,540
+Banana Shrimp,West Bengal,Retail,136
+Banana Shrimp,West Bengal,FLC,559
+Banana Shrimp,West Bengal,FH,972
+Banana Shrimp,Tamil Nadu,Retail,131
+Banana Shrimp,Tamil Nadu,FLC,810
+Banana Shrimp,Tamil Nadu,FH,952
+Banana Shrimp,Andhra Pradesh,FH,245
+Banana Shrimp,Gujarat,Retail,838
+Banana Shrimp,Gujarat,FLC,728
+Banana Shrimp,Gujarat,FH,555
+Banana Shrimp,West Bengal,Retail,142
+Banana Shrimp,West Bengal,FLC,555
+Banana Shrimp,West Bengal,FH,960
+Banana Shrimp,Tamil Nadu,Retail,137
+Banana Shrimp,Tamil Nadu,FLC,818
+Banana Shrimp,Tamil Nadu,FH,962
+Banana Shrimp,Andhra Pradesh,FH,250
+Banana Shrimp,Gujarat,Retail,843
+Banana Shrimp,Gujarat,FLC,733
+Banana Shrimp,Gujarat,FH,548
+Banana Shrimp,West Bengal,Retail,138
+Banana Shrimp,West Bengal,FLC,550
+Banana Shrimp,West Bengal,FH,968
+Banana Shrimp,Tamil Nadu,Retail,135
+Banana Shrimp,Tamil Nadu,FLC,812
+Banana Shrimp,Tamil Nadu,FH,955
