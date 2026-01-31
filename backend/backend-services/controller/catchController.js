@@ -42,47 +42,114 @@ const getCatchSummary = async (req, res) => {
     }
 };
 
+// const getWeeklyCatches = async (req, res) => {
+//     try {
+//         const { userId } = req.params; // This is a string from the URL
+
+//         const today = new Date();
+//         const dayOfWeek = today.getDay();
+//         const startOfWeek = new Date(today);
+//         startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+//         startOfWeek.setHours(0, 0, 0, 0);
+
+//         const endOfWeek = new Date(startOfWeek);
+//         endOfWeek.setDate(startOfWeek.getDate() + 6);
+//         endOfWeek.setHours(23, 59, 59, 999);
+        
+//         const weeklyData = await Analysis.aggregate([
+//             {
+//                 $match: {
+//                     // CRITICAL CHANGE: Match the string directly
+//                     user_id: userId,
+//                     // IMPORTANT: This requires a `createdAt` field in your documents
+//                     createdAt: { $gte: startOfWeek, $lte: endOfWeek },
+//                 },
+//             },
+//             {
+//                 $group: {
+//                     _id: { $dayOfWeek: '$createdAt' },
+//                     totalQuantity: { $sum: '$qty_captured' },
+//                 },
+//             },
+//             { $sort: { _id: 1 } },
+//         ]);
+
+//         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+//         let formattedData = days.map((day, index) => {
+//             const dayData = weeklyData.find(d => d._id === index + 1);
+//             return { day, quantity: dayData ? dayData.totalQuantity : 0 };
+//         });
+        
+//         formattedData = [...formattedData.slice(1), formattedData[0]];
+//         res.status(200).json(formattedData);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server Error: Could not fetch weekly data.' });
+//     }
+// };
 const getWeeklyCatches = async (req, res) => {
     try {
-        const { userId } = req.params; // This is a string from the URL
+        const { userId } = req.params;
 
+        // 1. Calculate the start and end of the current week
         const today = new Date();
-        const dayOfWeek = today.getDay();
+        const dayOfWeek = today.getDay(); // 0 (Sun) to 6 (Sat)
+        
+        // Calculate Monday (Start of week)
         const startOfWeek = new Date(today);
         startOfWeek.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
         startOfWeek.setHours(0, 0, 0, 0);
 
+        // Calculate Sunday (End of week)
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
         endOfWeek.setHours(23, 59, 59, 999);
-        
+
+        // Debug logs to verify range
+        console.log(`🔎 Weekly Query (Using updatedAt) for ${userId}`);
+        console.log(`📅 Range: ${startOfWeek.toISOString()} to ${endOfWeek.toISOString()}`);
+
         const weeklyData = await Analysis.aggregate([
             {
                 $match: {
-                    // CRITICAL CHANGE: Match the string directly
                     user_id: userId,
-                    // IMPORTANT: This requires a `createdAt` field in your documents
-                    createdAt: { $gte: startOfWeek, $lte: endOfWeek },
+                    // CHANGE: Check 'updatedAt' instead of 'createdAt'
+                    updatedAt: { $gte: startOfWeek, $lte: endOfWeek },
                 },
             },
             {
                 $group: {
-                    _id: { $dayOfWeek: '$createdAt' },
+                    // CHANGE: Group by 'updatedAt' day
+                    _id: { $dayOfWeek: '$updatedAt' }, 
                     totalQuantity: { $sum: '$qty_captured' },
                 },
             },
             { $sort: { _id: 1 } },
         ]);
 
+        console.log("📊 Aggregation Result:", JSON.stringify(weeklyData));
+
+        // Format data for the chart (Monday -> Sunday)
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // Map data to days
         let formattedData = days.map((day, index) => {
-            const dayData = weeklyData.find(d => d._id === index + 1);
-            return { day, quantity: dayData ? dayData.totalQuantity : 0 };
+            // MongoDB $dayOfWeek returns 1 (Sun) -> 7 (Sat)
+            // Array index is 0 (Sun) -> 6 (Sat)
+            // So we match _id === index + 1
+            const dayData = weeklyData.find(d => d._id === (index + 1));
+            return { 
+                day, 
+                quantity: dayData ? dayData.totalQuantity : 0 
+            };
         });
         
+        // Shift Sunday (index 0) to the end so array starts with Monday
         formattedData = [...formattedData.slice(1), formattedData[0]];
+        
         res.status(200).json(formattedData);
+
     } catch (error) {
+        console.error("❌ Error fetching weekly catches:", error);
         res.status(500).json({ message: 'Server Error: Could not fetch weekly data.' });
     }
 };
