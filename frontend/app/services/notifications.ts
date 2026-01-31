@@ -2,6 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ALERT_CACHE_KEY = '@recent_alerts_cache';
+const ALERTS_SCREEN_CACHE_KEY = '@all_alerts_cache';
+
 
 
 const BACKEND_URL = 'https://hackcelestial-kdg-1.onrender.com';
@@ -116,6 +118,25 @@ export const cacheAlerts = async (alerts: AlertData[]): Promise<void> => {
     console.error('Error caching alerts:', e);
   }
 };
+
+export const loadCachedAllAlerts = async (): Promise<AlertData[]> => {
+  try {
+    const jsonValue = await AsyncStorage.getItem(ALERTS_SCREEN_CACHE_KEY);
+    return jsonValue != null ? JSON.parse(jsonValue) : [];
+  } catch (e) {
+    console.error('Error loading cached all alerts:', e);
+    return [];
+  }
+};
+
+export const cacheAllAlerts = async (alerts: AlertData[]): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(ALERTS_SCREEN_CACHE_KEY, JSON.stringify(alerts));
+  } catch (e) {
+    console.error('Error caching all alerts:', e);
+  }
+};
+
 export const fetchPopularSpots = async (latitude: number, longitude: number): Promise<SpotItem[]> => {
   try {
     const response = await axios.post(`${BACKEND_URL}/popular-spots`, {

@@ -15,7 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/design';
-import { fetchNotifications, AlertData } from '../services/notifications';
+import { fetchNotifications, AlertData, loadCachedAllAlerts, cacheAllAlerts } from '../services/notifications';
+
 import * as Location from 'expo-location';
 
 // Types
@@ -58,10 +59,22 @@ export default function AlertsScreen() {
 
   const loadAlerts = async () => {
     try {
-      console.log('Starting loadAlerts...');
       setLoading(true);
+
+      // 1. Load cached alerts first
+      const cached = await loadCachedAllAlerts();
+      if (cached && cached.length > 0) {
+        // Apply relative time formatting to cached items
+        const processedCached = cached.map((alert: AlertData) => ({
+          ...alert,
+          timestamp: formatRelativeTime(alert.timestamp)
+        }));
+        setAlerts(processedCached);
+        setLoading(false); // Show cached data immediately
+      }
       
       // Get permissions
+
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         console.log('Permission to access location was denied');
@@ -101,6 +114,11 @@ export default function AlertsScreen() {
       }));
 
       setAlerts(processedAlerts);
+      
+      // Cache the full list (raw data before relative time formatting if possible, 
+      // but here we cache fetchedAlerts which has raw timestamp)
+      cacheAllAlerts(fetchedAlerts);
+
     } catch (error) {
       console.error("Failed to load alerts", error);
     } finally {
